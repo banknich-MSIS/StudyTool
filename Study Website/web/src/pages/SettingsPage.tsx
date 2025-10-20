@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createExam, fetchConcepts } from "../api/client";
-import type { QuestionType } from "../types";
+import type { QuestionType, UploadMetadata } from "../types";
 import { useExamStore } from "../store/examStore";
 
 export default function SettingsPage() {
   const nav = useNavigate();
   const loc = useLocation() as any;
   const uploadId: number | undefined = loc?.state?.uploadId;
+  const metadata: UploadMetadata | undefined = loc?.state?.metadata;
   const setExam = useExamStore((s) => s.setExam);
 
   const [concepts, setConcepts] = useState<
@@ -25,6 +26,18 @@ export default function SettingsPage() {
       .then(setConcepts)
       .catch((e) => setError(e?.message || "Failed to load concepts"));
   }, [uploadId]);
+
+  // Auto-configure from metadata
+  useEffect(() => {
+    if (metadata) {
+      if (metadata.suggested_types) {
+        setTypes(metadata.suggested_types as QuestionType[]);
+      }
+      if (metadata.recommended_count) {
+        setCount(metadata.recommended_count);
+      }
+    }
+  }, [metadata]);
 
   const sortedConcepts = useMemo(
     () => [...concepts].sort((a, b) => b.score - a.score),
@@ -72,6 +85,47 @@ export default function SettingsPage() {
         </div>
       )}
       {error && <div style={{ color: "crimson" }}>{error}</div>}
+
+      {/* Show metadata recommendations */}
+      {metadata && (
+        <div
+          style={{
+            background: "#e8f5e8",
+            padding: 16,
+            borderRadius: 8,
+            border: "1px solid #c3e6c3",
+          }}
+        >
+          <h3 style={{ margin: "0 0 12px 0", color: "#2d5a2d" }}>
+            📋 Recommended Settings (from your CSV)
+          </h3>
+          {metadata.themes && (
+            <div style={{ marginBottom: 8 }}>
+              <strong>Themes:</strong> {metadata.themes.join(", ")}
+            </div>
+          )}
+          {metadata.suggested_types && (
+            <div style={{ marginBottom: 8 }}>
+              <strong>Question Types:</strong>{" "}
+              {metadata.suggested_types.join(", ")}
+            </div>
+          )}
+          {metadata.recommended_count && (
+            <div style={{ marginBottom: 8 }}>
+              <strong>Question Count:</strong> {metadata.recommended_count}
+            </div>
+          )}
+          {metadata.difficulty && (
+            <div style={{ marginBottom: 8 }}>
+              <strong>Difficulty:</strong> {metadata.difficulty}
+            </div>
+          )}
+          <div style={{ fontSize: 14, color: "#666", marginTop: 8 }}>
+            These settings have been pre-filled below. You can modify them as
+            needed.
+          </div>
+        </div>
+      )}
 
       <section>
         <h3>Concepts</h3>

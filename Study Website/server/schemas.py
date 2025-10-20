@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, Field
@@ -14,6 +15,16 @@ class UploadOut(BaseModel):
     file_type: str
 
     model_config = dict(from_attributes=True)
+
+
+class UploadSummary(BaseModel):
+    id: int
+    filename: str
+    created_at: datetime
+    question_count: int
+    themes: List[str] = []
+    exam_count: int
+    file_type: str
 
 
 class ConceptOut(BaseModel):
@@ -32,6 +43,13 @@ class QuestionDTO(BaseModel):
     concepts: List[int] = []
 
     model_config = dict(from_attributes=True, populate_by_name=True)
+
+
+class QuestionReview(BaseModel):
+    question: QuestionDTO
+    user_answer: Any
+    correct_answer: Any
+    is_correct: bool
 
 
 class ExamCreate(BaseModel):
@@ -61,5 +79,24 @@ class GradeItem(BaseModel):
 class GradeReport(BaseModel):
     scorePct: float
     perQuestion: List[GradeItem]
+    attemptId: Optional[int] = None  # New field for attempt tracking
+
+
+class AttemptSummary(BaseModel):
+    id: int
+    exam_id: int
+    upload_filename: str
+    score_pct: float
+    finished_at: datetime
+    question_count: int
+    correct_count: int
+
+
+class AttemptDetail(BaseModel):
+    id: int
+    exam_id: int
+    score_pct: float
+    finished_at: datetime
+    questions: List[QuestionReview]
 
 

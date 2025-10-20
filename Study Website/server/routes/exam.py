@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import Exam as ExamModel, Question as QuestionModel, Upload
+from ..models import Attempt, AttemptAnswer, Exam as ExamModel, Question as QuestionModel, Upload
 from ..schemas import ExamCreate, ExamOut, GradeItem, GradeReport, QuestionDTO, UserAnswer
 
 router = APIRouter(tags=["exam"])
@@ -96,7 +97,33 @@ def grade_exam(
             correct_count += 1
 
     score_pct = (correct_count / max(1, len(exam.question_ids))) * 100.0
-    return GradeReport(scorePct=round(score_pct, 2), perQuestion=per_items)
+    
+    # Create attempt record
+    attempt = Attempt(
+        exam_id=exam_id,
+        finished_at=datetime.utcnow(),
+        score_pct=score_pct
+    )
+    db.add(attempt)
+    db.flush()
+    
+    # Save individual answers
+    for item in per_items:
+        answer_record = AttemptAnswer(
+            attempt_id=attempt.id,
+            question_id=item.questionId,
+            response={"value": item.userAnswer},
+            correct=item.correct
+        )
+        db.add(answer_record)
+    
+    db.commit()
+    
+    return GradeReport(
+        scorePct=round(score_pct, 2), 
+        perQuestion=per_items,
+        attemptId=attempt.id
+    )
 
 
 def _normalize_text(value: Any) -> str:

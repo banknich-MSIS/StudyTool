@@ -1,9 +1,12 @@
 import axios from "axios";
 import type {
+  AttemptDetail,
+  AttemptSummary,
   ExamOut,
   GradeReport,
   QuestionType,
   UploadResponse,
+  UploadSummary,
 } from "../types";
 
 const api = axios.create({ baseURL: "http://127.0.0.1:8000/api" });
@@ -56,5 +59,38 @@ export async function gradeExam(
     `/exams/${examId}/grade`,
     answers
   );
+  return data;
+}
+
+// Dashboard API methods
+export async function fetchAllUploads(): Promise<UploadSummary[]> {
+  const { data } = await api.get<UploadSummary[]>("/uploads");
+  return data;
+}
+
+export async function fetchRecentAttempts(
+  limit: number = 10
+): Promise<AttemptSummary[]> {
+  const { data } = await api.get<AttemptSummary[]>(
+    `/attempts/recent?limit=${limit}`
+  );
+  return data;
+}
+
+export async function fetchAttemptDetail(
+  attemptId: number
+): Promise<AttemptDetail> {
+  const { data } = await api.get<AttemptDetail>(`/attempts/${attemptId}`);
+  return data;
+}
+
+export async function deleteUpload(uploadId: number): Promise<void> {
+  await api.delete(`/uploads/${uploadId}`);
+}
+
+export async function downloadCSV(uploadId: number): Promise<Blob> {
+  const { data } = await api.get(`/uploads/${uploadId}/download`, {
+    responseType: "blob",
+  });
   return data;
 }

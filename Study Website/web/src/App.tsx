@@ -1,6 +1,28 @@
 import { Link, Outlet } from "react-router-dom";
+import { useState, useEffect } from "react";
+import TutorialModal from "./components/TutorialModal";
 
 export default function App() {
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  useEffect(() => {
+    // Check if tutorial has been completed
+    const tutorialCompleted = localStorage.getItem(
+      "studytool_tutorial_completed"
+    );
+    if (!tutorialCompleted) {
+      setShowTutorial(true);
+    }
+
+    // Listen for custom event from UploadPage
+    const handleShowTutorial = () => setShowTutorial(true);
+    window.addEventListener("showTutorial", handleShowTutorial);
+
+    return () => {
+      window.removeEventListener("showTutorial", handleShowTutorial);
+    };
+  }, []);
+
   return (
     <div
       style={{
@@ -20,11 +42,28 @@ export default function App() {
       >
         <h1 style={{ margin: 0, fontSize: 20 }}>Local Exam Builder</h1>
         <nav style={{ display: "flex", gap: 12 }}>
-          <Link to="/">Upload</Link>
-          <Link to="/settings">Settings</Link>
+          <Link to="/">Dashboard</Link>
+          <Link to="/upload">Upload CSV</Link>
+          <button
+            onClick={() => setShowTutorial(true)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#007bff",
+              cursor: "pointer",
+              textDecoration: "underline",
+            }}
+          >
+            Help
+          </button>
         </nav>
       </header>
       <Outlet />
+
+      <TutorialModal
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+      />
     </div>
   );
 }
