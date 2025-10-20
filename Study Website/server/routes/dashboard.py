@@ -98,6 +98,23 @@ def get_recent_attempts(limit: int = 10, db: Session = Depends(get_db)) -> List[
     return result
 
 
+@router.delete("/attempts/{attempt_id}")
+def delete_attempt(attempt_id: int, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Delete an exam attempt and its answers"""
+    attempt = db.get(Attempt, attempt_id)
+    if not attempt:
+        raise HTTPException(status_code=404, detail="Attempt not found")
+    
+    # Delete all answers first
+    db.query(AttemptAnswer).filter(AttemptAnswer.attempt_id == attempt_id).delete()
+    
+    # Delete the attempt
+    db.delete(attempt)
+    db.commit()
+    
+    return {"success": True}
+
+
 @router.get("/attempts/{attempt_id}", response_model=AttemptDetail)
 def get_attempt_detail(attempt_id: int, db: Session = Depends(get_db)) -> AttemptDetail:
     """Return full attempt details for review"""

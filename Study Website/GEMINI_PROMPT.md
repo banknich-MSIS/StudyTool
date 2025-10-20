@@ -1,5 +1,19 @@
 # Gemini CSV Generation Prompt
 
+## How to Use
+
+1. Upload your study materials (PDF, PowerPoint, DOCX) to the Gemini Gem: https://gemini.google.com/gem/582bd1e1e16d
+2. Gemini will generate a CSV with questions
+3. **Copy the entire CSV content** from Gemini's response
+4. Open Notepad or any text editor
+5. Paste the CSV content
+6. Save As → Choose "All Files (_._)" → Name it "questions.csv"
+7. Upload the CSV file to the Study Tool
+
+---
+
+## Prompt Template
+
 Copy and paste this prompt when uploading your study materials to Gemini:
 
 ---

@@ -57,17 +57,18 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
       ),
     },
     {
-      title: "Step 2: Download CSV",
+      title: "Step 2: Copy & Save CSV",
       content: (
         <div>
-          <p>Gemini will create a CSV file with:</p>
-          <ul>
-            <li>Questions and answers</li>
-            <li>Study themes and topics</li>
-            <li>Recommended question types</li>
-            <li>Difficulty settings</li>
-          </ul>
-          <p>Download this CSV file to your computer.</p>
+          <p>Gemini will generate a CSV with your questions. To use it:</p>
+          <ol style={{ paddingLeft: 20, marginTop: 12 }}>
+            <li>Copy the entire CSV content from Gemini's response</li>
+            <li>Open Notepad or any text editor</li>
+            <li>Paste the CSV content</li>
+            <li>Save As → Choose "All Files (*.*)"</li>
+            <li>Name it something like "questions.csv"</li>
+            <li>Make sure it ends with .csv extension</li>
+          </ol>
         </div>
       ),
     },

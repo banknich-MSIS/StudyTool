@@ -35,7 +35,7 @@ def create_exam(payload: ExamCreate, db: Session = Depends(get_db)) -> ExamOut:
         QuestionDTO(
             id=q.id,
             stem=q.stem,
-            qtype=q.qtype,
+            type=q.qtype,
             options=(q.options or {}).get("list"),
             concepts=q.concept_ids or [],
         )
@@ -56,7 +56,7 @@ def get_exam(exam_id: int, db: Session = Depends(get_db)) -> ExamOut:
         QuestionDTO(
             id=q.id,
             stem=q.stem,
-            qtype=q.qtype,
+            type=q.qtype,
             options=(q.options or {}).get("list"),
             concepts=q.concept_ids or [],
         )

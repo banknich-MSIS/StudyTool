@@ -1,31 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { createExam, fetchConcepts } from "../api/client";
+import { createExam } from "../api/client";
 import type { QuestionType, UploadMetadata } from "../types";
 import { useExamStore } from "../store/examStore";
 
 export default function SettingsPage() {
   const nav = useNavigate();
   const loc = useLocation() as any;
-  const uploadId: number | undefined = loc?.state?.uploadId;
+  const uploadId: number | undefined =
+    loc?.state?.uploadId || loc?.state?.uploadIds?.[0];
   const metadata: UploadMetadata | undefined = loc?.state?.metadata;
   const setExam = useExamStore((s) => s.setExam);
 
-  const [concepts, setConcepts] = useState<
-    { id: number; name: string; score: number }[]
-  >([]);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
   const [types, setTypes] = useState<QuestionType[]>(["mcq", "short"]);
   const [count, setCount] = useState(10);
+  const [examName, setExamName] = useState("");
+  const [examTheme, setExamTheme] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!uploadId) return;
-    fetchConcepts(uploadId)
-      .then(setConcepts)
-      .catch((e) => setError(e?.message || "Failed to load concepts"));
-  }, [uploadId]);
 
   // Auto-configure from metadata
   useEffect(() => {
@@ -36,20 +28,11 @@ export default function SettingsPage() {
       if (metadata.recommended_count) {
         setCount(metadata.recommended_count);
       }
+      if (metadata.themes && metadata.themes.length > 0) {
+        setExamTheme(metadata.themes[0]);
+      }
     }
   }, [metadata]);
-
-  const sortedConcepts = useMemo(
-    () => [...concepts].sort((a, b) => b.score - a.score),
-    [concepts]
-  );
-
-  const toggleConcept = (id: number) => {
-    const next = new Set(selected);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelected(next);
-  };
 
   const toggleType = (t: QuestionType) => {
     setTypes((prev) =>
@@ -64,7 +47,7 @@ export default function SettingsPage() {
     try {
       const exam = await createExam({
         uploadId,
-        includeConceptIds: Array.from(selected),
+        includeConceptIds: [], // No concepts needed
         questionTypes: types,
         count,
       });
@@ -128,39 +111,48 @@ export default function SettingsPage() {
       )}
 
       <section>
-        <h3>Concepts</h3>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-            gap: 8,
-          }}
-        >
-          {sortedConcepts.map((c) => (
+        <h3>Exam Details</h3>
+        <div style={{ display: "grid", gap: 12 }}>
+          <div>
             <label
-              key={c.id}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: 8,
-                padding: 8,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}
+              style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}
             >
-              <input
-                type="checkbox"
-                checked={selected.has(c.id)}
-                onChange={() => toggleConcept(c.id)}
-              />
-              <div style={{ display: "grid" }}>
-                <span>{c.name}</span>
-                <small style={{ color: "#666" }}>
-                  score {c.score.toFixed(2)}
-                </small>
-              </div>
+              Exam Name
             </label>
-          ))}
+            <input
+              type="text"
+              value={examName}
+              onChange={(e) => setExamName(e.target.value)}
+              placeholder="Enter exam name (optional)"
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                border: "1px solid #ddd",
+                borderRadius: 4,
+                fontSize: 14,
+              }}
+            />
+          </div>
+          <div>
+            <label
+              style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}
+            >
+              Theme/Subject
+            </label>
+            <input
+              type="text"
+              value={examTheme}
+              onChange={(e) => setExamTheme(e.target.value)}
+              placeholder="Enter theme or subject (optional)"
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                border: "1px solid #ddd",
+                borderRadius: 4,
+                fontSize: 14,
+              }}
+            />
+          </div>
         </div>
       </section>
 

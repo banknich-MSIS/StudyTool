@@ -29,7 +29,7 @@ export default function AttemptReviewPage() {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",

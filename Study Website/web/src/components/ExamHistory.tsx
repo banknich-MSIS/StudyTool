@@ -4,17 +4,19 @@ import type { AttemptSummary } from "../types";
 interface ExamHistoryProps {
   attempts: AttemptSummary[];
   onReviewAttempt: (attemptId: number) => void;
+  onDeleteAttempt: (attemptId: number) => void;
 }
 
 export default function ExamHistory({
   attempts,
   onReviewAttempt,
+  onDeleteAttempt,
 }: ExamHistoryProps) {
   const [sortBy, setSortBy] = useState<"date" | "score" | "source">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -187,7 +189,7 @@ export default function ExamHistory({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr 1fr",
+            gridTemplateColumns: "1fr 1fr 1fr 1fr 80px",
             backgroundColor: "#f8f9fa",
             padding: 12,
             fontWeight: "bold",
@@ -229,6 +231,7 @@ export default function ExamHistory({
             Source {getSortIcon("source")}
           </div>
           <div>Questions</div>
+          <div>Actions</div>
         </div>
 
         {sortedAttempts.map((attempt) => (
@@ -236,13 +239,12 @@ export default function ExamHistory({
             key={attempt.id}
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr 1fr",
+              gridTemplateColumns: "1fr 1fr 1fr 1fr 80px",
               padding: 12,
               borderBottom: "1px solid #f1f3f4",
-              cursor: "pointer",
               transition: "background-color 0.2s ease",
+              alignItems: "center",
             }}
-            onClick={() => onReviewAttempt(attempt.id)}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "#f8f9fa";
             }}
@@ -250,7 +252,10 @@ export default function ExamHistory({
               e.currentTarget.style.backgroundColor = "white";
             }}
           >
-            <div style={{ fontSize: 14 }}>
+            <div
+              style={{ fontSize: 14, cursor: "pointer" }}
+              onClick={() => onReviewAttempt(attempt.id)}
+            >
               {formatDate(attempt.finished_at)}
             </div>
             <div
@@ -263,16 +268,48 @@ export default function ExamHistory({
                 borderRadius: 4,
                 textAlign: "center",
                 display: "inline-block",
+                cursor: "pointer",
               }}
+              onClick={() => onReviewAttempt(attempt.id)}
             >
               {Math.round(attempt.score_pct)}%
             </div>
-            <div style={{ fontSize: 14, color: "#6c757d" }}>
+            <div
+              style={{ fontSize: 14, color: "#6c757d", cursor: "pointer" }}
+              onClick={() => onReviewAttempt(attempt.id)}
+            >
               {attempt.upload_filename}
             </div>
-            <div style={{ fontSize: 14, color: "#6c757d" }}>
+            <div
+              style={{ fontSize: 14, color: "#6c757d", cursor: "pointer" }}
+              onClick={() => onReviewAttempt(attempt.id)}
+            >
               {attempt.correct_count}/{attempt.question_count}
             </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (
+                  window.confirm(
+                    "Are you sure you want to delete this exam attempt?"
+                  )
+                ) {
+                  onDeleteAttempt(attempt.id);
+                }
+              }}
+              style={{
+                padding: "6px 12px",
+                backgroundColor: "#dc3545",
+                color: "white",
+                border: "none",
+                borderRadius: 4,
+                cursor: "pointer",
+                fontSize: "13px",
+              }}
+              title="Delete attempt"
+            >
+              Delete
+            </button>
           </div>
         ))}
       </div>

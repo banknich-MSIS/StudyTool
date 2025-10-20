@@ -8,6 +8,7 @@ import {
   fetchRecentAttempts,
   deleteUpload,
   downloadCSV,
+  deleteAttempt,
 } from "../api/client";
 import type { UploadSummary, AttemptSummary } from "../types";
 
@@ -70,13 +71,21 @@ export default function Dashboard() {
     navigate(`/history/${attemptId}`);
   };
 
+  const handleDeleteAttempt = async (attemptId: number) => {
+    try {
+      await deleteAttempt(attemptId);
+      setAttempts(attempts.filter((a) => a.id !== attemptId));
+    } catch (e: any) {
+      setError(e?.message || "Failed to delete attempt");
+    }
+  };
+
   const handleUploadNew = () => {
     navigate("/upload");
   };
 
   const handleViewAllHistory = () => {
-    // TODO: Navigate to full history page
-    console.log("View all history");
+    navigate("/history");
   };
 
   const handleShowTutorial = () => {
@@ -168,6 +177,7 @@ export default function Dashboard() {
           <ExamHistory
             attempts={attempts}
             onReviewAttempt={handleReviewAttempt}
+            onDeleteAttempt={handleDeleteAttempt}
           />
         ) : (
           <div

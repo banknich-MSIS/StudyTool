@@ -8,6 +8,7 @@ import SettingsPage from "./pages/SettingsPage";
 import ExamPage from "./pages/ExamPage";
 import ReviewPage from "./pages/ReviewPage";
 import AttemptReviewPage from "./pages/AttemptReviewPage";
+import HistoryPage from "./pages/HistoryPage";
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
       { path: "settings", element: <SettingsPage /> },
       { path: "exam/:examId", element: <ExamPage /> },
       { path: "review/:examId", element: <ReviewPage /> },
+      { path: "history", element: <HistoryPage /> },
       { path: "history/:attemptId", element: <AttemptReviewPage /> },
     ],
   },

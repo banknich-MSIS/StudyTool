@@ -3,9 +3,8 @@ uvicorn==0.30.3
 sqlalchemy==2.0.32
 aiosqlite==0.20.0
 pydantic==2.9.1
-pandas==2.2.2
+pandas>=2.2.3
 python-multipart==0.0.9
-spacy==3.7.5
 keybert==0.8.5
 yake==0.4.8
 

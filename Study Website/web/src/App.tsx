@@ -44,6 +44,7 @@ export default function App() {
         <nav style={{ display: "flex", gap: 12 }}>
           <Link to="/">Dashboard</Link>
           <Link to="/upload">Upload CSV</Link>
+          <Link to="/history">History</Link>
           <button
             onClick={() => setShowTutorial(true)}
             style={{

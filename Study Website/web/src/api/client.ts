@@ -94,3 +94,7 @@ export async function downloadCSV(uploadId: number): Promise<Blob> {
   });
   return data;
 }
+
+export async function deleteAttempt(attemptId: number): Promise<void> {
+  await api.delete(`/attempts/${attemptId}`);
+}
