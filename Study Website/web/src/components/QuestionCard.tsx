@@ -1,6 +1,14 @@
 import { useMemo } from "react";
-import type { QuestionDTO } from "../types";
+import type { QuestionDTO, QuestionType } from "../types";
 import { useExamStore } from "../store/examStore";
+
+const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
+  mcq: "Multiple Choice",
+  multi: "Multiple Select",
+  short: "Short Answer",
+  truefalse: "True/False",
+  cloze: "Fill in the Blank",
+};
 
 interface Props {
   question: QuestionDTO;
@@ -38,7 +46,9 @@ export default function QuestionCard({ question }: Props) {
           fontStyle: "italic",
         }}
       >
-        Question Type: {questionType.toUpperCase()} | Options: {options.length}
+        Type:{" "}
+        {QUESTION_TYPE_LABELS[questionType as QuestionType] || questionType} |
+        Options: {options.length}
       </div>
       <div
         style={{
@@ -147,6 +157,7 @@ export default function QuestionCard({ question }: Props) {
               border: "1px solid #ddd",
               borderRadius: "4px",
               fontSize: "15px",
+              boxSizing: "border-box",
             }}
             placeholder="Type your answer"
             value={typeof value === "string" ? value : ""}

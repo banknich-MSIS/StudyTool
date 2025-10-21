@@ -65,6 +65,26 @@ def get_exam(exam_id: int, db: Session = Depends(get_db)) -> ExamOut:
     return ExamOut(examId=exam.id, questions=dto)
 
 
+@router.get("/exams/{exam_id}/preview")
+def preview_exam_answers(exam_id: int, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Get exam questions with correct answers for preview (does not create attempt)"""
+    exam = db.get(ExamModel, exam_id)
+    if exam is None:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    questions = (
+        db.query(QuestionModel).filter(QuestionModel.id.in_(exam.question_ids)).all()
+    )
+    
+    preview_data = []
+    for q in questions:
+        preview_data.append({
+            "questionId": q.id,
+            "correctAnswer": (q.answer or {}).get("value")
+        })
+    
+    return {"answers": preview_data}
+
+
 @router.post("/exams/{exam_id}/grade", response_model=GradeReport)
 def grade_exam(
     exam_id: int, answers: List[UserAnswer], db: Session = Depends(get_db)

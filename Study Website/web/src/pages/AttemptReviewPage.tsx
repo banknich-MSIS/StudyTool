@@ -231,7 +231,7 @@ export default function AttemptReviewPage() {
                     borderRadius: 4,
                   }}
                 >
-                  {questionReview.is_correct ? "✓ Correct" : "✗ Incorrect"}
+                  {questionReview.is_correct ? "Correct" : "Incorrect"}
                 </div>
               </div>
 

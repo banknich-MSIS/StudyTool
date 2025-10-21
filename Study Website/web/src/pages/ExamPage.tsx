@@ -4,7 +4,7 @@ import { useExamStore } from "../store/examStore";
 import QuestionCard from "../components/QuestionCard";
 import QuestionNavigator from "../components/QuestionNavigator";
 import BookmarkButton from "../components/BookmarkButton";
-import { gradeExam } from "../api/client";
+import { gradeExam, previewExamAnswers } from "../api/client";
 
 export default function ExamPage() {
   const { examId } = useParams<{ examId: string }>();
@@ -13,6 +13,8 @@ export default function ExamPage() {
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [showUnansweredAlert, setShowUnansweredAlert] = useState(false);
   const [unansweredCount, setUnansweredCount] = useState(0);
+  const [showExamSummary, setShowExamSummary] = useState(false);
+  const [correctAnswers, setCorrectAnswers] = useState<Record<number, any>>({});
 
   useEffect(() => {
     if (!storeExamId) return;
@@ -78,6 +80,22 @@ export default function ExamPage() {
     setShowSubmitConfirm(false);
   };
 
+  const handleShowSummary = async () => {
+    if (!storeExamId) return;
+    try {
+      const preview = await previewExamAnswers(storeExamId);
+      const answersMap: Record<number, any> = {};
+      preview.answers.forEach((item) => {
+        answersMap[item.questionId] = item.correctAnswer;
+      });
+      setCorrectAnswers(answersMap);
+      setShowExamSummary(true);
+    } catch (error) {
+      console.error("Failed to load preview:", error);
+      alert("Failed to load exam preview. Please try again.");
+    }
+  };
+
   return (
     <div
       style={{
@@ -140,6 +158,21 @@ export default function ExamPage() {
           }}
         >
           <button
+            onClick={handleShowSummary}
+            style={{
+              padding: "12px 24px",
+              backgroundColor: "#6c757d",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "16px",
+              cursor: "pointer",
+              marginRight: "12px",
+            }}
+          >
+            Exam Summary
+          </button>
+          <button
             onClick={handleSubmitClick}
             style={{
               padding: "12px 24px",
@@ -155,6 +188,243 @@ export default function ExamPage() {
           </button>
         </div>
       </main>
+
+      {/* Exam Summary Modal */}
+      {showExamSummary && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              maxWidth: "900px",
+              width: "100%",
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div
+              style={{
+                padding: "20px",
+                borderBottom: "2px solid #dee2e6",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h2 style={{ margin: 0 }}>Exam Summary (Preview Only)</h2>
+              <button
+                onClick={() => setShowExamSummary(false)}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                Close
+              </button>
+            </div>
+            <div style={{ padding: "20px", overflow: "auto", flex: 1 }}>
+              <div
+                style={{
+                  backgroundColor: "#fff3cd",
+                  border: "1px solid #ffc107",
+                  borderRadius: "6px",
+                  padding: "12px",
+                  marginBottom: "20px",
+                  fontSize: "14px",
+                  color: "#856404",
+                }}
+              >
+                <strong>Note:</strong> This is a preview only. You can see
+                correct answers for all questions, including ones you haven't
+                answered yet. This does NOT count as a completed exam. Continue
+                answering questions and click "Submit Exam" when ready.
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "20px",
+                }}
+              >
+                {questions.map((question, index) => {
+                  const userAnswer = answers[question.id];
+                  const hasAnswer =
+                    userAnswer !== undefined &&
+                    userAnswer !== null &&
+                    userAnswer !== "";
+                  const questionType =
+                    question.type || (question as any).qtype || "unknown";
+                  const options = question.options || [];
+
+                  return (
+                    <div
+                      key={question.id}
+                      style={{
+                        border: "1px solid #ddd",
+                        borderRadius: "8px",
+                        padding: "16px",
+                        backgroundColor: hasAnswer ? "#f8f9fa" : "#fff",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: "bold",
+                          marginBottom: "8px",
+                          fontSize: "16px",
+                        }}
+                      >
+                        Question {index + 1} {!hasAnswer && "(Not Answered)"}
+                      </div>
+                      <div style={{ marginBottom: "12px", lineHeight: "1.5" }}>
+                        {question.stem}
+                      </div>
+
+                      {/* MCQ/Multi Options */}
+                      {(questionType === "mcq" || questionType === "multi") &&
+                        options.length > 0 && (
+                          <div style={{ display: "grid", gap: "8px" }}>
+                            {options.map((option, optIdx) => {
+                              const isUserAnswer =
+                                String(userAnswer) === String(option) ||
+                                (Array.isArray(userAnswer) &&
+                                  userAnswer.includes(option));
+
+                              return (
+                                <div
+                                  key={optIdx}
+                                  style={{
+                                    padding: "8px 12px",
+                                    borderRadius: "4px",
+                                    border: "2px solid #e9ecef",
+                                    backgroundColor: isUserAnswer
+                                      ? "#e3f2fd"
+                                      : "#fff",
+                                  }}
+                                >
+                                  {option}
+                                  {isUserAnswer && (
+                                    <span
+                                      style={{
+                                        marginLeft: "8px",
+                                        fontWeight: "bold",
+                                        color: "#1976d2",
+                                      }}
+                                    >
+                                      (Your Answer)
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                            <div
+                              style={{
+                                marginTop: "8px",
+                                padding: "8px 12px",
+                                backgroundColor: "#d4edda",
+                                border: "2px solid #28a745",
+                                borderRadius: "4px",
+                                fontWeight: "bold",
+                                color: "#155724",
+                              }}
+                            >
+                              Correct Answer:{" "}
+                              {String(
+                                correctAnswers[question.id] || "Loading..."
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                      {/* True/False */}
+                      {questionType === "truefalse" && (
+                        <div>
+                          <div style={{ marginBottom: "8px" }}>
+                            Your answer:{" "}
+                            {userAnswer ? String(userAnswer) : "Not answered"}
+                          </div>
+                          <div
+                            style={{
+                              padding: "8px 12px",
+                              backgroundColor: "#d4edda",
+                              border: "2px solid #28a745",
+                              borderRadius: "4px",
+                              fontWeight: "bold",
+                              color: "#155724",
+                            }}
+                          >
+                            Correct Answer:{" "}
+                            {String(
+                              correctAnswers[question.id] || "Loading..."
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Short/Cloze */}
+                      {(questionType === "short" ||
+                        questionType === "cloze") && (
+                        <div>
+                          {userAnswer !== undefined &&
+                          userAnswer !== null &&
+                          userAnswer !== "" ? (
+                            <div style={{ marginBottom: "8px" }}>
+                              Your answer: <strong>{String(userAnswer)}</strong>
+                            </div>
+                          ) : (
+                            <div
+                              style={{
+                                marginBottom: "8px",
+                                color: "#6c757d",
+                                fontStyle: "italic",
+                              }}
+                            >
+                              Not answered yet
+                            </div>
+                          )}
+                          <div
+                            style={{
+                              padding: "8px 12px",
+                              backgroundColor: "#d4edda",
+                              border: "2px solid #28a745",
+                              borderRadius: "4px",
+                              fontWeight: "bold",
+                              color: "#155724",
+                            }}
+                          >
+                            Correct Answer:{" "}
+                            {String(
+                              correctAnswers[question.id] || "Loading..."
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Unanswered Questions Alert Modal */}
       {showUnansweredAlert && (

@@ -9,7 +9,7 @@ from .routes import dashboard as dashboard_routes
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Local Exam Builder API", version="0.1.0")
+    app = FastAPI(title="Hoosier Prep Portal API", version="0.1.0")
 
     # CORS for Vite dev server
     origins = [

@@ -40,7 +40,7 @@ export default function App() {
           marginBottom: 16,
         }}
       >
-        <h1 style={{ margin: 0, fontSize: 20 }}>Local Exam Builder</h1>
+        <h1 style={{ margin: 0, fontSize: 20 }}>Hoosier Prep Portal</h1>
         <nav style={{ display: "flex", gap: 12 }}>
           <Link to="/">Dashboard</Link>
           <Link to="/upload">Upload CSV</Link>

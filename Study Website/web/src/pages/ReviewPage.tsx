@@ -146,7 +146,7 @@ export default function ReviewPage() {
             onClick={() => nav("/settings")}
             style={{
               padding: "10px 20px",
-              backgroundColor: "#007bff",
+              backgroundColor: "#dc3545",
               color: "white",
               border: "none",
               borderRadius: 6,
@@ -216,7 +216,7 @@ export default function ReviewPage() {
                     color: "white",
                   }}
                 >
-                  {question.isCorrect ? "✓ Correct" : "✗ Incorrect"}
+                  {question.isCorrect ? "Correct" : "Incorrect"}
                 </div>
               </div>
 
@@ -277,7 +277,7 @@ export default function ReviewPage() {
                                 color: "#28a745",
                               }}
                             >
-                              ✓ Correct Answer
+                              Correct Answer
                             </span>
                           )}
                           {isUserAnswer && !isCorrectAnswer && (

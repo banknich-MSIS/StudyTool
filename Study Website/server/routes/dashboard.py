@@ -19,6 +19,19 @@ from ..schemas import (
 router = APIRouter(tags=["dashboard"])
 
 
+@router.get("/debug/routes")
+def debug_routes():
+    """Debug endpoint to see all registered routes"""
+    routes_info = []
+    for route in router.routes:
+        routes_info.append({
+            "path": route.path,
+            "methods": list(route.methods) if hasattr(route, 'methods') else [],
+            "name": route.name
+        })
+    return {"routes": routes_info}
+
+
 @router.get("/uploads", response_model=List[UploadSummary])
 def get_all_uploads(db: Session = Depends(get_db)) -> List[UploadSummary]:
     """Return all uploaded CSVs with question counts and metadata"""
@@ -98,7 +111,7 @@ def get_recent_attempts(limit: int = 10, db: Session = Depends(get_db)) -> List[
     return result
 
 
-@router.delete("/attempts/{attempt_id}")
+@router.delete("/attempts/delete/{attempt_id}")
 def delete_attempt(attempt_id: int, db: Session = Depends(get_db)) -> Dict[str, Any]:
     """Delete an exam attempt and its answers"""
     attempt = db.get(Attempt, attempt_id)

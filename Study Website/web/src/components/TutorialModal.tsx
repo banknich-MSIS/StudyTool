@@ -11,7 +11,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
 
   const steps = [
     {
-      title: "Welcome to Study Tool!",
+      title: "Welcome to Hoosier Prep Portal!",
       content: (
         <div>
           <p>
@@ -76,7 +76,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
       title: "Step 3: Upload Here",
       content: (
         <div>
-          <p>Upload the CSV file to this tool.</p>
+          <p>Upload the CSV file to Hoosier Prep Portal.</p>
           <p>
             We'll automatically configure your exam settings based on Gemini's
             recommendations.

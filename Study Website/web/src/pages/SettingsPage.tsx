@@ -4,6 +4,14 @@ import { createExam } from "../api/client";
 import type { QuestionType, UploadMetadata } from "../types";
 import { useExamStore } from "../store/examStore";
 
+const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
+  mcq: "Multiple Choice",
+  multi: "Multiple Select",
+  short: "Short Answer",
+  truefalse: "True/False",
+  cloze: "Fill in the Blank",
+};
+
 export default function SettingsPage() {
   const nav = useNavigate();
   const loc = useLocation() as any;
@@ -80,7 +88,7 @@ export default function SettingsPage() {
           }}
         >
           <h3 style={{ margin: "0 0 12px 0", color: "#2d5a2d" }}>
-            📋 Recommended Settings (from your CSV)
+            Recommended Settings (from your CSV)
           </h3>
           {metadata.themes && (
             <div style={{ marginBottom: 8 }}>
@@ -158,6 +166,20 @@ export default function SettingsPage() {
 
       <section>
         <h3>Question types</h3>
+        <div
+          style={{
+            padding: "12px",
+            backgroundColor: "#fff3cd",
+            border: "1px solid #ffc107",
+            borderRadius: "6px",
+            marginBottom: "12px",
+            fontSize: "14px",
+            color: "#856404",
+          }}
+        >
+          <strong>Important:</strong> Ensure the question types you select match
+          what you instructed Gemini to create to avoid errors.
+        </div>
         {(
           ["mcq", "multi", "short", "truefalse", "cloze"] as QuestionType[]
         ).map((t) => (
@@ -167,7 +189,7 @@ export default function SettingsPage() {
               checked={types.includes(t)}
               onChange={() => toggleType(t)}
             />{" "}
-            {t}
+            {QUESTION_TYPE_LABELS[t]}
           </label>
         ))}
       </section>
@@ -186,9 +208,18 @@ export default function SettingsPage() {
       <button
         onClick={onStart}
         disabled={!uploadId || loading}
-        style={{ padding: "8px 12px" }}
+        style={{
+          padding: "12px 24px",
+          backgroundColor: uploadId && !loading ? "#dc3545" : "#6c757d",
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+          cursor: uploadId && !loading ? "pointer" : "not-allowed",
+          fontSize: "16px",
+          fontWeight: "bold",
+        }}
       >
-        {loading ? "Starting…" : "Start Exam"}
+        {loading ? "Starting..." : "Start Exam"}
       </button>
     </div>
   );

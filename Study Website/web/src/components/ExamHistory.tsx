@@ -74,8 +74,8 @@ export default function ExamHistory({
   };
 
   const getSortIcon = (column: "date" | "score" | "source") => {
-    if (sortBy !== column) return "↕️";
-    return sortOrder === "asc" ? "↑" : "↓";
+    if (sortBy !== column) return "";
+    return sortOrder === "asc" ? " ▲" : " ▼";
   };
 
   // Calculate summary stats
@@ -269,6 +269,7 @@ export default function ExamHistory({
                 textAlign: "center",
                 display: "inline-block",
                 cursor: "pointer",
+                width: "fit-content",
               }}
               onClick={() => onReviewAttempt(attempt.id)}
             >

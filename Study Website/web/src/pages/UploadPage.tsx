@@ -38,7 +38,7 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "studytool-template.csv";
+    a.download = "hoosier-prep-template.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -160,7 +160,7 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
           }}
         >
           <h3 style={{ margin: "0 0 12px 0", color: "#28a745" }}>
-            ✓ Upload Successful!
+            Upload Successful!
           </h3>
           <div style={{ marginBottom: 12 }}>
             <strong>Upload ID:</strong> {uploadId}

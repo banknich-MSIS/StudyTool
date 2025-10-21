@@ -96,5 +96,12 @@ export async function downloadCSV(uploadId: number): Promise<Blob> {
 }
 
 export async function deleteAttempt(attemptId: number): Promise<void> {
-  await api.delete(`/attempts/${attemptId}`);
+  await api.delete(`/attempts/delete/${attemptId}`);
+}
+
+export async function previewExamAnswers(
+  examId: number
+): Promise<{ answers: Array<{ questionId: number; correctAnswer: any }> }> {
+  const { data } = await api.get(`/exams/${examId}/preview`);
+  return data;
 }
