@@ -112,6 +112,18 @@ export default function CSVLibrary({
     ? uploads.filter((u) => u.class_tags?.includes(selectedClassFilter))
     : uploads;
 
+  // Debug logging
+  useEffect(() => {
+    console.log("=== CSV LIBRARY ===");
+    console.log("All uploads:", uploads);
+    if (uploads.length > 0) {
+      console.log(
+        "First upload question_type_counts:",
+        uploads[0]?.question_type_counts
+      );
+    }
+  }, [uploads]);
+
   if (uploads.length === 0) {
     return (
       <div

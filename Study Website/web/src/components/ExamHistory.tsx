@@ -300,6 +300,7 @@ export default function ExamHistory({
         {sortedAttempts.map((attempt) => (
           <div
             key={attempt.id}
+            onClick={() => onReviewAttempt(attempt.id)}
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr 1fr 1fr 80px",
@@ -308,6 +309,7 @@ export default function ExamHistory({
               backgroundColor: theme.cardBg,
               transition: "background-color 0.2s ease",
               alignItems: "center",
+              cursor: "pointer",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = theme.navHover;
@@ -316,10 +318,7 @@ export default function ExamHistory({
               e.currentTarget.style.backgroundColor = theme.cardBg;
             }}
           >
-            <div
-              style={{ fontSize: 14, cursor: "pointer", color: theme.text }}
-              onClick={() => onReviewAttempt(attempt.id)}
-            >
+            <div style={{ fontSize: 14, color: theme.text }}>
               {formatDate(attempt.finished_at)}
             </div>
             <div
@@ -332,10 +331,8 @@ export default function ExamHistory({
                 borderRadius: 4,
                 textAlign: "center",
                 display: "inline-block",
-                cursor: "pointer",
                 width: "fit-content",
               }}
-              onClick={() => onReviewAttempt(attempt.id)}
             >
               {Math.round(attempt.score_pct)}%
             </div>
@@ -343,9 +340,7 @@ export default function ExamHistory({
               style={{
                 fontSize: 14,
                 color: theme.textSecondary,
-                cursor: "pointer",
               }}
-              onClick={() => onReviewAttempt(attempt.id)}
             >
               {attempt.upload_filename}
             </div>
@@ -353,9 +348,7 @@ export default function ExamHistory({
               style={{
                 fontSize: 14,
                 color: theme.textSecondary,
-                cursor: "pointer",
               }}
-              onClick={() => onReviewAttempt(attempt.id)}
             >
               {attempt.correct_count}/{attempt.question_count}
             </div>

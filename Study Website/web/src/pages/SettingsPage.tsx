@@ -39,6 +39,12 @@ export default function SettingsPage() {
   useEffect(() => {
     if (uploadDataFromState) {
       // Use passed data immediately (preferred)
+      console.log("=== SETTINGS PAGE ===");
+      console.log("Received uploadData from state:", uploadDataFromState);
+      console.log(
+        "Question type counts:",
+        uploadDataFromState.question_type_counts
+      );
       setUploadData(uploadDataFromState);
       setLoadingUpload(false);
       const initialCount = Math.min(10, uploadDataFromState.question_count);

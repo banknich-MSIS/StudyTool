@@ -39,7 +39,14 @@ export default function ExamPage() {
       response: answers[it.id],
     }));
     const graded = await gradeExam(storeExamId, payload);
-    nav(`/review/${storeExamId}`, { state: graded });
+
+    // Navigate to attempt review page with the attemptId from graded response
+    if (graded.attemptId) {
+      nav(`/history/${graded.attemptId}`);
+    } else {
+      console.error("No attemptId returned from grading");
+      alert("Error: Could not load exam results");
+    }
   };
 
   const handleSubmitClick = () => {

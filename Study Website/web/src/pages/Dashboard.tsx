@@ -35,6 +35,13 @@ export default function Dashboard() {
         fetchAllUploads(),
         fetchRecentAttempts(10),
       ]);
+      console.log("=== UPLOADS DATA ===");
+      console.log("Uploads:", uploadsData);
+      console.log("First upload:", uploadsData[0]);
+      console.log(
+        "Question type counts:",
+        uploadsData[0]?.question_type_counts
+      );
       setUploads(uploadsData);
       setAttempts(attemptsData);
     } catch (e: any) {
@@ -172,42 +179,9 @@ export default function Dashboard() {
             <h3 style={{ margin: "0 0 8px 0", color: theme.textSecondary }}>
               No exams taken yet
             </h3>
-            <p style={{ margin: "0 0 16px 0", color: theme.textSecondary }}>
+            <p style={{ margin: "0", color: theme.textSecondary }}>
               Upload a CSV and take your first exam to see your history here.
             </p>
-            <button
-              onClick={() => {
-                if (uploads.length > 0) {
-                  // User has CSVs, go to settings with first CSV
-                  navigate("/settings", {
-                    state: {
-                      uploadIds: [uploads[0].id],
-                      uploadData: uploads[0],
-                    },
-                  });
-                } else {
-                  // No CSVs, go to upload page
-                  navigate("/upload");
-                }
-              }}
-              onMouseEnter={() => setHoveredButton("uploadFirst")}
-              onMouseLeave={() => setHoveredButton(null)}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: 6,
-                cursor: "pointer",
-                filter:
-                  hoveredButton === "uploadFirst"
-                    ? "brightness(0.85)"
-                    : "brightness(1)",
-                transition: "all 0.2s ease",
-              }}
-            >
-              {uploads.length > 0 ? "Take Exam" : "Upload Your First CSV"}
-            </button>
           </div>
         )}
       </section>

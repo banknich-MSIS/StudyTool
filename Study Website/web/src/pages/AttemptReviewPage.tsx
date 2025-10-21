@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { fetchAttemptDetail } from "../api/client";
 import type { AttemptDetail } from "../types";
 
 export default function AttemptReviewPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const navigate = useNavigate();
+  const { darkMode, theme } = useOutletContext<{
+    darkMode: boolean;
+    theme: any;
+  }>();
   const [attempt, setAttempt] = useState<AttemptDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,9 +49,22 @@ export default function AttemptReviewPage() {
   };
 
   const getScoreBackground = (score: number) => {
+    if (darkMode) {
+      if (score >= 80) return "#1a3d1a";
+      if (score >= 60) return "#3d3d1a";
+      return "#3d1a1a";
+    }
     if (score >= 80) return "#d4edda";
     if (score >= 60) return "#fff3cd";
     return "#f8d7da";
+  };
+
+  const handleRetakeExam = () => {
+    if (attempt) {
+      // Navigate back to settings to create a new exam from the same upload
+      // We need to get the upload ID from the exam
+      navigate("/");
+    }
   };
 
   if (loading) {
@@ -81,14 +98,16 @@ export default function AttemptReviewPage() {
           justifyContent: "space-between",
           alignItems: "center",
           padding: 16,
-          backgroundColor: "#f8f9fa",
+          backgroundColor: theme.navBg,
           borderRadius: 8,
-          border: "1px solid #dee2e6",
+          border: `1px solid ${theme.border}`,
         }}
       >
         <div>
-          <h2 style={{ margin: "0 0 8px 0", fontSize: 24 }}>Exam Review</h2>
-          <div style={{ fontSize: 14, color: "#6c757d" }}>
+          <h2 style={{ margin: "0 0 8px 0", fontSize: 24, color: theme.text }}>
+            Exam Review
+          </h2>
+          <div style={{ fontSize: 14, color: theme.textSecondary }}>
             Completed: {formatDate(attempt.finished_at)}
           </div>
         </div>
@@ -193,11 +212,15 @@ export default function AttemptReviewPage() {
               style={{
                 border: questionReview.is_correct
                   ? "2px solid #28a745"
-                  : "2px solid #dc3545",
+                  : `2px solid ${darkMode ? "#4d2a2a" : "#dc3545"}`,
                 borderRadius: 8,
                 padding: 16,
                 backgroundColor: questionReview.is_correct
-                  ? "#f8fff8"
+                  ? darkMode
+                    ? "#1a3d1a"
+                    : "#f8fff8"
+                  : darkMode
+                  ? "#3d1a1a"
                   : "#fff8f8",
               }}
             >
@@ -214,7 +237,7 @@ export default function AttemptReviewPage() {
                   style={{
                     fontSize: 14,
                     fontWeight: "bold",
-                    color: "#495057",
+                    color: theme.text,
                   }}
                 >
                   Question {index + 1}
@@ -241,6 +264,7 @@ export default function AttemptReviewPage() {
                   fontSize: 16,
                   marginBottom: 12,
                   lineHeight: 1.5,
+                  color: theme.text,
                 }}
               >
                 {questionReview.question.stem}
@@ -255,9 +279,10 @@ export default function AttemptReviewPage() {
                       style={{
                         padding: "8px 12px",
                         marginBottom: 4,
-                        backgroundColor: "#f8f9fa",
+                        backgroundColor: theme.navBg,
                         borderRadius: 4,
                         fontSize: 14,
+                        color: theme.text,
                       }}
                     >
                       {String.fromCharCode(65 + optIndex)}. {option}
@@ -280,7 +305,7 @@ export default function AttemptReviewPage() {
                     style={{
                       fontSize: 12,
                       fontWeight: "bold",
-                      color: "#6c757d",
+                      color: theme.textSecondary,
                       marginBottom: 4,
                     }}
                   >
@@ -289,10 +314,11 @@ export default function AttemptReviewPage() {
                   <div
                     style={{
                       padding: "8px 12px",
-                      backgroundColor: "#e9ecef",
+                      backgroundColor: darkMode ? "#3d3d3d" : "#e9ecef",
                       borderRadius: 4,
                       fontSize: 14,
                       minHeight: 20,
+                      color: theme.text,
                     }}
                   >
                     {questionReview.user_answer !== null &&
@@ -306,7 +332,7 @@ export default function AttemptReviewPage() {
                     style={{
                       fontSize: 12,
                       fontWeight: "bold",
-                      color: "#6c757d",
+                      color: theme.textSecondary,
                       marginBottom: 4,
                     }}
                   >
@@ -315,10 +341,11 @@ export default function AttemptReviewPage() {
                   <div
                     style={{
                       padding: "8px 12px",
-                      backgroundColor: "#d4edda",
+                      backgroundColor: darkMode ? "#1a3d1a" : "#d4edda",
                       borderRadius: 4,
                       fontSize: 14,
                       minHeight: 20,
+                      color: darkMode ? "#66bb6a" : "#155724",
                     }}
                   >
                     {questionReview.correct_answer !== null &&
@@ -340,16 +367,16 @@ export default function AttemptReviewPage() {
           gap: 12,
           justifyContent: "center",
           padding: 16,
-          backgroundColor: "#f8f9fa",
+          backgroundColor: theme.navBg,
           borderRadius: 8,
-          border: "1px solid #dee2e6",
+          border: `1px solid ${theme.border}`,
         }}
       >
         <button
           onClick={() => navigate("/")}
           style={{
             padding: "12px 24px",
-            backgroundColor: "#007bff",
+            backgroundColor: "#6c757d",
             color: "white",
             border: "none",
             borderRadius: 6,
@@ -360,10 +387,7 @@ export default function AttemptReviewPage() {
           Back to Dashboard
         </button>
         <button
-          onClick={() => {
-            // TODO: Implement retake functionality
-            alert("Retake functionality coming soon!");
-          }}
+          onClick={handleRetakeExam}
           style={{
             padding: "12px 24px",
             backgroundColor: "#28a745",
