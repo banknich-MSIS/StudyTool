@@ -55,6 +55,9 @@ def get_all_uploads(db: Session = Depends(get_db)) -> List[UploadSummary]:
             except (json.JSONDecodeError, KeyError):
                 pass
         
+        # Get class tags
+        class_tags = [cls.name for cls in upload.classes] if upload.classes else []
+        
         result.append(
             UploadSummary(
                 id=upload.id,
@@ -64,6 +67,7 @@ def get_all_uploads(db: Session = Depends(get_db)) -> List[UploadSummary]:
                 themes=themes,
                 exam_count=len(upload.exams),
                 file_type=upload.file_type,
+                class_tags=class_tags,
             )
         )
     

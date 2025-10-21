@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import type { UploadSummary } from "../types";
+import ClassTagSelector from "./ClassTagSelector";
 
 interface CSVLibraryProps {
   uploads: UploadSummary[];
   onCreateExam: (uploadIds: number[]) => void;
   onDelete: (uploadId: number) => void;
   onDownload: (uploadId: number) => void;
+  onUpdate: () => void;
+  darkMode: boolean;
+  theme: any;
 }
 
 export default function CSVLibrary({
@@ -13,10 +17,26 @@ export default function CSVLibrary({
   onCreateExam,
   onDelete,
   onDownload,
+  onUpdate,
+  darkMode,
+  theme,
 }: CSVLibraryProps) {
   const [selectedUploads, setSelectedUploads] = useState<Set<number>>(
     new Set()
   );
+
+  // Generate a consistent color from a string
+  const getTagColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = hash % 360;
+    return {
+      bg: `hsl(${hue}, 70%, 90%)`,
+      text: `hsl(${hue}, 70%, 30%)`,
+    };
+  };
 
   const toggleSelection = (uploadId: number) => {
     const newSelection = new Set(selectedUploads);
@@ -49,15 +69,15 @@ export default function CSVLibrary({
         style={{
           padding: 48,
           textAlign: "center",
-          backgroundColor: "#f8f9fa",
+          backgroundColor: theme.navBg,
           borderRadius: 8,
-          border: "2px dashed #dee2e6",
+          border: `2px dashed ${theme.border}`,
         }}
       >
-        <h3 style={{ margin: "0 0 8px 0", color: "#6c757d" }}>
+        <h3 style={{ margin: "0 0 8px 0", color: theme.textSecondary }}>
           No CSVs uploaded yet
         </h3>
-        <p style={{ margin: "0 0 16px 0", color: "#6c757d" }}>
+        <p style={{ margin: "0 0 16px 0", color: theme.textSecondary }}>
           Upload your first CSV file to start creating practice exams.
         </p>
         <button
@@ -89,10 +109,10 @@ export default function CSVLibrary({
             alignItems: "center",
             marginBottom: 16,
             padding: 12,
-            backgroundColor: selectedUploads.size > 0 ? "#e3f2fd" : "#f8f9fa",
+            backgroundColor: selectedUploads.size > 0 ? "#e3f2fd" : theme.navBg,
             borderRadius: 6,
             border: `1px solid ${
-              selectedUploads.size > 0 ? "#2196f3" : "#dee2e6"
+              selectedUploads.size > 0 ? "#2196f3" : theme.border
             }`,
           }}
         >
@@ -140,17 +160,54 @@ export default function CSVLibrary({
             style={{
               border: selectedUploads.has(upload.id)
                 ? "2px solid #2196f3"
-                : "1px solid #dee2e6",
+                : `1px solid ${theme.border}`,
               borderRadius: 8,
               padding: 16,
               backgroundColor: selectedUploads.has(upload.id)
                 ? "#f3f9ff"
-                : "white",
+                : theme.cardBg,
               cursor: "pointer",
               transition: "all 0.2s ease",
+              position: "relative",
             }}
             onClick={() => toggleSelection(upload.id)}
           >
+            {/* Class Tags in Top Right */}
+            {upload.class_tags && upload.class_tags.length > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 4,
+                  maxWidth: "60%",
+                  justifyContent: "flex-end",
+                }}
+              >
+                {upload.class_tags.map((tag, index) => {
+                  const colors = getTagColor(tag);
+                  return (
+                    <span
+                      key={index}
+                      style={{
+                        padding: "3px 8px",
+                        backgroundColor: colors.bg,
+                        color: colors.text,
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: "bold",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Selection Checkbox */}
             <div style={{ marginBottom: 12 }}>
               <input
@@ -159,13 +216,21 @@ export default function CSVLibrary({
                 onChange={() => toggleSelection(upload.id)}
                 style={{ marginRight: 8 }}
               />
-              <span style={{ fontWeight: "bold", fontSize: 16 }}>
+              <span
+                style={{ fontWeight: "bold", fontSize: 16, color: theme.text }}
+              >
                 {upload.filename}
               </span>
             </div>
 
             {/* Upload Info */}
-            <div style={{ marginBottom: 12, fontSize: 14, color: "#6c757d" }}>
+            <div
+              style={{
+                marginBottom: 12,
+                fontSize: 14,
+                color: theme.textSecondary,
+              }}
+            >
               <div>Uploaded: {formatDate(upload.created_at)}</div>
               <div>Questions: {upload.question_count}</div>
               <div>Exams Created: {upload.exam_count}</div>
@@ -175,30 +240,29 @@ export default function CSVLibrary({
             {upload.themes && upload.themes.length > 0 && (
               <div style={{ marginBottom: 12 }}>
                 <div
-                  style={{ fontSize: 12, color: "#6c757d", marginBottom: 4 }}
+                  style={{
+                    fontSize: 12,
+                    color: theme.textSecondary,
+                    marginBottom: 4,
+                  }}
                 >
                   Themes:
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                  {upload.themes.slice(0, 3).map((theme, index) => (
+                  {upload.themes.slice(0, 5).map((themeItem, index) => (
                     <span
                       key={index}
                       style={{
                         padding: "2px 6px",
-                        backgroundColor: "#e9ecef",
+                        backgroundColor: darkMode ? "#3d3d3d" : "#e9ecef",
                         borderRadius: 4,
                         fontSize: 11,
-                        color: "#495057",
+                        color: darkMode ? "#a0a0a0" : "#495057",
                       }}
                     >
-                      {theme}
+                      {themeItem}
                     </span>
                   ))}
-                  {upload.themes.length > 3 && (
-                    <span style={{ fontSize: 11, color: "#6c757d" }}>
-                      +{upload.themes.length - 3} more
-                    </span>
-                  )}
                 </div>
               </div>
             )}
@@ -207,70 +271,80 @@ export default function CSVLibrary({
             <div
               style={{
                 display: "flex",
+                flexDirection: "column",
                 gap: 8,
                 marginTop: 12,
                 paddingTop: 12,
                 borderTop: "1px solid #f1f3f4",
               }}
             >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCreateExam([upload.id]);
-                }}
-                style={{
-                  flex: 1,
-                  padding: "6px 12px",
-                  backgroundColor: "#007bff",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontSize: 12,
-                }}
-              >
-                Create Exam
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDownload(upload.id);
-                }}
-                style={{
-                  padding: "6px 12px",
-                  backgroundColor: "#6c757d",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontSize: 12,
-                }}
-              >
-                Download
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (
-                    confirm(
-                      `Are you sure you want to delete "${upload.filename}"? This will also delete all associated exams and attempts.`
-                    )
-                  ) {
-                    onDelete(upload.id);
-                  }
-                }}
-                style={{
-                  padding: "6px 12px",
-                  backgroundColor: "#dc3545",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontSize: 12,
-                }}
-              >
-                Delete
-              </button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCreateExam([upload.id]);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: "6px 12px",
+                    backgroundColor: "#007bff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    fontSize: 12,
+                  }}
+                >
+                  Create Exam
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownload(upload.id);
+                  }}
+                  style={{
+                    padding: "6px 12px",
+                    backgroundColor: "#6c757d",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    fontSize: 12,
+                  }}
+                >
+                  Download
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (
+                      confirm(
+                        `Are you sure you want to delete "${upload.filename}"? This will also delete all associated exams and attempts.`
+                      )
+                    ) {
+                      onDelete(upload.id);
+                    }
+                  }}
+                  style={{
+                    padding: "6px 12px",
+                    backgroundColor: "#dc3545",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    fontSize: 12,
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <ClassTagSelector
+                  uploadId={upload.id}
+                  currentTags={upload.class_tags || []}
+                  onUpdate={onUpdate}
+                />
+              </div>
             </div>
           </div>
         ))}

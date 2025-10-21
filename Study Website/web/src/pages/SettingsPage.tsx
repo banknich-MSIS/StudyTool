@@ -195,13 +195,20 @@ export default function SettingsPage() {
       </section>
 
       <section>
-        <h3>Count</h3>
+        <h3>Number of Questions</h3>
         <input
           type="number"
           min={1}
           max={100}
           value={count}
           onChange={(e) => setCount(parseInt(e.target.value || "1"))}
+          style={{
+            padding: "8px 12px",
+            border: "1px solid #ddd",
+            borderRadius: "4px",
+            fontSize: "15px",
+            width: "120px",
+          }}
         />
       </section>
 

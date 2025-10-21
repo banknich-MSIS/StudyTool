@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { uploadCsv } from "../api/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import type { UploadMetadata } from "../types";
 
 export default function UploadPage() {
+  const { darkMode, theme } = useOutletContext<{
+    darkMode: boolean;
+    theme: any;
+  }>();
   const [file, setFile] = useState<File | null>(null);
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
   const [uploadId, setUploadId] = useState<number | null>(null);
@@ -55,18 +59,29 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
       {/* Gemini Workflow Instructions */}
       <div
         style={{
-          background: "#f0f7ff",
+          background: darkMode ? "#1a3a52" : "#f0f7ff",
           padding: 16,
           borderRadius: 8,
-          border: "1px solid #b3d9ff",
+          border: `1px solid ${darkMode ? "#2a4a62" : "#b3d9ff"}`,
         }}
       >
-        <h3 style={{ margin: "0 0 12px 0", color: "#0066cc" }}>
+        <h3
+          style={{
+            margin: "0 0 12px 0",
+            color: darkMode ? "#64b5f6" : "#0066cc",
+          }}
+        >
           How to use this tool:
         </h3>
-        <ol style={{ margin: 0, paddingLeft: 20 }}>
+        <ol
+          style={{
+            margin: 0,
+            paddingLeft: 20,
+            color: darkMode ? "#90caf9" : theme.text,
+          }}
+        >
           <li>Upload your study materials (PDF/PowerPoint) to Gemini AI</li>
-          <li>Ask Gemini to create a study CSV using our format</li>
+          <li>Ask Gemini to create a study CSV using the format</li>
           <li>Download the CSV and upload it here</li>
         </ol>
         <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
@@ -74,10 +89,10 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
             onClick={showTutorial}
             style={{
               padding: "6px 12px",
-              border: "1px solid #0066cc",
+              border: `1px solid ${darkMode ? "#64b5f6" : "#0066cc"}`,
               borderRadius: 4,
-              backgroundColor: "white",
-              color: "#0066cc",
+              backgroundColor: theme.cardBg,
+              color: darkMode ? "#64b5f6" : "#0066cc",
               cursor: "pointer",
             }}
           >
@@ -87,10 +102,10 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
             onClick={downloadTemplate}
             style={{
               padding: "6px 12px",
-              border: "1px solid #0066cc",
+              border: `1px solid ${darkMode ? "#64b5f6" : "#0066cc"}`,
               borderRadius: 4,
-              backgroundColor: "white",
-              color: "#0066cc",
+              backgroundColor: theme.cardBg,
+              color: darkMode ? "#64b5f6" : "#0066cc",
               cursor: "pointer",
             }}
           >
@@ -102,19 +117,28 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
       {/* CSV Upload Section */}
       <div
         style={{
-          border: "2px dashed #ddd",
+          border: `2px dashed ${theme.border}`,
           borderRadius: 8,
           padding: 24,
           textAlign: "center",
-          backgroundColor: file ? "#f8f9fa" : "white",
+          backgroundColor: file ? theme.navBg : theme.cardBg,
         }}
       >
-        <h3 style={{ margin: "0 0 16px 0" }}>Upload Study CSV</h3>
+        <h3 style={{ margin: "0 0 16px 0", color: theme.text }}>
+          Upload Study CSV
+        </h3>
         <input
           type="file"
           accept=".csv"
           onChange={(e) => setFile(e.target.files?.[0] || null)}
-          style={{ marginBottom: 16 }}
+          style={{
+            marginBottom: 16,
+            color: theme.text,
+            backgroundColor: theme.cardBg,
+            padding: 8,
+            borderRadius: 4,
+            border: `1px solid ${theme.border}`,
+          }}
         />
         <div>
           <button
@@ -122,7 +146,7 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
             disabled={!file || loading}
             style={{
               padding: "12px 24px",
-              backgroundColor: file ? "#007bff" : "#ccc",
+              backgroundColor: file ? "#007bff" : theme.border,
               color: "white",
               border: "none",
               borderRadius: 6,
@@ -138,11 +162,11 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
       {error && (
         <div
           style={{
-            color: "crimson",
+            color: darkMode ? "#ef5350" : "crimson",
             padding: 12,
-            backgroundColor: "#ffe6e6",
+            backgroundColor: darkMode ? "#3d1a1a" : "#ffe6e6",
             borderRadius: 6,
-            border: "1px solid #ffcccc",
+            border: `1px solid ${darkMode ? "#4d2a2a" : "#ffcccc"}`,
           }}
         >
           {error}
@@ -152,23 +176,28 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
       {uploadId && (
         <div
           style={{
-            borderTop: "1px solid #eee",
+            borderTop: `1px solid ${theme.border}`,
             paddingTop: 16,
-            backgroundColor: "#f8f9fa",
+            backgroundColor: theme.navBg,
             borderRadius: 8,
             padding: 16,
           }}
         >
-          <h3 style={{ margin: "0 0 12px 0", color: "#28a745" }}>
+          <h3
+            style={{
+              margin: "0 0 12px 0",
+              color: darkMode ? "#66bb6a" : "#28a745",
+            }}
+          >
             Upload Successful!
           </h3>
-          <div style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 12, color: theme.text }}>
             <strong>Upload ID:</strong> {uploadId}
           </div>
 
           {/* Display Metadata */}
           {metadata && (
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 16, color: theme.text }}>
               <h4 style={{ margin: "0 0 8px 0" }}>Study Configuration:</h4>
               {metadata.themes && (
                 <div style={{ marginBottom: 8 }}>
@@ -196,14 +225,16 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
           )}
 
           <div style={{ marginBottom: 16 }}>
-            <strong>Upload Stats:</strong>
+            <strong style={{ color: theme.text }}>Upload Stats:</strong>
             <pre
               style={{
-                background: "#f8f8f8",
+                background: darkMode ? "#3d3d3d" : "#f8f8f8",
+                color: darkMode ? "#e0e0e0" : "#333",
                 padding: 12,
                 borderRadius: 6,
                 fontSize: 12,
                 overflow: "auto",
+                border: `1px solid ${theme.border}`,
               }}
             >
               {JSON.stringify(stats, null, 2)}

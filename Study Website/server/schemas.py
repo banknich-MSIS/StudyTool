@@ -25,6 +25,7 @@ class UploadSummary(BaseModel):
     themes: List[str] = []
     exam_count: int
     file_type: str
+    class_tags: List[str] = []
 
 
 class ConceptOut(BaseModel):
@@ -98,5 +99,32 @@ class AttemptDetail(BaseModel):
     score_pct: float
     finished_at: datetime
     questions: List[QuestionReview]
+
+
+class ClassCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+class ClassUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+class ClassOut(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    created_at: datetime
+
+    model_config = dict(from_attributes=True)
+
+
+class ClassSummary(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    created_at: datetime
+    upload_count: int
 
 

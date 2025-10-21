@@ -5,12 +5,16 @@ interface ExamHistoryProps {
   attempts: AttemptSummary[];
   onReviewAttempt: (attemptId: number) => void;
   onDeleteAttempt: (attemptId: number) => void;
+  darkMode: boolean;
+  theme: any;
 }
 
 export default function ExamHistory({
   attempts,
   onReviewAttempt,
   onDeleteAttempt,
+  darkMode,
+  theme,
 }: ExamHistoryProps) {
   const [sortBy, setSortBy] = useState<"date" | "score" | "source">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -105,54 +109,97 @@ export default function ExamHistory({
         <div
           style={{
             padding: 16,
-            backgroundColor: "#e3f2fd",
+            backgroundColor: darkMode ? "#1a3a52" : "#e3f2fd",
             borderRadius: 8,
             textAlign: "center",
-            border: "1px solid #bbdefb",
+            border: `1px solid ${darkMode ? "#2a4a62" : "#bbdefb"}`,
           }}
         >
-          <div style={{ fontSize: 24, fontWeight: "bold", color: "#1976d2" }}>
+          <div
+            style={{
+              fontSize: 24,
+              fontWeight: "bold",
+              color: darkMode ? "#64b5f6" : "#1976d2",
+            }}
+          >
             {totalAttempts}
           </div>
-          <div style={{ fontSize: 14, color: "#1976d2" }}>Total Exams</div>
+          <div
+            style={{ fontSize: 14, color: darkMode ? "#64b5f6" : "#1976d2" }}
+          >
+            Total Exams
+          </div>
         </div>
         <div
           style={{
             padding: 16,
-            backgroundColor: "#e8f5e8",
+            backgroundColor: darkMode ? "#1a3d1a" : "#e8f5e8",
             borderRadius: 8,
             textAlign: "center",
-            border: "1px solid #c8e6c9",
+            border: `1px solid ${darkMode ? "#2a4d2a" : "#c8e6c9"}`,
           }}
         >
-          <div style={{ fontSize: 24, fontWeight: "bold", color: "#2e7d32" }}>
+          <div
+            style={{
+              fontSize: 24,
+              fontWeight: "bold",
+              color: darkMode ? "#66bb6a" : "#2e7d32",
+            }}
+          >
             {averageScore}%
           </div>
-          <div style={{ fontSize: 14, color: "#2e7d32" }}>Average Score</div>
+          <div
+            style={{ fontSize: 14, color: darkMode ? "#66bb6a" : "#2e7d32" }}
+          >
+            Average Score
+          </div>
         </div>
         <div
           style={{
             padding: 16,
-            backgroundColor: "#fff3e0",
+            backgroundColor: darkMode ? "#3d3520" : "#fff3e0",
             borderRadius: 8,
             textAlign: "center",
-            border: "1px solid #ffcc02",
+            border: `1px solid ${darkMode ? "#4d4530" : "#ffcc02"}`,
           }}
         >
-          <div style={{ fontSize: 24, fontWeight: "bold", color: "#f57c00" }}>
+          <div
+            style={{
+              fontSize: 24,
+              fontWeight: "bold",
+              color: darkMode ? "#ffb74d" : "#f57c00",
+            }}
+          >
             {bestScore}%
           </div>
-          <div style={{ fontSize: 14, color: "#f57c00" }}>Best Score</div>
+          <div
+            style={{ fontSize: 14, color: darkMode ? "#ffb74d" : "#f57c00" }}
+          >
+            Best Score
+          </div>
         </div>
         {recentImprovement !== 0 && (
           <div
             style={{
               padding: 16,
-              backgroundColor: recentImprovement > 0 ? "#e8f5e8" : "#ffebee",
+              backgroundColor:
+                recentImprovement > 0
+                  ? darkMode
+                    ? "#1a3d1a"
+                    : "#e8f5e8"
+                  : darkMode
+                  ? "#3d1a1a"
+                  : "#ffebee",
               borderRadius: 8,
               textAlign: "center",
               border: `1px solid ${
-                recentImprovement > 0 ? "#c8e6c9" : "#ffcdd2"
+                recentImprovement > 0
+                  ? darkMode
+                    ? "#2a4d2a"
+                    : "#c8e6c9"
+                  : darkMode
+                  ? "#4d2a2a"
+                  : "#ffcdd2"
               }`,
             }}
           >
@@ -160,7 +207,14 @@ export default function ExamHistory({
               style={{
                 fontSize: 24,
                 fontWeight: "bold",
-                color: recentImprovement > 0 ? "#2e7d32" : "#c62828",
+                color:
+                  recentImprovement > 0
+                    ? darkMode
+                      ? "#66bb6a"
+                      : "#2e7d32"
+                    : darkMode
+                    ? "#ef5350"
+                    : "#c62828",
               }}
             >
               {recentImprovement > 0 ? "+" : ""}
@@ -169,7 +223,14 @@ export default function ExamHistory({
             <div
               style={{
                 fontSize: 14,
-                color: recentImprovement > 0 ? "#2e7d32" : "#c62828",
+                color:
+                  recentImprovement > 0
+                    ? darkMode
+                      ? "#66bb6a"
+                      : "#2e7d32"
+                    : darkMode
+                    ? "#ef5350"
+                    : "#c62828",
               }}
             >
               Recent Change
@@ -181,7 +242,7 @@ export default function ExamHistory({
       {/* Attempts Table */}
       <div
         style={{
-          border: "1px solid #dee2e6",
+          border: `1px solid ${theme.border}`,
           borderRadius: 8,
           overflow: "hidden",
         }}
@@ -190,11 +251,12 @@ export default function ExamHistory({
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr 1fr 1fr 80px",
-            backgroundColor: "#f8f9fa",
+            backgroundColor: theme.navBg,
             padding: 12,
             fontWeight: "bold",
             fontSize: 14,
-            borderBottom: "1px solid #dee2e6",
+            borderBottom: `1px solid ${theme.border}`,
+            color: theme.text,
           }}
         >
           <div
@@ -241,19 +303,20 @@ export default function ExamHistory({
               display: "grid",
               gridTemplateColumns: "1fr 1fr 1fr 1fr 80px",
               padding: 12,
-              borderBottom: "1px solid #f1f3f4",
+              borderBottom: `1px solid ${theme.border}`,
+              backgroundColor: theme.cardBg,
               transition: "background-color 0.2s ease",
               alignItems: "center",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#f8f9fa";
+              e.currentTarget.style.backgroundColor = theme.navHover;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "white";
+              e.currentTarget.style.backgroundColor = theme.cardBg;
             }}
           >
             <div
-              style={{ fontSize: 14, cursor: "pointer" }}
+              style={{ fontSize: 14, cursor: "pointer", color: theme.text }}
               onClick={() => onReviewAttempt(attempt.id)}
             >
               {formatDate(attempt.finished_at)}
@@ -276,13 +339,21 @@ export default function ExamHistory({
               {Math.round(attempt.score_pct)}%
             </div>
             <div
-              style={{ fontSize: 14, color: "#6c757d", cursor: "pointer" }}
+              style={{
+                fontSize: 14,
+                color: theme.textSecondary,
+                cursor: "pointer",
+              }}
               onClick={() => onReviewAttempt(attempt.id)}
             >
               {attempt.upload_filename}
             </div>
             <div
-              style={{ fontSize: 14, color: "#6c757d", cursor: "pointer" }}
+              style={{
+                fontSize: 14,
+                color: theme.textSecondary,
+                cursor: "pointer",
+              }}
               onClick={() => onReviewAttempt(attempt.id)}
             >
               {attempt.correct_count}/{attempt.question_count}
@@ -320,7 +391,7 @@ export default function ExamHistory({
           style={{
             padding: 32,
             textAlign: "center",
-            color: "#6c757d",
+            color: theme.textSecondary,
           }}
         >
           No exam attempts yet. Take your first exam to see your history here.

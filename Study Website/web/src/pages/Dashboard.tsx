@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import CSVLibrary from "../components/CSVLibrary";
 import ExamHistory from "../components/ExamHistory";
 import PerformanceAnalytics from "../components/PerformanceAnalytics";
@@ -14,6 +14,10 @@ import type { UploadSummary, AttemptSummary } from "../types";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { darkMode, theme } = useOutletContext<{
+    darkMode: boolean;
+    theme: any;
+  }>();
   const [uploads, setUploads] = useState<UploadSummary[]>([]);
   const [attempts, setAttempts] = useState<AttemptSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,64 +117,18 @@ export default function Dashboard() {
 
   return (
     <div style={{ display: "grid", gap: 24 }}>
-      {/* Quick Actions Bar */}
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          padding: 16,
-          backgroundColor: "#f8f9fa",
-          borderRadius: 8,
-          border: "1px solid #dee2e6",
-        }}
-      >
-        <button
-          onClick={handleUploadNew}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer",
-          }}
-        >
-          Upload New CSV
-        </button>
-        <button
-          onClick={handleViewAllHistory}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#6c757d",
-            color: "white",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer",
-          }}
-        >
-          View All History
-        </button>
-        <button
-          onClick={handleShowTutorial}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#17a2b8",
-            color: "white",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer",
-          }}
-        >
-          Help & Tutorial
-        </button>
-      </div>
-
       {/* Performance Analytics */}
-      {attempts.length > 0 && <PerformanceAnalytics attempts={attempts} />}
+      {attempts.length > 0 && (
+        <PerformanceAnalytics
+          attempts={attempts}
+          darkMode={darkMode}
+          theme={theme}
+        />
+      )}
 
       {/* Recent Exam History */}
       <section>
-        <h2 style={{ margin: "0 0 16px 0", fontSize: 24 }}>
+        <h2 style={{ margin: "0 0 16px 0", fontSize: 24, color: theme.text }}>
           Recent Exam History
         </h2>
         {attempts.length > 0 ? (
@@ -178,21 +136,23 @@ export default function Dashboard() {
             attempts={attempts}
             onReviewAttempt={handleReviewAttempt}
             onDeleteAttempt={handleDeleteAttempt}
+            darkMode={darkMode}
+            theme={theme}
           />
         ) : (
           <div
             style={{
               padding: 32,
               textAlign: "center",
-              backgroundColor: "#f8f9fa",
+              backgroundColor: theme.navBg,
               borderRadius: 8,
-              border: "2px dashed #dee2e6",
+              border: `2px dashed ${theme.border}`,
             }}
           >
-            <h3 style={{ margin: "0 0 8px 0", color: "#6c757d" }}>
+            <h3 style={{ margin: "0 0 8px 0", color: theme.textSecondary }}>
               No exams taken yet
             </h3>
-            <p style={{ margin: "0 0 16px 0", color: "#6c757d" }}>
+            <p style={{ margin: "0 0 16px 0", color: theme.textSecondary }}>
               Upload a CSV and take your first exam to see your history here.
             </p>
             <button
@@ -214,12 +174,17 @@ export default function Dashboard() {
 
       {/* CSV Library */}
       <section>
-        <h2 style={{ margin: "0 0 16px 0", fontSize: 24 }}>CSV Library</h2>
+        <h2 style={{ margin: "0 0 16px 0", fontSize: 24, color: theme.text }}>
+          CSV Library
+        </h2>
         <CSVLibrary
           uploads={uploads}
           onCreateExam={handleCreateExam}
           onDelete={handleDeleteUpload}
           onDownload={handleDownloadCSV}
+          onUpdate={loadDashboardData}
+          darkMode={darkMode}
+          theme={theme}
         />
       </section>
     </div>

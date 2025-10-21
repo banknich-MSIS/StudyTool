@@ -12,9 +12,11 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
 
 interface Props {
   question: QuestionDTO;
+  darkMode: boolean;
+  theme: any;
 }
 
-export default function QuestionCard({ question }: Props) {
+export default function QuestionCard({ question, darkMode, theme }: Props) {
   const setAnswer = useExamStore((s) => s.setAnswer);
   const answers = useExamStore((s) => s.answers);
   const value = answers[question.id];
@@ -37,11 +39,18 @@ export default function QuestionCard({ question }: Props) {
   });
 
   return (
-    <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 16 }}>
+    <div
+      style={{
+        border: `1px solid ${theme.border}`,
+        borderRadius: 8,
+        padding: 16,
+        backgroundColor: theme.cardBg,
+      }}
+    >
       <div
         style={{
           fontSize: "12px",
-          color: "#666",
+          color: theme.textSecondary,
           marginBottom: "8px",
           fontStyle: "italic",
         }}
@@ -56,6 +65,7 @@ export default function QuestionCard({ question }: Props) {
           whiteSpace: "pre-wrap",
           fontSize: "16px",
           lineHeight: "1.5",
+          color: theme.text,
         }}
       >
         {question.stem}
@@ -81,10 +91,10 @@ export default function QuestionCard({ question }: Props) {
                   alignItems: "center",
                   gap: 8,
                   padding: "8px",
-                  border: "1px solid #e9ecef",
+                  border: `1px solid ${theme.border}`,
                   borderRadius: "4px",
                   cursor: "pointer",
-                  backgroundColor: value === opt ? "#e3f2fd" : "#fff",
+                  backgroundColor: value === opt ? "#e3f2fd" : theme.cardBg,
                 }}
               >
                 <input
@@ -94,7 +104,9 @@ export default function QuestionCard({ question }: Props) {
                   onChange={() => setAnswer(question.id, opt)}
                   style={{ transform: "scale(1.2)" }}
                 />
-                <span style={{ fontSize: "15px" }}>{opt}</span>
+                <span style={{ fontSize: "15px", color: theme.text }}>
+                  {opt}
+                </span>
               </label>
             ))
           )}
@@ -124,10 +136,10 @@ export default function QuestionCard({ question }: Props) {
                     alignItems: "center",
                     gap: 8,
                     padding: "8px",
-                    border: "1px solid #e9ecef",
+                    border: `1px solid ${theme.border}`,
                     borderRadius: "4px",
                     cursor: "pointer",
-                    backgroundColor: checked ? "#e3f2fd" : "#fff",
+                    backgroundColor: checked ? "#e3f2fd" : theme.cardBg,
                   }}
                 >
                   <input
@@ -141,7 +153,9 @@ export default function QuestionCard({ question }: Props) {
                     }}
                     style={{ transform: "scale(1.2)" }}
                   />
-                  <span style={{ fontSize: "15px" }}>{opt}</span>
+                  <span style={{ fontSize: "15px", color: theme.text }}>
+                    {opt}
+                  </span>
                 </label>
               );
             })
@@ -154,10 +168,12 @@ export default function QuestionCard({ question }: Props) {
             style={{
               width: "100%",
               padding: "12px",
-              border: "1px solid #ddd",
+              border: `1px solid ${theme.border}`,
               borderRadius: "4px",
               fontSize: "15px",
               boxSizing: "border-box",
+              backgroundColor: theme.cardBg,
+              color: theme.text,
             }}
             placeholder="Type your answer"
             value={typeof value === "string" ? value : ""}
@@ -175,11 +191,13 @@ export default function QuestionCard({ question }: Props) {
                 alignItems: "center",
                 gap: 8,
                 padding: "8px 16px",
-                border: "1px solid #e9ecef",
+                border: `1px solid ${theme.border}`,
                 borderRadius: "4px",
                 cursor: "pointer",
                 backgroundColor:
-                  String(value).toLowerCase() === opt ? "#e3f2fd" : "#fff",
+                  String(value).toLowerCase() === opt
+                    ? "#e3f2fd"
+                    : theme.cardBg,
               }}
             >
               <input
@@ -189,7 +207,13 @@ export default function QuestionCard({ question }: Props) {
                 onChange={() => setAnswer(question.id, opt)}
                 style={{ transform: "scale(1.2)" }}
               />
-              <span style={{ textTransform: "capitalize", fontSize: "15px" }}>
+              <span
+                style={{
+                  textTransform: "capitalize",
+                  fontSize: "15px",
+                  color: theme.text,
+                }}
+              >
                 {opt}
               </span>
             </label>

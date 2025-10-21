@@ -1,6 +1,11 @@
 import { useExamStore } from "../store/examStore";
 
-export default function QuestionNavigator() {
+interface Props {
+  darkMode: boolean;
+  theme: any;
+}
+
+export default function QuestionNavigator({ darkMode, theme }: Props) {
   const { questions, bookmarks, answers } = useExamStore();
 
   const scrollToQuestion = (index: number) => {
@@ -31,14 +36,19 @@ export default function QuestionNavigator() {
             style={{
               padding: 8,
               borderRadius: 6,
-              border: "1px solid #ddd",
+              border: `1px solid ${theme.border}`,
               background: isBookmarked
-                ? "#fff3cd"
+                ? darkMode
+                  ? "#4d4520"
+                  : "#fff3cd"
                 : answered
-                ? "#e9ecef"
-                : "#fff",
+                ? darkMode
+                  ? "#3d3d3d"
+                  : "#e9ecef"
+                : theme.cardBg,
               position: "relative",
               cursor: "pointer",
+              color: theme.text,
             }}
             title={`Question ${idx + 1}${isBookmarked ? " (Bookmarked)" : ""}${
               answered ? " (Answered)" : ""

@@ -3,10 +3,14 @@ import type { AttemptSummary } from "../types";
 
 interface PerformanceAnalyticsProps {
   attempts: AttemptSummary[];
+  darkMode: boolean;
+  theme: any;
 }
 
 export default function PerformanceAnalytics({
   attempts,
+  darkMode,
+  theme,
 }: PerformanceAnalyticsProps) {
   if (attempts.length === 0) {
     return null;
@@ -88,12 +92,12 @@ export default function PerformanceAnalytics({
     <div
       style={{
         padding: 20,
-        backgroundColor: "#f8f9fa",
+        backgroundColor: theme.navBg,
         borderRadius: 8,
-        border: "1px solid #dee2e6",
+        border: `1px solid ${theme.border}`,
       }}
     >
-      <h3 style={{ margin: "0 0 16px 0", fontSize: 18, color: "#495057" }}>
+      <h3 style={{ margin: "0 0 16px 0", fontSize: 18, color: theme.text }}>
         📊 Performance Analytics
       </h3>
 
@@ -109,12 +113,18 @@ export default function PerformanceAnalytics({
         <div
           style={{
             padding: 16,
-            backgroundColor: "white",
+            backgroundColor: theme.cardBg,
             borderRadius: 6,
-            border: "1px solid #e9ecef",
+            border: `1px solid ${theme.border}`,
           }}
         >
-          <div style={{ fontSize: 12, color: "#6c757d", marginBottom: 4 }}>
+          <div
+            style={{
+              fontSize: 12,
+              color: theme.textSecondary,
+              marginBottom: 4,
+            }}
+          >
             Average Score
           </div>
           <div style={{ fontSize: 24, fontWeight: "bold", color: "#28a745" }}>
@@ -125,12 +135,18 @@ export default function PerformanceAnalytics({
         <div
           style={{
             padding: 16,
-            backgroundColor: "white",
+            backgroundColor: theme.cardBg,
             borderRadius: 6,
-            border: "1px solid #e9ecef",
+            border: `1px solid ${theme.border}`,
           }}
         >
-          <div style={{ fontSize: 12, color: "#6c757d", marginBottom: 4 }}>
+          <div
+            style={{
+              fontSize: 12,
+              color: theme.textSecondary,
+              marginBottom: 4,
+            }}
+          >
             Best Score
           </div>
           <div style={{ fontSize: 24, fontWeight: "bold", color: "#007bff" }}>
@@ -141,15 +157,27 @@ export default function PerformanceAnalytics({
         <div
           style={{
             padding: 16,
-            backgroundColor: "white",
+            backgroundColor: theme.cardBg,
             borderRadius: 6,
-            border: "1px solid #e9ecef",
+            border: `1px solid ${theme.border}`,
           }}
         >
-          <div style={{ fontSize: 12, color: "#6c757d", marginBottom: 4 }}>
+          <div
+            style={{
+              fontSize: 12,
+              color: theme.textSecondary,
+              marginBottom: 4,
+            }}
+          >
             Total Exams
           </div>
-          <div style={{ fontSize: 24, fontWeight: "bold", color: "#6c757d" }}>
+          <div
+            style={{
+              fontSize: 24,
+              fontWeight: "bold",
+              color: theme.textSecondary,
+            }}
+          >
             {totalAttempts}
           </div>
         </div>
@@ -161,9 +189,9 @@ export default function PerformanceAnalytics({
           style={{
             marginBottom: 20,
             padding: 16,
-            backgroundColor: "white",
+            backgroundColor: theme.cardBg,
             borderRadius: 6,
-            border: "1px solid #e9ecef",
+            border: `1px solid ${theme.border}`,
           }}
         >
           <div
@@ -171,7 +199,7 @@ export default function PerformanceAnalytics({
               fontSize: 14,
               fontWeight: "bold",
               marginBottom: 12,
-              color: "#495057",
+              color: theme.text,
             }}
           >
             Recent Score Trend (Last {scoreTrend.length} Exams)
@@ -211,7 +239,7 @@ export default function PerformanceAnalytics({
                       marginBottom: 4,
                     }}
                   />
-                  <div style={{ fontSize: 10, color: "#6c757d" }}>
+                  <div style={{ fontSize: 10, color: theme.textSecondary }}>
                     {Math.round(score)}%
                   </div>
                 </div>
@@ -227,9 +255,9 @@ export default function PerformanceAnalytics({
           style={{
             marginBottom: 20,
             padding: 16,
-            backgroundColor: "white",
+            backgroundColor: theme.cardBg,
             borderRadius: 6,
-            border: "1px solid #e9ecef",
+            border: `1px solid ${theme.border}`,
           }}
         >
           <div
@@ -237,7 +265,7 @@ export default function PerformanceAnalytics({
               fontSize: 14,
               fontWeight: "bold",
               marginBottom: 12,
-              color: "#495057",
+              color: theme.text,
             }}
           >
             Performance by Study Material
@@ -253,15 +281,19 @@ export default function PerformanceAnalytics({
                     justifyContent: "space-between",
                     alignItems: "center",
                     padding: 8,
-                    backgroundColor: "#f8f9fa",
+                    backgroundColor: darkMode ? "#3d3d3d" : "#f8f9fa",
                     borderRadius: 4,
                   }}
                 >
-                  <div style={{ fontSize: 12, color: "#495057", flex: 1 }}>
+                  <div style={{ fontSize: 12, color: theme.text, flex: 1 }}>
                     {source}
                   </div>
                   <div
-                    style={{ fontSize: 12, color: "#6c757d", marginRight: 8 }}
+                    style={{
+                      fontSize: 12,
+                      color: theme.textSecondary,
+                      marginRight: 8,
+                    }}
                   >
                     {stats.count} exam{stats.count > 1 ? "s" : ""}
                   </div>
@@ -298,9 +330,9 @@ export default function PerformanceAnalytics({
       <div
         style={{
           padding: 16,
-          backgroundColor: "#e3f2fd",
+          backgroundColor: darkMode ? "#1a3a52" : "#e3f2fd",
           borderRadius: 6,
-          border: "1px solid #bbdefb",
+          border: `1px solid ${darkMode ? "#2a4a62" : "#bbdefb"}`,
         }}
       >
         <div
@@ -308,13 +340,18 @@ export default function PerformanceAnalytics({
             fontSize: 14,
             fontWeight: "bold",
             marginBottom: 8,
-            color: "#1976d2",
+            color: darkMode ? "#64b5f6" : "#1976d2",
           }}
         >
           💡 Improvement Suggestions
         </div>
         <ul
-          style={{ margin: 0, paddingLeft: 20, fontSize: 13, color: "#1976d2" }}
+          style={{
+            margin: 0,
+            paddingLeft: 20,
+            fontSize: 13,
+            color: darkMode ? "#90caf9" : "#1976d2",
+          }}
         >
           {suggestions.map((suggestion, index) => (
             <li key={index} style={{ marginBottom: 4 }}>

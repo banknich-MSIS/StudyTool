@@ -11,11 +11,21 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    Table,
     Text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
+
+
+# Association table for many-to-many relationship between uploads and classes
+upload_classes = Table(
+    "upload_classes",
+    Base.metadata,
+    mapped_column("upload_id", ForeignKey("uploads.id"), primary_key=True),
+    mapped_column("class_id", ForeignKey("classes.id"), primary_key=True),
+)
 
 
 class Upload(Base):
@@ -36,6 +46,9 @@ class Upload(Base):
     )
     exams: Mapped[List["Exam"]] = relationship(
         back_populates="upload", cascade="all, delete-orphan"
+    )
+    classes: Mapped[List["Class"]] = relationship(
+        secondary=upload_classes, back_populates="uploads"
     )
 
 
@@ -105,5 +118,20 @@ class AttemptAnswer(Base):
     correct: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
 
     attempt: Mapped[Attempt] = relationship(back_populates="answers")
+
+
+class Class(Base):
+    __tablename__ = "classes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(256), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
+
+    uploads: Mapped[List[Upload]] = relationship(
+        secondary=upload_classes, back_populates="classes"
+    )
 
 

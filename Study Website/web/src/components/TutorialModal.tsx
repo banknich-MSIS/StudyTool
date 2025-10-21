@@ -3,9 +3,16 @@ import React, { useState } from "react";
 interface TutorialModalProps {
   isOpen: boolean;
   onClose: () => void;
+  darkMode: boolean;
+  theme: any;
 }
 
-const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
+const TutorialModal: React.FC<TutorialModalProps> = ({
+  isOpen,
+  onClose,
+  darkMode,
+  theme,
+}) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
@@ -19,8 +26,8 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
             materials.
           </p>
           <p>
-            We work seamlessly with Gemini AI to convert your documents into
-            study-ready quizzes.
+            This tool works seamlessly with Gemini AI to convert your documents
+            into study-ready quizzes.
           </p>
         </div>
       ),
@@ -30,7 +37,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
       content: (
         <div>
           <p>
-            First, use our dedicated Gemini Gem to convert your study materials:
+            First, use the dedicated Gemini Gem to convert your study materials:
           </p>
           <a
             href="https://gemini.google.com/gem/582bd1e1e16d"
@@ -78,8 +85,8 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
         <div>
           <p>Upload the CSV file to Hoosier Prep Portal.</p>
           <p>
-            We'll automatically configure your exam settings based on Gemini's
-            recommendations.
+            The tool will automatically configure your exam settings based on
+            Gemini's recommendations.
           </p>
           <p>You can still customize the settings if needed.</p>
         </div>
@@ -139,19 +146,19 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
     >
       <div
         style={{
-          backgroundColor: "white",
+          backgroundColor: theme.modalBg,
           borderRadius: 12,
           padding: 24,
           maxWidth: 500,
           width: "90%",
           maxHeight: "80vh",
           overflow: "auto",
-          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
+          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)",
         }}
       >
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 24, color: "#333" }}>
+          <h2 style={{ margin: 0, fontSize: 24, color: theme.text }}>
             {steps[currentStep].title}
           </h2>
           <div
@@ -169,7 +176,8 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
                   width: 8,
                   height: 8,
                   borderRadius: "50%",
-                  backgroundColor: index === currentStep ? "#007bff" : "#ddd",
+                  backgroundColor:
+                    index === currentStep ? "#007bff" : theme.border,
                 }}
               />
             ))}
@@ -177,7 +185,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Content */}
-        <div style={{ marginBottom: 24, lineHeight: 1.6 }}>
+        <div style={{ marginBottom: 24, lineHeight: 1.6, color: theme.text }}>
           {steps[currentStep].content}
         </div>
 
@@ -187,7 +195,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            borderTop: "1px solid #eee",
+            borderTop: `1px solid ${theme.border}`,
             paddingTop: 16,
           }}
         >
@@ -198,6 +206,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
                 alignItems: "center",
                 gap: 8,
                 fontSize: 14,
+                color: theme.text,
               }}
             >
               <input
@@ -215,9 +224,10 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose }) => {
                 onClick={prevStep}
                 style={{
                   padding: "8px 16px",
-                  border: "1px solid #ddd",
+                  border: `1px solid ${theme.border}`,
                   borderRadius: 6,
-                  backgroundColor: "white",
+                  backgroundColor: theme.cardBg,
+                  color: theme.text,
                   cursor: "pointer",
                 }}
               >

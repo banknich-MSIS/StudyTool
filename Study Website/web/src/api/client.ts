@@ -105,3 +105,46 @@ export async function previewExamAnswers(
   const { data } = await api.get(`/exams/${examId}/preview`);
   return data;
 }
+
+// Class management API methods
+export async function createClass(
+  name: string,
+  description?: string
+): Promise<import("../types").Class> {
+  const { data } = await api.post("/classes", { name, description });
+  return data;
+}
+
+export async function fetchClasses(): Promise<
+  import("../types").ClassSummary[]
+> {
+  const { data } = await api.get("/classes");
+  return data;
+}
+
+export async function updateClass(
+  id: number,
+  name?: string,
+  description?: string
+): Promise<import("../types").Class> {
+  const { data } = await api.put(`/classes/${id}`, { name, description });
+  return data;
+}
+
+export async function deleteClass(id: number): Promise<void> {
+  await api.delete(`/classes/${id}`);
+}
+
+export async function assignUploadToClass(
+  uploadId: number,
+  classId: number
+): Promise<void> {
+  await api.post(`/uploads/${uploadId}/classes/${classId}`);
+}
+
+export async function removeUploadFromClass(
+  uploadId: number,
+  classId: number
+): Promise<void> {
+  await api.delete(`/uploads/${uploadId}/classes/${classId}`);
+}

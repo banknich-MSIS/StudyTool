@@ -35,6 +35,7 @@ export interface UploadSummary {
   themes: string[];
   exam_count: number;
   file_type: string;
+  class_tags?: string[];
 }
 
 export interface AttemptSummary {
@@ -73,4 +74,15 @@ export interface GradeReport {
   scorePct: number;
   perQuestion: GradeItem[];
   attemptId?: number;
+}
+
+export interface Class {
+  id: number;
+  name: string;
+  description?: string | null;
+  created_at: string;
+}
+
+export interface ClassSummary extends Class {
+  upload_count: number;
 }
