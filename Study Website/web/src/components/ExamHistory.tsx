@@ -18,6 +18,7 @@ export default function ExamHistory({
 }: ExamHistoryProps) {
   const [sortBy, setSortBy] = useState<"date" | "score" | "source">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [hoveredButton, setHoveredButton] = useState<string | null>(null);
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleString("en-US", {
@@ -369,6 +370,8 @@ export default function ExamHistory({
                   onDeleteAttempt(attempt.id);
                 }
               }}
+              onMouseEnter={() => setHoveredButton(`delete-${attempt.id}`)}
+              onMouseLeave={() => setHoveredButton(null)}
               style={{
                 padding: "6px 12px",
                 backgroundColor: "#dc3545",
@@ -377,6 +380,11 @@ export default function ExamHistory({
                 borderRadius: 4,
                 cursor: "pointer",
                 fontSize: "13px",
+                filter:
+                  hoveredButton === `delete-${attempt.id}`
+                    ? "brightness(0.85)"
+                    : "brightness(1)",
+                transition: "all 0.2s ease",
               }}
               title="Delete attempt"
             >

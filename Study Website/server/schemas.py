@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -26,6 +26,7 @@ class UploadSummary(BaseModel):
     exam_count: int
     file_type: str
     class_tags: List[str] = []
+    question_type_counts: Optional[Dict[str, int]] = None
 
 
 class ConceptOut(BaseModel):

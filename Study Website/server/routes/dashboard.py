@@ -58,6 +58,12 @@ def get_all_uploads(db: Session = Depends(get_db)) -> List[UploadSummary]:
         # Get class tags
         class_tags = [cls.name for cls in upload.classes] if upload.classes else []
         
+        # Calculate question type counts
+        question_type_counts = {}
+        for question in upload.questions:
+            qtype = question.qtype
+            question_type_counts[qtype] = question_type_counts.get(qtype, 0) + 1
+        
         result.append(
             UploadSummary(
                 id=upload.id,
@@ -68,6 +74,7 @@ def get_all_uploads(db: Session = Depends(get_db)) -> List[UploadSummary]:
                 exam_count=len(upload.exams),
                 file_type=upload.file_type,
                 class_tags=class_tags,
+                question_type_counts=question_type_counts if question_type_counts else None,
             )
         )
     

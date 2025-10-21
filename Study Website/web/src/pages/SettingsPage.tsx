@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { createExam } from "../api/client";
-import type { QuestionType, UploadMetadata } from "../types";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { createExam, fetchAllUploads } from "../api/client";
+import type { QuestionType, UploadMetadata, UploadSummary } from "../types";
 import { useExamStore } from "../store/examStore";
 
 const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
@@ -15,24 +15,59 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
 export default function SettingsPage() {
   const nav = useNavigate();
   const loc = useLocation() as any;
+  const { darkMode, theme } = useOutletContext<{
+    darkMode: boolean;
+    theme: any;
+  }>();
   const uploadId: number | undefined =
     loc?.state?.uploadId || loc?.state?.uploadIds?.[0];
   const metadata: UploadMetadata | undefined = loc?.state?.metadata;
+  const uploadDataFromState = loc?.state?.uploadData as
+    | UploadSummary
+    | undefined;
   const setExam = useExamStore((s) => s.setExam);
 
-  const [types, setTypes] = useState<QuestionType[]>(["mcq", "short"]);
   const [count, setCount] = useState(10);
   const [examName, setExamName] = useState("");
   const [examTheme, setExamTheme] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingUpload, setLoadingUpload] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uploadData, setUploadData] = useState<UploadSummary | null>(null);
+
+  // Fetch upload details to get question type counts
+  useEffect(() => {
+    if (uploadDataFromState) {
+      // Use passed data immediately (preferred)
+      setUploadData(uploadDataFromState);
+      setLoadingUpload(false);
+      const initialCount = Math.min(10, uploadDataFromState.question_count);
+      setCount(initialCount);
+    } else if (uploadId) {
+      // Fetch as fallback
+      setLoadingUpload(true);
+      fetchAllUploads()
+        .then((uploads) => {
+          const upload = uploads.find((u) => u.id === uploadId);
+          if (upload) {
+            setUploadData(upload);
+            // Set initial count to min of 10 or available questions
+            const initialCount = Math.min(10, upload.question_count);
+            setCount(initialCount);
+          }
+        })
+        .catch((e) => {
+          console.error("Failed to fetch upload data:", e);
+        })
+        .finally(() => {
+          setLoadingUpload(false);
+        });
+    }
+  }, [uploadId, uploadDataFromState]);
 
   // Auto-configure from metadata
   useEffect(() => {
     if (metadata) {
-      if (metadata.suggested_types) {
-        setTypes(metadata.suggested_types as QuestionType[]);
-      }
       if (metadata.recommended_count) {
         setCount(metadata.recommended_count);
       }
@@ -42,11 +77,9 @@ export default function SettingsPage() {
     }
   }, [metadata]);
 
-  const toggleType = (t: QuestionType) => {
-    setTypes((prev) =>
-      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
-    );
-  };
+  const availableQuestions = uploadData?.question_count || 0;
+  const questionTypeCounts = uploadData?.question_type_counts || {};
+  const isCountValid = count > 0 && count <= availableQuestions;
 
   const onStart = async () => {
     if (!uploadId) return;
@@ -55,8 +88,8 @@ export default function SettingsPage() {
     try {
       const exam = await createExam({
         uploadId,
-        includeConceptIds: [], // No concepts needed
-        questionTypes: types,
+        includeConceptIds: [],
+        questionTypes: [], // Empty array means all types
         count,
       });
       setExam(exam.examId, exam.questions);
@@ -69,165 +102,274 @@ export default function SettingsPage() {
   };
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    <div style={{ display: "grid", gap: 16, color: theme.text }}>
       {!uploadId && (
         <div style={{ color: "crimson" }}>
           No upload selected. Go back to Upload.
         </div>
       )}
-      {error && <div style={{ color: "crimson" }}>{error}</div>}
-
-      {/* Show metadata recommendations */}
-      {metadata && (
+      {error && (
         <div
           style={{
-            background: "#e8f5e8",
-            padding: 16,
-            borderRadius: 8,
-            border: "1px solid #c3e6c3",
+            color: darkMode ? "#ef5350" : "crimson",
+            padding: 12,
+            backgroundColor: darkMode ? "#3d1a1a" : "#ffe6e6",
+            borderRadius: 6,
+            border: `1px solid ${darkMode ? "#4d2a2a" : "#ffcccc"}`,
           }}
         >
-          <h3 style={{ margin: "0 0 12px 0", color: "#2d5a2d" }}>
-            Recommended Settings (from your CSV)
-          </h3>
-          {metadata.themes && (
-            <div style={{ marginBottom: 8 }}>
-              <strong>Themes:</strong> {metadata.themes.join(", ")}
-            </div>
-          )}
-          {metadata.suggested_types && (
-            <div style={{ marginBottom: 8 }}>
-              <strong>Question Types:</strong>{" "}
-              {metadata.suggested_types.join(", ")}
-            </div>
-          )}
-          {metadata.recommended_count && (
-            <div style={{ marginBottom: 8 }}>
-              <strong>Question Count:</strong> {metadata.recommended_count}
-            </div>
-          )}
-          {metadata.difficulty && (
-            <div style={{ marginBottom: 8 }}>
-              <strong>Difficulty:</strong> {metadata.difficulty}
-            </div>
-          )}
-          <div style={{ fontSize: 14, color: "#666", marginTop: 8 }}>
-            These settings have been pre-filled below. You can modify them as
-            needed.
-          </div>
+          {error}
         </div>
       )}
 
-      <section>
-        <h3>Exam Details</h3>
-        <div style={{ display: "grid", gap: 12 }}>
-          <div>
-            <label
-              style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}
-            >
-              Exam Name
-            </label>
-            <input
-              type="text"
-              value={examName}
-              onChange={(e) => setExamName(e.target.value)}
-              placeholder="Enter exam name (optional)"
-              style={{
-                width: "100%",
-                padding: "8px 12px",
-                border: "1px solid #ddd",
-                borderRadius: 4,
-                fontSize: 14,
-              }}
-            />
-          </div>
-          <div>
-            <label
-              style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}
-            >
-              Theme/Subject
-            </label>
-            <input
-              type="text"
-              value={examTheme}
-              onChange={(e) => setExamTheme(e.target.value)}
-              placeholder="Enter theme or subject (optional)"
-              style={{
-                width: "100%",
-                padding: "8px 12px",
-                border: "1px solid #ddd",
-                borderRadius: 4,
-                fontSize: 14,
-              }}
-            />
-          </div>
+      {loadingUpload ? (
+        <div style={{ padding: 24, textAlign: "center", color: theme.text }}>
+          Loading CSV details...
         </div>
-      </section>
+      ) : uploadData ? (
+        <>
+          {/* Questions Available Section */}
+          <section
+            style={{
+              backgroundColor: darkMode ? "#1a3a52" : "#e3f2fd",
+              border: `1px solid ${darkMode ? "#2a4a62" : "#bbdefb"}`,
+              borderRadius: 8,
+              padding: 20,
+            }}
+          >
+            <h3
+              style={{
+                margin: "0 0 12px 0",
+                fontSize: 20,
+                color: darkMode ? "#64b5f6" : "#1976d2",
+              }}
+            >
+              Questions Available in CSV
+            </h3>
+            <div
+              style={{
+                fontSize: 16,
+                marginBottom: 16,
+                fontWeight: "bold",
+                color: darkMode ? "#90caf9" : "#1976d2",
+              }}
+            >
+              Total: {availableQuestions} questions
+            </div>
+            {Object.keys(questionTypeCounts).length > 0 && (
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    marginBottom: 8,
+                    color: darkMode ? "#64b5f6" : "#1976d2",
+                    fontWeight: 500,
+                  }}
+                >
+                  Breakdown by Type:
+                </div>
+                <div style={{ display: "grid", gap: 6 }}>
+                  {Object.entries(questionTypeCounts).map(([type, count]) => (
+                    <div
+                      key={type}
+                      style={{
+                        fontSize: 14,
+                        color: darkMode ? "#90caf9" : "#1565c0",
+                        paddingLeft: 12,
+                      }}
+                    >
+                      • {QUESTION_TYPE_LABELS[type as QuestionType] || type}:{" "}
+                      {count}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
 
-      <section>
-        <h3>Question types</h3>
-        <div
-          style={{
-            padding: "12px",
-            backgroundColor: "#fff3cd",
-            border: "1px solid #ffc107",
-            borderRadius: "6px",
-            marginBottom: "12px",
-            fontSize: "14px",
-            color: "#856404",
-          }}
-        >
-          <strong>Important:</strong> Ensure the question types you select match
-          what you instructed Gemini to create to avoid errors.
-        </div>
-        {(
-          ["mcq", "multi", "short", "truefalse", "cloze"] as QuestionType[]
-        ).map((t) => (
-          <label key={t} style={{ marginRight: 12 }}>
-            <input
-              type="checkbox"
-              checked={types.includes(t)}
-              onChange={() => toggleType(t)}
-            />{" "}
-            {QUESTION_TYPE_LABELS[t]}
-          </label>
-        ))}
-      </section>
+          {/* Exam Configuration */}
+          <section>
+            <h3 style={{ margin: "0 0 12px 0", color: theme.text }}>
+              Exam Details (Optional)
+            </h3>
+            <div style={{ display: "grid", gap: 12 }}>
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: 4,
+                    fontWeight: "bold",
+                    color: theme.text,
+                  }}
+                >
+                  Exam Name
+                </label>
+                <input
+                  type="text"
+                  value={examName}
+                  onChange={(e) => setExamName(e.target.value)}
+                  placeholder="Enter exam name (optional)"
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: 4,
+                    fontSize: 14,
+                    backgroundColor: theme.cardBg,
+                    color: theme.text,
+                  }}
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: 4,
+                    fontWeight: "bold",
+                    color: theme.text,
+                  }}
+                >
+                  Theme/Subject
+                </label>
+                <input
+                  type="text"
+                  value={examTheme}
+                  onChange={(e) => setExamTheme(e.target.value)}
+                  placeholder="Enter theme or subject (optional)"
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: 4,
+                    fontSize: 14,
+                    backgroundColor: theme.cardBg,
+                    color: theme.text,
+                  }}
+                />
+              </div>
+            </div>
+          </section>
 
-      <section>
-        <h3>Number of Questions</h3>
-        <input
-          type="number"
-          min={1}
-          max={100}
-          value={count}
-          onChange={(e) => setCount(parseInt(e.target.value || "1"))}
-          style={{
-            padding: "8px 12px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-            fontSize: "15px",
-            width: "120px",
-          }}
-        />
-      </section>
+          {/* Question Count */}
+          <section>
+            <h3 style={{ margin: "0 0 12px 0", color: theme.text }}>
+              How many questions for this exam?
+            </h3>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <input
+                type="number"
+                min={1}
+                max={availableQuestions}
+                value={count}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value || "1");
+                  setCount(Math.min(val, availableQuestions));
+                }}
+                style={{
+                  padding: "8px 12px",
+                  border: `1px solid ${
+                    isCountValid
+                      ? theme.border
+                      : darkMode
+                      ? "#ef5350"
+                      : "#dc3545"
+                  }`,
+                  borderRadius: "4px",
+                  fontSize: "15px",
+                  width: "120px",
+                  backgroundColor: theme.cardBg,
+                  color: theme.text,
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 14,
+                  color: theme.textSecondary,
+                }}
+              >
+                (max: {availableQuestions})
+              </span>
+            </div>
+            {!isCountValid && (
+              <div
+                style={{
+                  marginTop: 8,
+                  color: darkMode ? "#ef5350" : "#dc3545",
+                  fontSize: 14,
+                  fontWeight: 500,
+                }}
+              >
+                ⚠️ You cannot request more than {availableQuestions} questions
+              </div>
+            )}
+            {Object.keys(questionTypeCounts).length > 0 && (
+              <div
+                style={{
+                  marginTop: 12,
+                  fontSize: 14,
+                  color: theme.text,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  flexWrap: "wrap",
+                }}
+              >
+                <span style={{ color: theme.textSecondary }}>
+                  Available types:
+                </span>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {Object.keys(questionTypeCounts).map((type) => (
+                    <span
+                      key={type}
+                      style={{
+                        padding: "4px 10px",
+                        backgroundColor: darkMode ? "#2a4a62" : "#e3f2fd",
+                        color: darkMode ? "#90caf9" : "#1976d2",
+                        borderRadius: 4,
+                        fontSize: 12,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {QUESTION_TYPE_LABELS[type as QuestionType]}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
 
-      <button
-        onClick={onStart}
-        disabled={!uploadId || loading}
-        style={{
-          padding: "12px 24px",
-          backgroundColor: uploadId && !loading ? "#dc3545" : "#6c757d",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: uploadId && !loading ? "pointer" : "not-allowed",
-          fontSize: "16px",
-          fontWeight: "bold",
-        }}
-      >
-        {loading ? "Starting..." : "Start Exam"}
-      </button>
+          {/* Start Exam Button */}
+          <button
+            onClick={onStart}
+            disabled={!uploadId || loading || !isCountValid}
+            style={{
+              padding: "12px 24px",
+              backgroundColor:
+                uploadId && !loading && isCountValid ? "#dc3545" : "#6c757d",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor:
+                uploadId && !loading && isCountValid
+                  ? "pointer"
+                  : "not-allowed",
+              fontSize: "16px",
+              fontWeight: "bold",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              if (uploadId && !loading && isCountValid) {
+                e.currentTarget.style.filter = "brightness(0.85)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.filter = "brightness(1)";
+            }}
+          >
+            {loading ? "Starting..." : "Start Exam"}
+          </button>
+        </>
+      ) : null}
     </div>
   );
 }

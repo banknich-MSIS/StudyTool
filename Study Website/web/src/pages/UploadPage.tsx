@@ -13,6 +13,7 @@ export default function UploadPage() {
   const [uploadId, setUploadId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredButton, setHoveredButton] = useState<string | null>(null);
   const nav = useNavigate();
 
   const onUpload = async () => {
@@ -87,6 +88,8 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
         <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
           <button
             onClick={showTutorial}
+            onMouseEnter={() => setHoveredButton("viewGuide")}
+            onMouseLeave={() => setHoveredButton(null)}
             style={{
               padding: "6px 12px",
               border: `1px solid ${darkMode ? "#64b5f6" : "#0066cc"}`,
@@ -94,12 +97,19 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
               backgroundColor: theme.cardBg,
               color: darkMode ? "#64b5f6" : "#0066cc",
               cursor: "pointer",
+              filter:
+                hoveredButton === "viewGuide"
+                  ? "brightness(0.85)"
+                  : "brightness(1)",
+              transition: "all 0.2s ease",
             }}
           >
             View detailed guide
           </button>
           <button
             onClick={downloadTemplate}
+            onMouseEnter={() => setHoveredButton("downloadTemplate")}
+            onMouseLeave={() => setHoveredButton(null)}
             style={{
               padding: "6px 12px",
               border: `1px solid ${darkMode ? "#64b5f6" : "#0066cc"}`,
@@ -107,6 +117,11 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
               backgroundColor: theme.cardBg,
               color: darkMode ? "#64b5f6" : "#0066cc",
               cursor: "pointer",
+              filter:
+                hoveredButton === "downloadTemplate"
+                  ? "brightness(0.85)"
+                  : "brightness(1)",
+              transition: "all 0.2s ease",
             }}
           >
             Download CSV template
@@ -144,6 +159,10 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
           <button
             onClick={onUpload}
             disabled={!file || loading}
+            onMouseEnter={() =>
+              !loading && file && setHoveredButton("uploadCsv")
+            }
+            onMouseLeave={() => setHoveredButton(null)}
             style={{
               padding: "12px 24px",
               backgroundColor: file ? "#007bff" : theme.border,
@@ -152,6 +171,11 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
               borderRadius: 6,
               cursor: file ? "pointer" : "not-allowed",
               fontSize: 16,
+              filter:
+                hoveredButton === "uploadCsv"
+                  ? "brightness(0.85)"
+                  : "brightness(1)",
+              transition: "all 0.2s ease",
             }}
           >
             {loading ? "Uploading..." : "Upload CSV"}
@@ -243,6 +267,8 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
 
           <button
             onClick={() => nav("/settings", { state: { uploadId, metadata } })}
+            onMouseEnter={() => setHoveredButton("continueToSettings")}
+            onMouseLeave={() => setHoveredButton(null)}
             style={{
               padding: "12px 24px",
               backgroundColor: "#28a745",
@@ -251,6 +277,11 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
               borderRadius: 6,
               cursor: "pointer",
               fontSize: 16,
+              filter:
+                hoveredButton === "continueToSettings"
+                  ? "brightness(0.85)"
+                  : "brightness(1)",
+              transition: "all 0.2s ease",
             }}
           >
             Continue to Settings →

@@ -24,6 +24,7 @@ export default function ClassTagSelector({
   const [allClasses, setAllClasses] = useState<ClassSummary[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hoveredButton, setHoveredButton] = useState<string | null>(null);
 
   useEffect(() => {
     loadClasses();
@@ -61,6 +62,8 @@ export default function ClassTagSelector({
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         disabled={loading}
+        onMouseEnter={() => !loading && setHoveredButton("assignClasses")}
+        onMouseLeave={() => setHoveredButton(null)}
         style={{
           padding: "6px 12px",
           backgroundColor: "#007bff",
@@ -70,6 +73,11 @@ export default function ClassTagSelector({
           cursor: loading ? "not-allowed" : "pointer",
           fontSize: 12,
           opacity: loading ? 0.6 : 1,
+          filter:
+            hoveredButton === "assignClasses"
+              ? "brightness(0.85)"
+              : "brightness(1)",
+          transition: "all 0.2s ease",
         }}
       >
         {loading ? "Loading..." : "Assign Classes"}

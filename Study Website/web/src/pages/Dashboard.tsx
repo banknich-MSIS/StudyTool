@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [attempts, setAttempts] = useState<AttemptSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredButton, setHoveredButton] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -43,8 +44,11 @@ export default function Dashboard() {
     }
   };
 
-  const handleCreateExam = (uploadIds: number[]) => {
-    navigate("/settings", { state: { uploadIds } });
+  const handleCreateExam = (
+    uploadIds: number[],
+    uploadData?: UploadSummary
+  ) => {
+    navigate("/settings", { state: { uploadIds, uploadData } });
   };
 
   const handleDeleteUpload = async (uploadId: number) => {
@@ -108,7 +112,23 @@ export default function Dashboard() {
     return (
       <div style={{ padding: 24, color: "crimson" }}>
         <div>Error: {error}</div>
-        <button onClick={loadDashboardData} style={{ marginTop: 12 }}>
+        <button
+          onClick={loadDashboardData}
+          onMouseEnter={() => setHoveredButton("retry")}
+          onMouseLeave={() => setHoveredButton(null)}
+          style={{
+            marginTop: 12,
+            padding: "8px 16px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: 6,
+            cursor: "pointer",
+            filter:
+              hoveredButton === "retry" ? "brightness(0.85)" : "brightness(1)",
+            transition: "all 0.2s ease",
+          }}
+        >
           Retry
         </button>
       </div>
@@ -156,7 +176,22 @@ export default function Dashboard() {
               Upload a CSV and take your first exam to see your history here.
             </p>
             <button
-              onClick={handleUploadNew}
+              onClick={() => {
+                if (uploads.length > 0) {
+                  // User has CSVs, go to settings with first CSV
+                  navigate("/settings", {
+                    state: {
+                      uploadIds: [uploads[0].id],
+                      uploadData: uploads[0],
+                    },
+                  });
+                } else {
+                  // No CSVs, go to upload page
+                  navigate("/upload");
+                }
+              }}
+              onMouseEnter={() => setHoveredButton("uploadFirst")}
+              onMouseLeave={() => setHoveredButton(null)}
               style={{
                 padding: "8px 16px",
                 backgroundColor: "#007bff",
@@ -164,9 +199,14 @@ export default function Dashboard() {
                 border: "none",
                 borderRadius: 6,
                 cursor: "pointer",
+                filter:
+                  hoveredButton === "uploadFirst"
+                    ? "brightness(0.85)"
+                    : "brightness(1)",
+                transition: "all 0.2s ease",
               }}
             >
-              Upload Your First CSV
+              {uploads.length > 0 ? "Take Exam" : "Upload Your First CSV"}
             </button>
           </div>
         )}

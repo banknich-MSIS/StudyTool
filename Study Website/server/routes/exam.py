@@ -23,6 +23,15 @@ def create_exam(payload: ExamCreate, db: Session = Depends(get_db)) -> ExamOut:
     query = db.query(QuestionModel).filter(QuestionModel.upload_id == upload.id)
     if payload.questionTypes:
         query = query.filter(QuestionModel.qtype.in_(payload.questionTypes))
+    
+    # Count available questions
+    available_count = query.count()
+    if payload.count > available_count:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Requested {payload.count} questions but only {available_count} are available"
+        )
+    
     questions = query.limit(payload.count).all()
 
     question_ids = [q.id for q in questions]

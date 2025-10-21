@@ -38,6 +38,7 @@ export default function ClassesPage() {
   const [formName, setFormName] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formColor, setFormColor] = useState("#007bff");
+  const [hoveredButton, setHoveredButton] = useState<string | null>(null);
 
   useEffect(() => {
     loadClasses();
@@ -125,7 +126,23 @@ export default function ClassesPage() {
     return (
       <div style={{ padding: 24, color: "crimson" }}>
         <div>Error: {error}</div>
-        <button onClick={loadClasses} style={{ marginTop: 12 }}>
+        <button
+          onClick={loadClasses}
+          onMouseEnter={() => setHoveredButton("retry")}
+          onMouseLeave={() => setHoveredButton(null)}
+          style={{
+            marginTop: 12,
+            padding: "8px 16px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: 6,
+            cursor: "pointer",
+            filter:
+              hoveredButton === "retry" ? "brightness(0.85)" : "brightness(1)",
+            transition: "all 0.2s ease",
+          }}
+        >
           Retry
         </button>
       </div>
@@ -148,6 +165,8 @@ export default function ClassesPage() {
         <div style={{ display: "flex", gap: 12 }}>
           <button
             onClick={() => setShowCreateModal(true)}
+            onMouseEnter={() => setHoveredButton("createNew")}
+            onMouseLeave={() => setHoveredButton(null)}
             style={{
               padding: "10px 20px",
               backgroundColor: "#007bff",
@@ -156,12 +175,19 @@ export default function ClassesPage() {
               borderRadius: 6,
               cursor: "pointer",
               fontSize: 15,
+              filter:
+                hoveredButton === "createNew"
+                  ? "brightness(0.85)"
+                  : "brightness(1)",
+              transition: "all 0.2s ease",
             }}
           >
             Create New Class
           </button>
           <button
             onClick={() => navigate("/")}
+            onMouseEnter={() => setHoveredButton("backToDashboard")}
+            onMouseLeave={() => setHoveredButton(null)}
             style={{
               padding: "10px 20px",
               backgroundColor: "#6c757d",
@@ -170,6 +196,11 @@ export default function ClassesPage() {
               borderRadius: 6,
               cursor: "pointer",
               fontSize: 15,
+              filter:
+                hoveredButton === "backToDashboard"
+                  ? "brightness(0.85)"
+                  : "brightness(1)",
+              transition: "all 0.2s ease",
             }}
           >
             Back to Dashboard
@@ -246,6 +277,8 @@ export default function ClassesPage() {
                 <div style={{ display: "flex", gap: 8 }}>
                   <button
                     onClick={() => openEditModal(cls)}
+                    onMouseEnter={() => setHoveredButton(`edit-${cls.id}`)}
+                    onMouseLeave={() => setHoveredButton(null)}
                     style={{
                       flex: 1,
                       padding: "8px 12px",
@@ -255,12 +288,19 @@ export default function ClassesPage() {
                       borderRadius: 4,
                       cursor: "pointer",
                       fontSize: 14,
+                      filter:
+                        hoveredButton === `edit-${cls.id}`
+                          ? "brightness(0.85)"
+                          : "brightness(1)",
+                      transition: "all 0.2s ease",
                     }}
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeleteClass(cls.id, cls.name)}
+                    onMouseEnter={() => setHoveredButton(`delete-${cls.id}`)}
+                    onMouseLeave={() => setHoveredButton(null)}
                     style={{
                       flex: 1,
                       padding: "8px 12px",
@@ -270,6 +310,11 @@ export default function ClassesPage() {
                       borderRadius: 4,
                       cursor: "pointer",
                       fontSize: 14,
+                      filter:
+                        hoveredButton === `delete-${cls.id}`
+                          ? "brightness(0.85)"
+                          : "brightness(1)",
+                      transition: "all 0.2s ease",
                     }}
                   >
                     Delete
@@ -297,6 +342,8 @@ export default function ClassesPage() {
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
+            onMouseEnter={() => setHoveredButton("createNewEmpty")}
+            onMouseLeave={() => setHoveredButton(null)}
             style={{
               padding: "10px 20px",
               backgroundColor: "#007bff",
@@ -305,6 +352,11 @@ export default function ClassesPage() {
               borderRadius: 6,
               cursor: "pointer",
               fontSize: 15,
+              filter:
+                hoveredButton === "createNewEmpty"
+                  ? "brightness(0.85)"
+                  : "brightness(1)",
+              transition: "all 0.2s ease",
             }}
           >
             Create New Class
@@ -466,6 +518,8 @@ export default function ClassesPage() {
                   setFormDescription("");
                   setFormColor("#007bff");
                 }}
+                onMouseEnter={() => setHoveredButton("cancelCreate")}
+                onMouseLeave={() => setHoveredButton(null)}
                 style={{
                   padding: "8px 16px",
                   backgroundColor: "#6c757d",
@@ -473,12 +527,19 @@ export default function ClassesPage() {
                   border: "none",
                   borderRadius: 4,
                   cursor: "pointer",
+                  filter:
+                    hoveredButton === "cancelCreate"
+                      ? "brightness(0.85)"
+                      : "brightness(1)",
+                  transition: "all 0.2s ease",
                 }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateClass}
+                onMouseEnter={() => setHoveredButton("createClass")}
+                onMouseLeave={() => setHoveredButton(null)}
                 style={{
                   padding: "8px 16px",
                   backgroundColor: "#007bff",
@@ -486,6 +547,11 @@ export default function ClassesPage() {
                   border: "none",
                   borderRadius: 4,
                   cursor: "pointer",
+                  filter:
+                    hoveredButton === "createClass"
+                      ? "brightness(0.85)"
+                      : "brightness(1)",
+                  transition: "all 0.2s ease",
                 }}
               >
                 Create
@@ -650,6 +716,8 @@ export default function ClassesPage() {
                   setFormDescription("");
                   setFormColor("#007bff");
                 }}
+                onMouseEnter={() => setHoveredButton("cancelEdit")}
+                onMouseLeave={() => setHoveredButton(null)}
                 style={{
                   padding: "8px 16px",
                   backgroundColor: "#6c757d",
@@ -657,12 +725,19 @@ export default function ClassesPage() {
                   border: "none",
                   borderRadius: 4,
                   cursor: "pointer",
+                  filter:
+                    hoveredButton === "cancelEdit"
+                      ? "brightness(0.85)"
+                      : "brightness(1)",
+                  transition: "all 0.2s ease",
                 }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleEditClass}
+                onMouseEnter={() => setHoveredButton("saveEdit")}
+                onMouseLeave={() => setHoveredButton(null)}
                 style={{
                   padding: "8px 16px",
                   backgroundColor: "#007bff",
@@ -670,6 +745,11 @@ export default function ClassesPage() {
                   border: "none",
                   borderRadius: 4,
                   cursor: "pointer",
+                  filter:
+                    hoveredButton === "saveEdit"
+                      ? "brightness(0.85)"
+                      : "brightness(1)",
+                  transition: "all 0.2s ease",
                 }}
               >
                 Save

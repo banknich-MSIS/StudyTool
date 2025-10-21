@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import io
 from typing import Any, Dict, List
 
@@ -27,8 +28,57 @@ async def upload_csv(
 
     content = await file.read()
     try:
-        df = pd.read_csv(io.BytesIO(content))
+        # Debug: Log the CSV content for troubleshooting
+        print(f"DEBUG: Processing CSV file: {file.filename}")
+        print(f"DEBUG: Content length: {len(content)} bytes")
+        
+        # Try multiple CSV parsing strategies
+        df = None
+        parsing_method = ""
+        
+        # Method 1: Standard pandas with proper quoting
+        try:
+            df = pd.read_csv(
+                io.BytesIO(content),
+                quotechar='"',
+                quoting=csv.QUOTE_MINIMAL,
+                skipinitialspace=True,
+                encoding='utf-8'
+            )
+            parsing_method = "QUOTE_MINIMAL"
+        except Exception as e1:
+            print(f"DEBUG: QUOTE_MINIMAL failed: {e1}")
+            
+            # Method 2: Try with QUOTE_ALL (more aggressive quoting)
+            try:
+                df = pd.read_csv(
+                    io.BytesIO(content),
+                    quotechar='"',
+                    quoting=csv.QUOTE_ALL,
+                    skipinitialspace=True,
+                    encoding='utf-8'
+                )
+                parsing_method = "QUOTE_ALL"
+            except Exception as e2:
+                print(f"DEBUG: QUOTE_ALL failed: {e2}")
+                
+                # Method 3: Try with no quoting (for unquoted CSVs)
+                try:
+                    df = pd.read_csv(
+                        io.BytesIO(content),
+                        skipinitialspace=True,
+                        encoding='utf-8'
+                    )
+                    parsing_method = "NO_QUOTING"
+                except Exception as e3:
+                    print(f"DEBUG: NO_QUOTING failed: {e3}")
+                    raise e1  # Re-raise the original error
+        
+        print(f"DEBUG: Successfully parsed CSV with {len(df)} rows using {parsing_method}")
+        print(f"DEBUG: Columns: {list(df.columns)}")
+        
     except Exception as exc:
+        print(f"DEBUG: All CSV parsing methods failed: {exc}")
         raise HTTPException(status_code=400, detail=f"Invalid CSV: {exc}") from exc
 
     upload = Upload(filename=file.filename, file_type="csv")
@@ -59,8 +109,9 @@ async def upload_csv(
         name_to_concept[key] = existing
         return existing.id
 
-    # Insert questions
+    # Insert questions and count types
     q_count = 0
+    question_type_counts: Dict[str, int] = {}
     for item in normalized:
         concept_ids: List[int] = []
         for c in item.get("concepts", []) or []:
@@ -77,7 +128,16 @@ async def upload_csv(
         )
         db.add(q)
         q_count += 1
+        
+        # Count question types
+        qtype = item["qtype"]
+        question_type_counts[qtype] = question_type_counts.get(qtype, 0) + 1
     db.commit()
+
+    # Add question_type_counts to metadata
+    if metadata is None:
+        metadata = {}
+    metadata["question_type_counts"] = question_type_counts
 
     stats = {"rows": len(df), "columns": list(df.columns), "questions": q_count, "warnings": warnings, "metadata": metadata}
     return {"uploadId": upload.id, "stats": stats}

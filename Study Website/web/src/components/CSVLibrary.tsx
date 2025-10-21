@@ -1,10 +1,19 @@
-import React, { useState } from "react";
-import type { UploadSummary } from "../types";
+import React, { useState, useEffect } from "react";
+import type { UploadSummary, ClassSummary, QuestionType } from "../types";
 import ClassTagSelector from "./ClassTagSelector";
+import { fetchClasses } from "../api/client";
+
+const QUESTION_TYPE_LABELS: Record<string, string> = {
+  mcq: "Multiple Choice",
+  multi: "Multiple Select",
+  short: "Short Answer",
+  truefalse: "True/False",
+  cloze: "Fill in the Blank",
+};
 
 interface CSVLibraryProps {
   uploads: UploadSummary[];
-  onCreateExam: (uploadIds: number[]) => void;
+  onCreateExam: (uploadIds: number[], uploadData?: UploadSummary) => void;
   onDelete: (uploadId: number) => void;
   onDownload: (uploadId: number) => void;
   onUpdate: () => void;
@@ -24,18 +33,46 @@ export default function CSVLibrary({
   const [selectedUploads, setSelectedUploads] = useState<Set<number>>(
     new Set()
   );
+  const [allClasses, setAllClasses] = useState<ClassSummary[]>([]);
+  const [hoveredButton, setHoveredButton] = useState<string | null>(null);
+  const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(
+    null
+  );
 
-  // Generate a consistent color from a string
-  const getTagColor = (str: string) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue = hash % 360;
-    return {
-      bg: `hsl(${hue}, 70%, 90%)`,
-      text: `hsl(${hue}, 70%, 30%)`,
+  // Load classes to get actual colors
+  useEffect(() => {
+    const loadClasses = async () => {
+      try {
+        const data = await fetchClasses();
+        setAllClasses(data);
+      } catch (e) {
+        console.error("Failed to load classes:", e);
+      }
     };
+    loadClasses();
+  }, []);
+
+  // Helper function to calculate contrast text color
+  const getContrastTextColor = (hexColor: string): string => {
+    // Remove # if present
+    const hex = hexColor.replace("#", "");
+
+    // Convert to RGB
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Return black or white based on luminance
+    return luminance > 0.5 ? "#000000" : "#FFFFFF";
+  };
+
+  // Get class color by name
+  const getClassColor = (className: string) => {
+    const classData = allClasses.find((cls) => cls.name === className);
+    return classData?.color || "#007bff";
   };
 
   const toggleSelection = (uploadId: number) => {
@@ -50,7 +87,9 @@ export default function CSVLibrary({
 
   const handleCreateExamFromSelected = () => {
     if (selectedUploads.size > 0) {
-      onCreateExam(Array.from(selectedUploads));
+      const uploadIds = Array.from(selectedUploads);
+      const firstUpload = uploads.find((u) => u.id === uploadIds[0]);
+      onCreateExam(uploadIds, firstUpload);
       setSelectedUploads(new Set());
     }
   };
@@ -62,6 +101,16 @@ export default function CSVLibrary({
       day: "numeric",
     });
   };
+
+  // Get unique class tags from all uploads
+  const allClassTags = Array.from(
+    new Set(uploads.flatMap((u) => u.class_tags || []))
+  ).sort();
+
+  // Filter uploads based on selected class
+  const filteredUploads = selectedClassFilter
+    ? uploads.filter((u) => u.class_tags?.includes(selectedClassFilter))
+    : uploads;
 
   if (uploads.length === 0) {
     return (
@@ -82,6 +131,8 @@ export default function CSVLibrary({
         </p>
         <button
           onClick={() => onCreateExam([])}
+          onMouseEnter={() => setHoveredButton("uploadFirst")}
+          onMouseLeave={() => setHoveredButton(null)}
           style={{
             padding: "12px 24px",
             backgroundColor: "#007bff",
@@ -90,6 +141,11 @@ export default function CSVLibrary({
             borderRadius: 6,
             cursor: "pointer",
             fontSize: 16,
+            filter:
+              hoveredButton === "uploadFirst"
+                ? "brightness(0.85)"
+                : "brightness(1)",
+            transition: "all 0.2s ease",
           }}
         >
           Upload Your First CSV
@@ -100,6 +156,78 @@ export default function CSVLibrary({
 
   return (
     <div>
+      {/* Class Filter */}
+      {allClassTags.length > 0 && (
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            alignItems: "center",
+            marginBottom: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ fontSize: 14, color: theme.text, fontWeight: 500 }}>
+            Filter by class:
+          </span>
+          <button
+            onClick={() => setSelectedClassFilter(null)}
+            onMouseEnter={() => setHoveredButton("filterAll")}
+            onMouseLeave={() => setHoveredButton(null)}
+            style={{
+              padding: "6px 12px",
+              backgroundColor: !selectedClassFilter
+                ? darkMode
+                  ? "#2a4a62"
+                  : "#007bff"
+                : theme.cardBg,
+              color: !selectedClassFilter ? "white" : theme.text,
+              border: `1px solid ${theme.border}`,
+              borderRadius: 4,
+              cursor: "pointer",
+              fontSize: 12,
+              transition: "all 0.2s ease",
+              filter:
+                hoveredButton === "filterAll"
+                  ? "brightness(0.85)"
+                  : "brightness(1)",
+            }}
+          >
+            All
+          </button>
+          {allClassTags.map((tag) => {
+            const classColor = getClassColor(tag);
+            const isSelected = selectedClassFilter === tag;
+            return (
+              <button
+                key={tag}
+                onClick={() => setSelectedClassFilter(tag)}
+                onMouseEnter={() => setHoveredButton(`filter-${tag}`)}
+                onMouseLeave={() => setHoveredButton(null)}
+                style={{
+                  padding: "6px 12px",
+                  backgroundColor: isSelected ? classColor : theme.cardBg,
+                  color: isSelected
+                    ? getContrastTextColor(classColor)
+                    : theme.text,
+                  border: `1px solid ${isSelected ? classColor : theme.border}`,
+                  borderRadius: 4,
+                  cursor: "pointer",
+                  fontSize: 12,
+                  transition: "all 0.2s ease",
+                  filter:
+                    hoveredButton === `filter-${tag}`
+                      ? "brightness(0.85)"
+                      : "brightness(1)",
+                }}
+              >
+                {tag}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Multi-select Actions */}
       {uploads.length > 0 && (
         <div
@@ -109,21 +237,35 @@ export default function CSVLibrary({
             alignItems: "center",
             marginBottom: 16,
             padding: 12,
-            backgroundColor: selectedUploads.size > 0 ? "#e3f2fd" : theme.navBg,
+            backgroundColor:
+              selectedUploads.size > 0
+                ? darkMode
+                  ? "rgba(25, 118, 210, 0.1)"
+                  : "#e3f2fd"
+                : theme.navBg,
             borderRadius: 6,
             border: `1px solid ${
-              selectedUploads.size > 0 ? "#2196f3" : theme.border
+              selectedUploads.size > 0
+                ? darkMode
+                  ? "#1565c0"
+                  : "#2196f3"
+                : theme.border
             }`,
           }}
         >
           <div>
             {selectedUploads.size > 0 ? (
-              <span style={{ color: "#1976d2", fontWeight: "bold" }}>
+              <span
+                style={{
+                  color: darkMode ? "#90caf9" : "#1976d2",
+                  fontWeight: "bold",
+                }}
+              >
                 {selectedUploads.size} CSV{selectedUploads.size > 1 ? "s" : ""}{" "}
                 selected
               </span>
             ) : (
-              <span style={{ color: "#6c757d" }}>
+              <span style={{ color: theme.textSecondary }}>
                 Select CSVs to create a combined exam
               </span>
             )}
@@ -131,6 +273,8 @@ export default function CSVLibrary({
           {selectedUploads.size > 0 && (
             <button
               onClick={handleCreateExamFromSelected}
+              onMouseEnter={() => setHoveredButton("createFromSelected")}
+              onMouseLeave={() => setHoveredButton(null)}
               style={{
                 padding: "8px 16px",
                 backgroundColor: "#28a745",
@@ -138,6 +282,11 @@ export default function CSVLibrary({
                 border: "none",
                 borderRadius: 6,
                 cursor: "pointer",
+                filter:
+                  hoveredButton === "createFromSelected"
+                    ? "brightness(0.85)"
+                    : "brightness(1)",
+                transition: "all 0.2s ease",
               }}
             >
               Create Exam from Selected
@@ -154,17 +303,21 @@ export default function CSVLibrary({
           gap: 16,
         }}
       >
-        {uploads.map((upload) => (
+        {filteredUploads.map((upload) => (
           <div
             key={upload.id}
             style={{
               border: selectedUploads.has(upload.id)
-                ? "2px solid #2196f3"
+                ? darkMode
+                  ? "2px solid #1565c0"
+                  : "2px solid #2196f3"
                 : `1px solid ${theme.border}`,
               borderRadius: 8,
               padding: 16,
               backgroundColor: selectedUploads.has(upload.id)
-                ? "#f3f9ff"
+                ? darkMode
+                  ? theme.cardBg
+                  : "#f3f9ff"
                 : theme.cardBg,
               cursor: "pointer",
               transition: "all 0.2s ease",
@@ -187,14 +340,15 @@ export default function CSVLibrary({
                 }}
               >
                 {upload.class_tags.map((tag, index) => {
-                  const colors = getTagColor(tag);
+                  const classColor = getClassColor(tag);
+                  const textColor = getContrastTextColor(classColor);
                   return (
                     <span
                       key={index}
                       style={{
                         padding: "3px 8px",
-                        backgroundColor: colors.bg,
-                        color: colors.text,
+                        backgroundColor: classColor,
+                        color: textColor,
                         borderRadius: 4,
                         fontSize: 11,
                         fontWeight: "bold",
@@ -267,6 +421,40 @@ export default function CSVLibrary({
               </div>
             )}
 
+            {/* Question Types */}
+            {upload.question_type_counts &&
+              Object.keys(upload.question_type_counts).length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: theme.textSecondary,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Question Types:
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                    {Object.entries(upload.question_type_counts).map(
+                      ([type, count]) => (
+                        <span
+                          key={type}
+                          style={{
+                            padding: "2px 6px",
+                            backgroundColor: darkMode ? "#2a4a62" : "#e3f2fd",
+                            borderRadius: 4,
+                            fontSize: 11,
+                            color: darkMode ? "#90caf9" : "#1976d2",
+                          }}
+                        >
+                          {QUESTION_TYPE_LABELS[type as QuestionType]} ({count})
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
             {/* Actions */}
             <div
               style={{
@@ -275,15 +463,17 @@ export default function CSVLibrary({
                 gap: 8,
                 marginTop: 12,
                 paddingTop: 12,
-                borderTop: "1px solid #f1f3f4",
+                borderTop: `1px solid ${theme.border}`,
               }}
             >
               <div style={{ display: "flex", gap: 8 }}>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onCreateExam([upload.id]);
+                    onCreateExam([upload.id], upload);
                   }}
+                  onMouseEnter={() => setHoveredButton(`create-${upload.id}`)}
+                  onMouseLeave={() => setHoveredButton(null)}
                   style={{
                     flex: 1,
                     padding: "6px 12px",
@@ -293,6 +483,11 @@ export default function CSVLibrary({
                     borderRadius: 4,
                     cursor: "pointer",
                     fontSize: 12,
+                    filter:
+                      hoveredButton === `create-${upload.id}`
+                        ? "brightness(0.85)"
+                        : "brightness(1)",
+                    transition: "all 0.2s ease",
                   }}
                 >
                   Create Exam
@@ -302,6 +497,8 @@ export default function CSVLibrary({
                     e.stopPropagation();
                     onDownload(upload.id);
                   }}
+                  onMouseEnter={() => setHoveredButton(`download-${upload.id}`)}
+                  onMouseLeave={() => setHoveredButton(null)}
                   style={{
                     padding: "6px 12px",
                     backgroundColor: "#6c757d",
@@ -310,6 +507,11 @@ export default function CSVLibrary({
                     borderRadius: 4,
                     cursor: "pointer",
                     fontSize: 12,
+                    filter:
+                      hoveredButton === `download-${upload.id}`
+                        ? "brightness(0.85)"
+                        : "brightness(1)",
+                    transition: "all 0.2s ease",
                   }}
                 >
                   Download
@@ -325,6 +527,8 @@ export default function CSVLibrary({
                       onDelete(upload.id);
                     }
                   }}
+                  onMouseEnter={() => setHoveredButton(`delete-${upload.id}`)}
+                  onMouseLeave={() => setHoveredButton(null)}
                   style={{
                     padding: "6px 12px",
                     backgroundColor: "#dc3545",
@@ -333,6 +537,11 @@ export default function CSVLibrary({
                     borderRadius: 4,
                     cursor: "pointer",
                     fontSize: 12,
+                    filter:
+                      hoveredButton === `delete-${upload.id}`
+                        ? "brightness(0.85)"
+                        : "brightness(1)",
+                    transition: "all 0.2s ease",
                   }}
                 >
                   Delete

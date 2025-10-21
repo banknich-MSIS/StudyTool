@@ -57,6 +57,15 @@ export default function SupportPage() {
             <strong>Developer:</strong> Banks
           </div>
           <div style={{ marginBottom: 12, color: theme.text }}>
+            <strong>Email:</strong>{" "}
+            <a
+              href="mailto:banknich@iu.edu"
+              style={{ color: "#007bff", textDecoration: "underline" }}
+            >
+              banknich@iu.edu
+            </a>
+          </div>
+          <div style={{ marginBottom: 12, color: theme.text }}>
             <strong>GitHub:</strong>{" "}
             <a
               href="https://github.com/banknich-MSIS/StudyTool"
