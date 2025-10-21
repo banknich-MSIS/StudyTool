@@ -82,7 +82,7 @@ def normalize_csv(df: pd.DataFrame) -> Tuple[List[Dict], List[str], Dict]:
     work = df.rename(columns=lower_map)
 
     results: List[Dict] = []
-    for _, row in work.iterrows():
+    for row_idx, row in work.iterrows():
         stem = str(row.get("question", "")).strip()
         qtype = str(row.get("type", "")).strip().lower()
         options_raw = row.get("options")
@@ -92,16 +92,27 @@ def normalize_csv(df: pd.DataFrame) -> Tuple[List[Dict], List[str], Dict]:
         options_list: List[str] | None = None
         if isinstance(options_raw, str) and options_raw.strip():
             options_list = [o.strip() for o in options_raw.split("|") if o.strip()]
+            
+            # Validation: Check if any option contains commas (likely a formatting error)
+            for opt in options_list:
+                if "," in opt and qtype in ("mcq", "multi"):
+                    warnings.append(
+                        f"Row {row_idx + 2}: Option contains comma which may indicate improper CSV formatting: '{opt[:50]}...'. "
+                        f"Options should use pipe (|) delimiters only, and the options field should be quoted if it contains commas."
+                    )
 
         if not qtype:
             qtype = "mcq" if options_list else "short"
 
         # Parse answer
+        # For multi-select, answer should be pipe-separated list
+        # For MCQ, short, cloze: answer is a single value (even if it contains pipes - display as-is)
         if qtype == "multi":
             answer_value = [a.strip() for a in str(answer_raw).split("|") if a.strip()]
         elif qtype == "truefalse":
             answer_value = str(answer_raw).strip().lower() in ("true", "t", "1", "yes")
         else:
+            # For MCQ, short, cloze: keep answer as single string (don't split by pipes)
             answer_value = str(answer_raw).strip()
 
         concepts = []

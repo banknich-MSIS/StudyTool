@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import UploadPage from "./pages/UploadPage";
 import SettingsPage from "./pages/SettingsPage";
 import ExamPage from "./pages/ExamPage";
+import PracticeModePage from "./pages/PracticeModePage";
 import ReviewPage from "./pages/ReviewPage";
 import AttemptReviewPage from "./pages/AttemptReviewPage";
 import HistoryPage from "./pages/HistoryPage";
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
       { path: "upload", element: <UploadPage /> },
       { path: "settings", element: <SettingsPage /> },
       { path: "exam/:examId", element: <ExamPage /> },
+      { path: "practice/:examId", element: <PracticeModePage /> },
       { path: "review/:examId", element: <ReviewPage /> },
       { path: "classes", element: <ClassesPage /> },
       { path: "history", element: <HistoryPage /> },

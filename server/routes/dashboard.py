@@ -150,12 +150,16 @@ def get_attempt_detail(attempt_id: int, db: Session = Depends(get_db)) -> Attemp
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
     
-    # Get all questions for this exam
-    questions = (
+    # Get all questions for this exam (maintain order from exam.question_ids)
+    questions_query = (
         db.query(Question)
         .filter(Question.id.in_(exam.question_ids))
         .all()
     )
+    
+    # Create a lookup and maintain order
+    question_lookup = {q.id: q for q in questions_query}
+    questions = [question_lookup[qid] for qid in exam.question_ids if qid in question_lookup]
     
     # Get all answers for this attempt
     answers = (
@@ -172,13 +176,19 @@ def get_attempt_detail(attempt_id: int, db: Session = Depends(get_db)) -> Attemp
     for question in questions:
         answer = answer_lookup.get(question.id)
         
-        question_dto = QuestionDTO(
-            id=question.id,
-            stem=question.stem,
-            type=question.qtype,
-            options=(question.options or {}).get("list"),
-            concepts=question.concept_ids or [],
-        )
+        # Extract options from the JSON structure
+        options_data = None
+        if question.options and isinstance(question.options, dict):
+            options_data = question.options.get("list", [])
+        
+        # Explicitly construct QuestionDTO with proper type
+        question_dto = QuestionDTO.model_validate({
+            "id": question.id,
+            "stem": question.stem,
+            "type": question.qtype,
+            "options": options_data if options_data else None,
+            "concepts": question.concept_ids if question.concept_ids else [],
+        })
         
         question_reviews.append(
             QuestionReview(

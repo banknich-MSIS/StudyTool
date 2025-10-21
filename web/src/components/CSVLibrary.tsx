@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import type { UploadSummary, ClassSummary, QuestionType } from "../types";
 import ClassTagSelector from "./ClassTagSelector";
 import { fetchClasses } from "../api/client";
@@ -30,6 +31,7 @@ export default function CSVLibrary({
   darkMode,
   theme,
 }: CSVLibraryProps) {
+  const navigate = useNavigate();
   const [selectedUploads, setSelectedUploads] = useState<Set<number>>(
     new Set()
   );
@@ -142,7 +144,7 @@ export default function CSVLibrary({
           Upload your first CSV file to start creating practice exams.
         </p>
         <button
-          onClick={() => onCreateExam([])}
+          onClick={() => navigate("/upload")}
           onMouseEnter={() => setHoveredButton("uploadFirst")}
           onMouseLeave={() => setHoveredButton(null)}
           style={{

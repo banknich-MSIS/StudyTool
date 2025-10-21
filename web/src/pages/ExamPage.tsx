@@ -84,7 +84,12 @@ export default function ExamPage() {
 
   const confirmSubmit = () => {
     setShowSubmitConfirm(false);
-    onSubmit();
+    // Scroll to top before navigating
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Small delay to allow scroll to complete
+    setTimeout(() => {
+      onSubmit();
+    }, 300);
   };
 
   const cancelSubmit = () => {
@@ -143,6 +148,10 @@ export default function ExamPage() {
             padding: "16px",
             backgroundColor: theme.navBg,
             overflow: "auto",
+            position: "sticky",
+            top: 0,
+            height: "fit-content",
+            maxHeight: "100vh",
           }}
         >
           <h3
@@ -418,9 +427,9 @@ export default function ExamPage() {
                                 }}
                               >
                                 Correct Answer:{" "}
-                                {String(
-                                  correctAnswers[question.id] || "Loading..."
-                                )}
+                                {correctAnswers[question.id] !== undefined
+                                  ? String(correctAnswers[question.id])
+                                  : "Loading..."}
                               </div>
                             </div>
                           )}
@@ -430,7 +439,9 @@ export default function ExamPage() {
                           <div>
                             <div style={{ marginBottom: "8px" }}>
                               Your answer:{" "}
-                              {userAnswer ? String(userAnswer) : "Not answered"}
+                              {userAnswer !== undefined && userAnswer !== null
+                                ? String(userAnswer)
+                                : "Not answered"}
                             </div>
                             <div
                               style={{
@@ -443,9 +454,9 @@ export default function ExamPage() {
                               }}
                             >
                               Correct Answer:{" "}
-                              {String(
-                                correctAnswers[question.id] || "Loading..."
-                              )}
+                              {correctAnswers[question.id] !== undefined
+                                ? String(correctAnswers[question.id])
+                                : "Loading..."}
                             </div>
                           </div>
                         )}
@@ -483,9 +494,9 @@ export default function ExamPage() {
                               }}
                             >
                               Correct Answer:{" "}
-                              {String(
-                                correctAnswers[question.id] || "Loading..."
-                              )}
+                              {correctAnswers[question.id] !== undefined
+                                ? String(correctAnswers[question.id])
+                                : "Loading..."}
                             </div>
                           </div>
                         )}

@@ -1,7 +1,17 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
-import { createExam, fetchAllUploads } from "../api/client";
-import type { QuestionType, UploadMetadata, UploadSummary } from "../types";
+import {
+  createExam,
+  fetchAllUploads,
+  fetchClasses,
+  createClass,
+} from "../api/client";
+import type {
+  QuestionType,
+  UploadMetadata,
+  UploadSummary,
+  ClassSummary,
+} from "../types";
 import { useExamStore } from "../store/examStore";
 
 const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
@@ -29,22 +39,28 @@ export default function SettingsPage() {
 
   const [count, setCount] = useState(10);
   const [examName, setExamName] = useState("");
-  const [examTheme, setExamTheme] = useState("");
+  const [examMode, setExamMode] = useState<"exam" | "practice">("exam");
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const [showCreateClass, setShowCreateClass] = useState(false);
+  const [newClassName, setNewClassName] = useState("");
+  const [newClassDescription, setNewClassDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploadData, setUploadData] = useState<UploadSummary | null>(null);
+  const [classes, setClasses] = useState<ClassSummary[]>([]);
+
+  // Load classes
+  useEffect(() => {
+    fetchClasses()
+      .then((data) => setClasses(data))
+      .catch((e) => console.error("Failed to load classes:", e));
+  }, []);
 
   // Fetch upload details to get question type counts
   useEffect(() => {
     if (uploadDataFromState) {
       // Use passed data immediately (preferred)
-      console.log("=== SETTINGS PAGE ===");
-      console.log("Received uploadData from state:", uploadDataFromState);
-      console.log(
-        "Question type counts:",
-        uploadDataFromState.question_type_counts
-      );
       setUploadData(uploadDataFromState);
       setLoadingUpload(false);
       const initialCount = Math.min(10, uploadDataFromState.question_count);
@@ -77,11 +93,35 @@ export default function SettingsPage() {
       if (metadata.recommended_count) {
         setCount(metadata.recommended_count);
       }
-      if (metadata.themes && metadata.themes.length > 0) {
-        setExamTheme(metadata.themes[0]);
-      }
     }
   }, [metadata]);
+
+  const handleCreateNewClass = async () => {
+    if (!newClassName.trim()) {
+      alert("Please enter a class name");
+      return;
+    }
+
+    try {
+      const newClass = await createClass(
+        newClassName,
+        newClassDescription || undefined,
+        "#007bff"
+      );
+      // Convert Class to ClassSummary by adding upload_count
+      const newClassSummary: ClassSummary = {
+        ...newClass,
+        upload_count: 0,
+      };
+      setClasses([...classes, newClassSummary]);
+      setSelectedClassId(newClass.id);
+      setShowCreateClass(false);
+      setNewClassName("");
+      setNewClassDescription("");
+    } catch (e: any) {
+      alert(`Failed to create class: ${e?.message || "Unknown error"}`);
+    }
+  };
 
   const availableQuestions = uploadData?.question_count || 0;
   const questionTypeCounts = uploadData?.question_type_counts || {};
@@ -99,7 +139,13 @@ export default function SettingsPage() {
         count,
       });
       setExam(exam.examId, exam.questions);
-      nav(`/exam/${exam.examId}`);
+
+      // Navigate based on selected mode
+      if (examMode === "practice") {
+        nav(`/practice/${exam.examId}`);
+      } else {
+        nav(`/exam/${exam.examId}`);
+      }
     } catch (e: any) {
       setError(e?.response?.data?.detail || e.message);
     } finally {
@@ -193,10 +239,115 @@ export default function SettingsPage() {
             )}
           </section>
 
+          {/* Mode Selection */}
+          <section
+            style={{
+              backgroundColor: darkMode ? "#2a3a4a" : "#e8f4f8",
+              border: `1px solid ${darkMode ? "#3a4a5a" : "#b3d9e6"}`,
+              borderRadius: 8,
+              padding: 20,
+            }}
+          >
+            <h3
+              style={{
+                margin: "0 0 16px 0",
+                fontSize: 20,
+                color: theme.text,
+              }}
+            >
+              Select Mode
+            </h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 16,
+              }}
+            >
+              <button
+                onClick={() => setExamMode("exam")}
+                style={{
+                  padding: "20px",
+                  border: `2px solid ${
+                    examMode === "exam" ? "#dc3545" : theme.border
+                  }`,
+                  borderRadius: 8,
+                  backgroundColor:
+                    examMode === "exam"
+                      ? darkMode
+                        ? "#3d1a1a"
+                        : "#fff0f0"
+                      : theme.cardBg,
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "bold",
+                    marginBottom: 8,
+                    color: examMode === "exam" ? "#dc3545" : theme.text,
+                  }}
+                >
+                  📝 Exam Mode
+                </div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: theme.textSecondary,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Take all questions at once, submit at the end for grading
+                </div>
+              </button>
+              <button
+                onClick={() => setExamMode("practice")}
+                style={{
+                  padding: "20px",
+                  border: `2px solid ${
+                    examMode === "practice" ? "#007bff" : theme.border
+                  }`,
+                  borderRadius: 8,
+                  backgroundColor:
+                    examMode === "practice"
+                      ? darkMode
+                        ? "#1a2a3a"
+                        : "#f0f8ff"
+                      : theme.cardBg,
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "bold",
+                    marginBottom: 8,
+                    color: examMode === "practice" ? "#007bff" : theme.text,
+                  }}
+                >
+                  🎯 Practice Mode
+                </div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: theme.textSecondary,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  One question at a time with immediate feedback
+                </div>
+              </button>
+            </div>
+          </section>
+
           {/* Exam Configuration */}
           <section>
             <h3 style={{ margin: "0 0 12px 0", color: theme.text }}>
-              Exam Details (Optional)
+              {examMode === "practice" ? "Practice " : "Exam "}Details
+              (Optional)
             </h3>
             <div style={{ display: "grid", gap: 12 }}>
               <div>
@@ -235,13 +386,18 @@ export default function SettingsPage() {
                     color: theme.text,
                   }}
                 >
-                  Theme/Subject
+                  Assign to Class (Optional)
                 </label>
-                <input
-                  type="text"
-                  value={examTheme}
-                  onChange={(e) => setExamTheme(e.target.value)}
-                  placeholder="Enter theme or subject (optional)"
+                <select
+                  value={selectedClassId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "create_new") {
+                      setShowCreateClass(true);
+                    } else {
+                      setSelectedClassId(value ? parseInt(value) : null);
+                    }
+                  }}
                   style={{
                     width: "100%",
                     padding: "8px 12px",
@@ -251,7 +407,106 @@ export default function SettingsPage() {
                     backgroundColor: theme.cardBg,
                     color: theme.text,
                   }}
-                />
+                >
+                  <option value="">No class (unassigned)</option>
+                  {classes.map((cls) => (
+                    <option key={cls.id} value={cls.id}>
+                      {cls.name}
+                    </option>
+                  ))}
+                  <option value="create_new">+ Create New Class...</option>
+                </select>
+
+                {/* Inline Class Creation */}
+                {showCreateClass && (
+                  <div
+                    style={{
+                      marginTop: 12,
+                      padding: 16,
+                      backgroundColor: darkMode ? "#2a3a4a" : "#f0f8ff",
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: 6,
+                    }}
+                  >
+                    <h4
+                      style={{
+                        margin: "0 0 12px 0",
+                        fontSize: 14,
+                        color: theme.text,
+                      }}
+                    >
+                      Create New Class
+                    </h4>
+                    <div style={{ display: "grid", gap: 8 }}>
+                      <input
+                        type="text"
+                        value={newClassName}
+                        onChange={(e) => setNewClassName(e.target.value)}
+                        placeholder="Class name (e.g., CPA Review)"
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          border: `1px solid ${theme.border}`,
+                          borderRadius: 4,
+                          fontSize: 13,
+                          backgroundColor: theme.cardBg,
+                          color: theme.text,
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={newClassDescription}
+                        onChange={(e) => setNewClassDescription(e.target.value)}
+                        placeholder="Description (optional)"
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          border: `1px solid ${theme.border}`,
+                          borderRadius: 4,
+                          fontSize: 13,
+                          backgroundColor: theme.cardBg,
+                          color: theme.text,
+                        }}
+                      />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                          onClick={handleCreateNewClass}
+                          style={{
+                            flex: 1,
+                            padding: "6px 12px",
+                            backgroundColor: "#007bff",
+                            color: "white",
+                            border: "none",
+                            borderRadius: 4,
+                            cursor: "pointer",
+                            fontSize: 13,
+                          }}
+                        >
+                          Create
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowCreateClass(false);
+                            setNewClassName("");
+                            setNewClassDescription("");
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: "6px 12px",
+                            backgroundColor: "#6c757d",
+                            color: "white",
+                            border: "none",
+                            borderRadius: 4,
+                            cursor: "pointer",
+                            fontSize: 13,
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </section>

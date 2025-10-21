@@ -40,11 +40,23 @@ class ConceptOut(BaseModel):
 class QuestionDTO(BaseModel):
     id: int
     stem: str
-    type: QuestionType = Field(alias="qtype")
-    options: Optional[List[str]] = None
-    concepts: List[int] = []
+    type: QuestionType
+    options: Optional[List[str]] = Field(default=None)
+    concepts: List[int] = Field(default_factory=list)
 
-    model_config = dict(from_attributes=True, populate_by_name=True)
+    model_config = dict(
+        from_attributes=True, 
+        populate_by_name=True,
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "stem": "What is 2+2?",
+                "type": "mcq",
+                "options": ["2", "3", "4", "5"],
+                "concepts": [1, 2]
+            }
+        }
+    )
 
 
 class QuestionReview(BaseModel):

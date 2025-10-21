@@ -35,13 +35,6 @@ export default function Dashboard() {
         fetchAllUploads(),
         fetchRecentAttempts(10),
       ]);
-      console.log("=== UPLOADS DATA ===");
-      console.log("Uploads:", uploadsData);
-      console.log("First upload:", uploadsData[0]);
-      console.log(
-        "Question type counts:",
-        uploadsData[0]?.question_type_counts
-      );
       setUploads(uploadsData);
       setAttempts(attemptsData);
     } catch (e: any) {

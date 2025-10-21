@@ -36,16 +36,18 @@ async def upload_csv(
         df = None
         parsing_method = ""
         
-        # Method 1: Standard pandas with proper quoting
+        # Method 1: Standard pandas with proper quoting (handles quoted fields with commas)
         try:
             df = pd.read_csv(
                 io.BytesIO(content),
                 quotechar='"',
                 quoting=csv.QUOTE_MINIMAL,
                 skipinitialspace=True,
-                encoding='utf-8'
+                encoding='utf-8',
+                on_bad_lines='warn',  # Warn about bad lines instead of failing
+                engine='python'  # More flexible parsing
             )
-            parsing_method = "QUOTE_MINIMAL"
+            parsing_method = "QUOTE_MINIMAL (Python engine)"
         except Exception as e1:
             print(f"DEBUG: QUOTE_MINIMAL failed: {e1}")
             
@@ -56,22 +58,27 @@ async def upload_csv(
                     quotechar='"',
                     quoting=csv.QUOTE_ALL,
                     skipinitialspace=True,
-                    encoding='utf-8'
+                    encoding='utf-8',
+                    on_bad_lines='warn',
+                    engine='python'
                 )
-                parsing_method = "QUOTE_ALL"
+                parsing_method = "QUOTE_ALL (Python engine)"
             except Exception as e2:
                 print(f"DEBUG: QUOTE_ALL failed: {e2}")
                 
-                # Method 3: Try with no quoting (for unquoted CSVs)
+                # Method 3: Try with C engine (faster but less flexible)
                 try:
                     df = pd.read_csv(
                         io.BytesIO(content),
+                        quotechar='"',
+                        doublequote=True,
                         skipinitialspace=True,
-                        encoding='utf-8'
+                        encoding='utf-8',
+                        engine='c'
                     )
-                    parsing_method = "NO_QUOTING"
+                    parsing_method = "C engine with quoting"
                 except Exception as e3:
-                    print(f"DEBUG: NO_QUOTING failed: {e3}")
+                    print(f"DEBUG: C engine failed: {e3}")
                     raise e1  # Re-raise the original error
         
         print(f"DEBUG: Successfully parsed CSV with {len(df)} rows using {parsing_method}")

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { QuestionDTO, QuestionType } from "../types";
 import { useExamStore } from "../store/examStore";
+import { parseSimpleMarkdown } from "../utils/markdown";
 
 const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   mcq: "Multiple Choice",
@@ -25,18 +26,6 @@ export default function QuestionCard({ question, darkMode, theme }: Props) {
 
   // Handle both 'type' and 'qtype' fields from backend
   const questionType = question.type || (question as any).qtype || "unknown";
-
-  // Debug logging
-  console.log("QuestionCard Debug:", {
-    questionId: question.id,
-    questionType: question.type,
-    qtype: (question as any).qtype,
-    resolvedType: questionType,
-    questionStem: question.stem,
-    options: question.options,
-    optionsLength: options.length,
-    rawQuestion: question,
-  });
 
   return (
     <div
@@ -67,9 +56,8 @@ export default function QuestionCard({ question, darkMode, theme }: Props) {
           lineHeight: "1.5",
           color: theme.text,
         }}
-      >
-        {question.stem}
-      </div>
+        dangerouslySetInnerHTML={{ __html: parseSimpleMarkdown(question.stem) }}
+      />
       {questionType === "mcq" && (
         <div style={{ display: "grid", gap: 8 }}>
           {options.length === 0 ? (

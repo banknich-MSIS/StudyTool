@@ -41,13 +41,13 @@ def create_exam(payload: ExamCreate, db: Session = Depends(get_db)) -> ExamOut:
     db.refresh(exam)
 
     dto = [
-        QuestionDTO(
-            id=q.id,
-            stem=q.stem,
-            type=q.qtype,
-            options=(q.options or {}).get("list"),
-            concepts=q.concept_ids or [],
-        )
+        QuestionDTO.model_validate({
+            "id": q.id,
+            "stem": q.stem,
+            "type": q.qtype,
+            "options": (q.options or {}).get("list"),
+            "concepts": q.concept_ids or [],
+        })
         for q in questions
     ]
     return ExamOut(examId=exam.id, questions=dto)
@@ -62,13 +62,13 @@ def get_exam(exam_id: int, db: Session = Depends(get_db)) -> ExamOut:
         db.query(QuestionModel).filter(QuestionModel.id.in_(exam.question_ids)).all()
     )
     dto = [
-        QuestionDTO(
-            id=q.id,
-            stem=q.stem,
-            type=q.qtype,
-            options=(q.options or {}).get("list"),
-            concepts=q.concept_ids or [],
-        )
+        QuestionDTO.model_validate({
+            "id": q.id,
+            "stem": q.stem,
+            "type": q.qtype,
+            "options": (q.options or {}).get("list"),
+            "concepts": q.concept_ids or [],
+        })
         for q in questions
     ]
     return ExamOut(examId=exam.id, questions=dto)
@@ -170,5 +170,54 @@ def _check_correct(qtype: str, user: Any, answer: Any) -> bool:
         except Exception:
             return False
     return False
+
+
+@router.post("/attempts/{attempt_id}/questions/{question_id}/override")
+def override_question_grade(
+    attempt_id: int,
+    question_id: int,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """Override the grade for a specific question in an attempt"""
+    attempt = db.get(Attempt, attempt_id)
+    if attempt is None:
+        raise HTTPException(status_code=404, detail="Attempt not found")
+    
+    # Find the answer record
+    answer_record = (
+        db.query(AttemptAnswer)
+        .filter(
+            AttemptAnswer.attempt_id == attempt_id,
+            AttemptAnswer.question_id == question_id
+        )
+        .first()
+    )
+    
+    if answer_record is None:
+        raise HTTPException(status_code=404, detail="Answer not found")
+    
+    # Toggle the correct status
+    answer_record.correct = not answer_record.correct
+    
+    # Recalculate overall score
+    all_answers = (
+        db.query(AttemptAnswer)
+        .filter(AttemptAnswer.attempt_id == attempt_id)
+        .all()
+    )
+    
+    correct_count = sum(1 for ans in all_answers if ans.correct)
+    total_count = len(all_answers)
+    new_score_pct = (correct_count / max(1, total_count)) * 100.0
+    
+    attempt.score_pct = new_score_pct
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "new_status": answer_record.correct,
+        "new_score_pct": round(new_score_pct, 2)
+    }
 
 
