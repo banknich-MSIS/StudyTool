@@ -1,3 +1,0 @@
-# namespace for service utilities
-
-
