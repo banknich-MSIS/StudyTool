@@ -74,6 +74,9 @@ export default function App() {
       {/* Full-width Navigation Ribbon */}
       <nav
         style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
           backgroundColor: theme.navBg,
           borderBottom: `1px solid ${theme.border}`,
           padding: "12px 0",
@@ -248,9 +251,102 @@ export default function App() {
       </nav>
 
       {/* Main Content */}
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: "0 auto",
+          padding: "0 16px 80px 16px",
+          minHeight: "calc(100vh - 160px)",
+        }}
+      >
         <Outlet context={{ darkMode, theme }} />
       </div>
+
+      {/* Footer */}
+      <footer
+        style={{
+          marginTop: "auto",
+          padding: "20px 16px",
+          borderTop: `1px solid ${theme.border}`,
+          backgroundColor: theme.navBg,
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: 16,
+            justifyContent: "center",
+            alignItems: "center",
+            fontSize: 14,
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            onClick={() => navigate("/utilities")}
+            style={{
+              background: "none",
+              border: "none",
+              color: theme.text,
+              cursor: "pointer",
+              textDecoration: "underline",
+              fontSize: 14,
+            }}
+          >
+            Utilities
+          </button>
+          <span style={{ color: theme.textSecondary }}>|</span>
+          <button
+            onClick={() => navigate("/support")}
+            style={{
+              background: "none",
+              border: "none",
+              color: theme.text,
+              cursor: "pointer",
+              textDecoration: "underline",
+              fontSize: 14,
+            }}
+          >
+            Support/Contact
+          </button>
+          <span style={{ color: theme.textSecondary }}>|</span>
+          <button
+            onClick={() => setShowTutorial(true)}
+            style={{
+              background: "none",
+              border: "none",
+              color: theme.text,
+              cursor: "pointer",
+              textDecoration: "underline",
+              fontSize: 14,
+            }}
+          >
+            Instructions
+          </button>
+          <span style={{ color: theme.textSecondary }}>|</span>
+          <a
+            href="https://github.com/banknich-MSIS/StudyTool"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: theme.text,
+              textDecoration: "underline",
+              fontSize: 14,
+            }}
+          >
+            GitHub
+          </a>
+        </div>
+        <div
+          style={{
+            marginTop: 12,
+            fontSize: 12,
+            color: theme.textSecondary,
+          }}
+        >
+          © 2025 Hoosier Prep Portal - Built by Banks
+        </div>
+      </footer>
 
       {/* Tutorial Modal */}
       <TutorialModal

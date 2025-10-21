@@ -1,5 +1,5 @@
 # stop.ps1 - Stop all Study Tool servers
-# This script cleanly shuts down both backend (port 8000) and frontend (port 5173) servers
+# This script REQUIRES Administrator privileges to reliably stop processes by port
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Study Tool - Server Shutdown" -ForegroundColor Cyan
@@ -10,13 +10,23 @@ Write-Host ""
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin) {
-    Write-Host "[WARNING] Not running as Administrator" -ForegroundColor Yellow
-    Write-Host "Will attempt shutdown with limited privileges..." -ForegroundColor Yellow
+    Write-Host "[ERROR] This script requires Administrator privileges" -ForegroundColor Red
+    Write-Host "" -ForegroundColor Red
+    Write-Host "To run this script properly:" -ForegroundColor Yellow
+    Write-Host "  1. Right-click PowerShell" -ForegroundColor Gray
+    Write-Host "  2. Select 'Run as administrator'" -ForegroundColor Gray
+    Write-Host "  3. Navigate to: $PSScriptRoot" -ForegroundColor Gray
+    Write-Host "  4. Run: .\stop.ps1" -ForegroundColor Gray
     Write-Host ""
+    Write-Host "Alternative (Non-Admin):" -ForegroundColor Yellow
+    Write-Host "  - Close the PowerShell window running start.ps1" -ForegroundColor Gray
+    Write-Host "  - Or run: Get-Job | Stop-Job; Get-Job | Remove-Job" -ForegroundColor Gray
+    Write-Host ""
+    exit 1
 }
 
-# Stop PowerShell background jobs
-Write-Host "Stopping background jobs..." -ForegroundColor Yellow
+# Stop PowerShell background jobs first
+Write-Host "Stopping PowerShell background jobs..." -ForegroundColor Yellow
 $jobs = Get-Job
 if ($jobs) {
     try {
@@ -24,101 +34,123 @@ if ($jobs) {
         $jobs | Remove-Job
         Write-Host "[OK] Stopped and removed all background jobs" -ForegroundColor Green
     } catch {
-        Write-Host "[WARNING] Some jobs could not be removed" -ForegroundColor Yellow
+        Write-Host "[WARNING] Some jobs could not be removed: $_" -ForegroundColor Yellow
     }
 } else {
     Write-Host "[INFO] No background jobs found" -ForegroundColor Gray
 }
 Write-Host ""
 
-# Function to stop process by port
+# Function to force stop process by port
 function Stop-ProcessByPort {
     param(
         [int]$Port,
         [string]$ServerName
     )
     
-    Write-Host "Checking $ServerName (port $Port)..." -ForegroundColor Yellow
-    $conn = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
+    Write-Host "Checking port $Port ($ServerName)..." -ForegroundColor Yellow
     
-    if ($conn) {
-        $process = Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue
-        if ($process) {
-            $processName = $process.Name
-            $processPid = $process.Id
+    try {
+        # Find connection on the port
+        $connections = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+        
+        if (-not $connections) {
+            Write-Host "[INFO] No process listening on port $Port" -ForegroundColor Gray
+            return $true
+        }
+        
+        # Handle multiple connections (shouldn't happen but be safe)
+        $stoppedCount = 0
+        foreach ($conn in $connections) {
+            $processId = $conn.OwningProcess
             
-            # Try method 1: Stop-Process (requires admin)
+            # Skip system processes
+            if ($processId -eq 0 -or $processId -eq 4) {
+                Write-Host "[WARNING] Port $Port owned by system process (PID: $processId), skipping" -ForegroundColor Yellow
+                continue
+            }
+            
+            # Get process info
+            $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
+            if (-not $process) {
+                Write-Host "[WARNING] Process PID $processId not found, may be terminating" -ForegroundColor Yellow
+                continue
+            }
+            
+            $processName = $process.Name
+            Write-Host "  Found: $processName (PID: $processId)" -ForegroundColor Gray
+            
+            # Force stop the process
             try {
-                Stop-Process -Id $processPid -Force -ErrorAction Stop
-                Write-Host "[OK] Stopped $ServerName ($processName, PID: $processPid)" -ForegroundColor Green
-                return $true
+                Stop-Process -Id $processId -Force -ErrorAction Stop
+                Write-Host "  [OK] Stopped $ServerName - $processName (PID: $processId)" -ForegroundColor Green
+                $stoppedCount++
             } catch {
-                # Method 1 failed, try method 2: taskkill
-                Write-Host "[INFO] Trying alternative method (taskkill)..." -ForegroundColor Gray
+                # Fallback to taskkill
+                Write-Host "  [INFO] Trying taskkill..." -ForegroundColor Gray
                 try {
-                    $output = taskkill /F /PID $processPid 2>&1
+                    $result = taskkill /F /PID $processId 2>&1
                     if ($LASTEXITCODE -eq 0) {
-                        Write-Host "[OK] Stopped $ServerName ($processName, PID: $processPid)" -ForegroundColor Green
-                        return $true
+                        Write-Host "  [OK] Stopped $ServerName using taskkill (PID: $processId)" -ForegroundColor Green
+                        $stoppedCount++
                     } else {
-                        throw "taskkill failed"
+                        Write-Host "  [ERROR] Failed to stop PID $processId : $result" -ForegroundColor Red
                     }
                 } catch {
-                    Write-Host "[ERROR] Access denied - Cannot stop $ServerName" -ForegroundColor Red
-                    Write-Host "         Process: $processName (PID: $processPid)" -ForegroundColor Red
-                    return $false
+                    Write-Host "  [ERROR] Could not stop process: $_" -ForegroundColor Red
                 }
             }
         }
-    } else {
-        Write-Host "[INFO] No process found on port $Port" -ForegroundColor Gray
-        return $true
+        
+        return $stoppedCount -gt 0
+    } catch {
+        Write-Host "[ERROR] Error checking port $Port : $_" -ForegroundColor Red
+        return $false
     }
 }
 
 # Stop backend server (port 8000)
-$backendStopped = Stop-ProcessByPort -Port 8000 -ServerName "backend server"
+$backendStopped = Stop-ProcessByPort -Port 8000 -ServerName "Backend"
 Write-Host ""
 
 # Stop frontend server (port 5173)
-$frontendStopped = Stop-ProcessByPort -Port 5173 -ServerName "frontend server"
+$frontendStopped = Stop-ProcessByPort -Port 5173 -ServerName "Frontend"
 Write-Host ""
 
-# Wait a moment for ports to be released
-Start-Sleep -Milliseconds 500
+# Give processes time to fully terminate
+Write-Host "Waiting for ports to be released..." -ForegroundColor Yellow
+Start-Sleep -Seconds 2
 
 # Verify ports are free
 Write-Host "Verifying ports are free..." -ForegroundColor Yellow
-$backend8000 = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
-$frontend5173 = Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue
+$backend8000 = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue
+$frontend5173 = Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue
 
 if (-not $backend8000 -and -not $frontend5173) {
     Write-Host "[OK] All servers stopped successfully!" -ForegroundColor Green
     Write-Host "[OK] Ports 8000 and 5173 are now free" -ForegroundColor Green
 } else {
     Write-Host "[WARNING] Some ports may still be in use" -ForegroundColor Yellow
-    if ($backend8000) { 
-        Write-Host "  - Port 8000 still in use" -ForegroundColor Yellow 
+    
+    if ($backend8000) {
+        $proc = Get-Process -Id $backend8000.OwningProcess -ErrorAction SilentlyContinue
+        if ($proc) {
+            Write-Host "  - Port 8000: $($proc.Name) (PID: $($proc.Id))" -ForegroundColor Yellow
+            Write-Host "    Manual fix: Stop-Process -Id $($proc.Id) -Force" -ForegroundColor Gray
+        } else {
+            Write-Host "  - Port 8000 still in use (unknown process)" -ForegroundColor Yellow
+        }
     }
-    if ($frontend5173) { 
-        Write-Host "  - Port 5173 still in use" -ForegroundColor Yellow 
+    
+    if ($frontend5173) {
+        $proc = Get-Process -Id $frontend5173.OwningProcess -ErrorAction SilentlyContinue
+        if ($proc) {
+            Write-Host "  - Port 5173: $($proc.Name) (PID: $($proc.Id))" -ForegroundColor Yellow
+            Write-Host "    Manual fix: Stop-Process -Id $($proc.Id) -Force" -ForegroundColor Gray
+        } else {
+            Write-Host "  - Port 5173 still in use (unknown process)" -ForegroundColor Yellow
+        }
     }
-    Write-Host ""
-    Write-Host "Manual Shutdown Options:" -ForegroundColor Cyan
-    Write-Host "1. Run PowerShell as Administrator:" -ForegroundColor Gray
-    Write-Host "   - Right-click PowerShell" -ForegroundColor Gray
-    Write-Host "   - Select 'Run as administrator'" -ForegroundColor Gray
-    Write-Host "   - Run: .\stop.ps1" -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "2. Close the PowerShell window running start.ps1" -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "3. Use Task Manager (Ctrl+Shift+Esc):" -ForegroundColor Gray
-    Write-Host "   - Find and end python.exe tasks" -ForegroundColor Gray
-    Write-Host "   - Find and end node.exe tasks" -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "4. Force kill by port (as Admin):" -ForegroundColor Gray
-    Write-Host "   Get-NetTCPConnection -LocalPort 8000 | % { Stop-Process -Id `$_.OwningProcess -Force }" -ForegroundColor DarkGray
-    Write-Host "   Get-NetTCPConnection -LocalPort 5173 | % { Stop-Process -Id `$_.OwningProcess -Force }" -ForegroundColor DarkGray
 }
 
 Write-Host ""

@@ -10,12 +10,16 @@ interface ClassTagSelectorProps {
   uploadId: number;
   currentTags: string[];
   onUpdate: () => void;
+  darkMode: boolean;
+  theme: any;
 }
 
 export default function ClassTagSelector({
   uploadId,
   currentTags,
   onUpdate,
+  darkMode,
+  theme,
 }: ClassTagSelectorProps) {
   const [allClasses, setAllClasses] = useState<ClassSummary[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -93,10 +97,10 @@ export default function ClassTagSelector({
               top: "100%",
               left: 0,
               marginTop: 4,
-              backgroundColor: "white",
-              border: "1px solid #dee2e6",
+              backgroundColor: theme.modalBg,
+              border: `1px solid ${theme.border}`,
               borderRadius: 6,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
               minWidth: 200,
               maxHeight: 300,
               overflowY: "auto",
@@ -107,7 +111,7 @@ export default function ClassTagSelector({
               <div
                 style={{
                   padding: 12,
-                  color: "#6c757d",
+                  color: theme.textSecondary,
                   fontSize: 14,
                   textAlign: "center",
                 }}
@@ -126,20 +130,24 @@ export default function ClassTagSelector({
                     style={{
                       padding: "10px 12px",
                       cursor: "pointer",
-                      borderBottom: "1px solid #f0f0f0",
+                      borderBottom: `1px solid ${theme.border}`,
                       display: "flex",
                       alignItems: "center",
                       gap: 8,
-                      backgroundColor: isSelected ? "#e3f2fd" : "white",
+                      backgroundColor: isSelected
+                        ? darkMode
+                          ? "#2a4a62"
+                          : "#e3f2fd"
+                        : theme.cardBg,
                     }}
                     onMouseEnter={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.backgroundColor = "#f8f9fa";
+                        e.currentTarget.style.backgroundColor = theme.navHover;
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.backgroundColor = "white";
+                        e.currentTarget.style.backgroundColor = theme.cardBg;
                       }
                     }}
                   >
@@ -149,7 +157,18 @@ export default function ClassTagSelector({
                       readOnly
                       style={{ cursor: "pointer" }}
                     />
-                    <span style={{ fontSize: 14 }}>{cls.name}</span>
+                    <div
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: "50%",
+                        backgroundColor: cls.color || "#007bff",
+                        marginRight: 4,
+                      }}
+                    />
+                    <span style={{ fontSize: 14, color: theme.text }}>
+                      {cls.name}
+                    </span>
                   </div>
                 );
               })

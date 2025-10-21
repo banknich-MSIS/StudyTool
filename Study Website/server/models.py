@@ -6,6 +6,7 @@ from typing import List, Optional
 from sqlalchemy import (
     JSON,
     Boolean,
+    Column,
     DateTime,
     Float,
     ForeignKey,
@@ -23,8 +24,8 @@ from .db import Base
 upload_classes = Table(
     "upload_classes",
     Base.metadata,
-    mapped_column("upload_id", ForeignKey("uploads.id"), primary_key=True),
-    mapped_column("class_id", ForeignKey("classes.id"), primary_key=True),
+    Column("upload_id", Integer, ForeignKey("uploads.id"), primary_key=True),
+    Column("class_id", Integer, ForeignKey("classes.id"), primary_key=True),
 )
 
 
@@ -126,6 +127,7 @@ class Class(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(256), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    color: Mapped[Optional[str]] = mapped_column(String(16), nullable=True, default="#007bff")
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, nullable=False
     )

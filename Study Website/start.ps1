@@ -43,29 +43,50 @@ $webDir = Join-Path $root 'web'
 $venvDir = Join-Path $serverDir '.venv'
 $pythonExe = Join-Path $venvDir 'Scripts\python.exe'
 
-# Check for existing servers and clean up
-Write-Host "Checking for existing servers..."
-$backendPort = netstat -ano | findstr ":8000" | findstr "LISTENING"
-$frontendPort = netstat -ano | findstr ":5173" | findstr "LISTENING"
+# Clean up any existing servers first using stop.ps1
+Write-Host "Cleaning up any existing servers..." -ForegroundColor Yellow
+$stopScript = Join-Path $root "stop.ps1"
 
-if ($backendPort) {
-  Write-Warning "Port 8000 is already in use. You may need to stop the existing server."
-  Write-Host "Run: Get-Job | Stop-Job (to stop PowerShell background jobs)"
-  Write-Host "Or check Task Manager for Python/uvicorn processes"
+# Check if we're running as admin
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (Test-Path $stopScript) {
+  if ($isAdmin) {
+    Write-Host "Running stop script to clean up ports..." -ForegroundColor Gray
+    & $stopScript
+    Start-Sleep -Seconds 2
+  } else {
+    # Not admin - just clean up background jobs
+    Write-Host "[INFO] Not running as admin - cleaning up background jobs only" -ForegroundColor Gray
+    $existingJobs = Get-Job
+    if ($existingJobs) {
+      Write-Host "Stopping existing PowerShell background jobs..." -ForegroundColor Yellow
+      $existingJobs | Stop-Job
+      $existingJobs | Remove-Job
+    }
+  }
 }
 
-if ($frontendPort) {
-  Write-Warning "Port 5173 is already in use. You may need to stop the existing server."
-  Write-Host "Run: Get-Job | Stop-Job (to stop PowerShell background jobs)"
-  Write-Host "Or check Task Manager for Node.js processes"
-}
+# Final port check
+Write-Host "Checking for port conflicts..." -ForegroundColor Yellow
+$backendPort = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue
+$frontendPort = Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue
 
-# Stop any existing PowerShell background jobs
-$existingJobs = Get-Job
-if ($existingJobs) {
-  Write-Host "Stopping existing PowerShell background jobs..."
-  $existingJobs | Stop-Job
-  $existingJobs | Remove-Job
+if ($backendPort -or $frontendPort) {
+  Write-Host ""
+  Write-Host "[WARNING] Ports still in use!" -ForegroundColor Yellow
+  if ($backendPort) {
+    $proc = Get-Process -Id $backendPort.OwningProcess -ErrorAction SilentlyContinue
+    Write-Host "  Port 8000: $($proc.Name) (PID: $($proc.Id))" -ForegroundColor Yellow
+  }
+  if ($frontendPort) {
+    $proc = Get-Process -Id $frontendPort.OwningProcess -ErrorAction SilentlyContinue
+    Write-Host "  Port 5173: $($proc.Name) (PID: $($proc.Id))" -ForegroundColor Yellow
+  }
+  Write-Host ""
+  Write-Host "To fix: Run '.\stop.ps1' as Administrator" -ForegroundColor Cyan
+  Write-Host "Press Enter to continue anyway, or Ctrl+C to cancel" -ForegroundColor Yellow
+  Read-Host
 }
 
 # Ensure Python available to create venv

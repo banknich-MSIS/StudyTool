@@ -343,6 +343,8 @@ export default function CSVLibrary({
                   uploadId={upload.id}
                   currentTags={upload.class_tags || []}
                   onUpdate={onUpdate}
+                  darkMode={darkMode}
+                  theme={theme}
                 />
               </div>
             </div>

@@ -94,7 +94,12 @@ export default function QuestionCard({ question, darkMode, theme }: Props) {
                   border: `1px solid ${theme.border}`,
                   borderRadius: "4px",
                   cursor: "pointer",
-                  backgroundColor: value === opt ? "#e3f2fd" : theme.cardBg,
+                  backgroundColor:
+                    value === opt
+                      ? darkMode
+                        ? "#2a4a62"
+                        : "#e3f2fd"
+                      : theme.cardBg,
                 }}
               >
                 <input
@@ -104,7 +109,12 @@ export default function QuestionCard({ question, darkMode, theme }: Props) {
                   onChange={() => setAnswer(question.id, opt)}
                   style={{ transform: "scale(1.2)" }}
                 />
-                <span style={{ fontSize: "15px", color: theme.text }}>
+                <span
+                  style={{
+                    fontSize: "15px",
+                    color: value === opt && darkMode ? "#90caf9" : theme.text,
+                  }}
+                >
                   {opt}
                 </span>
               </label>
@@ -139,7 +149,11 @@ export default function QuestionCard({ question, darkMode, theme }: Props) {
                     border: `1px solid ${theme.border}`,
                     borderRadius: "4px",
                     cursor: "pointer",
-                    backgroundColor: checked ? "#e3f2fd" : theme.cardBg,
+                    backgroundColor: checked
+                      ? darkMode
+                        ? "#2a4a62"
+                        : "#e3f2fd"
+                      : theme.cardBg,
                   }}
                 >
                   <input
@@ -153,7 +167,12 @@ export default function QuestionCard({ question, darkMode, theme }: Props) {
                     }}
                     style={{ transform: "scale(1.2)" }}
                   />
-                  <span style={{ fontSize: "15px", color: theme.text }}>
+                  <span
+                    style={{
+                      fontSize: "15px",
+                      color: checked && darkMode ? "#90caf9" : theme.text,
+                    }}
+                  >
                     {opt}
                   </span>
                 </label>
@@ -196,7 +215,9 @@ export default function QuestionCard({ question, darkMode, theme }: Props) {
                 cursor: "pointer",
                 backgroundColor:
                   String(value).toLowerCase() === opt
-                    ? "#e3f2fd"
+                    ? darkMode
+                      ? "#2a4a62"
+                      : "#e3f2fd"
                     : theme.cardBg,
               }}
             >
@@ -211,7 +232,10 @@ export default function QuestionCard({ question, darkMode, theme }: Props) {
                 style={{
                   textTransform: "capitalize",
                   fontSize: "15px",
-                  color: theme.text,
+                  color:
+                    String(value).toLowerCase() === opt && darkMode
+                      ? "#90caf9"
+                      : theme.text,
                 }}
               >
                 {opt}

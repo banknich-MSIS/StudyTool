@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import { useExamStore } from "../store/examStore";
 import type { GradeReport, QuestionDTO } from "../types";
 
@@ -12,6 +12,10 @@ interface ReviewQuestion extends QuestionDTO {
 export default function ReviewPage() {
   const nav = useNavigate();
   const location = useLocation();
+  const { darkMode, theme } = useOutletContext<{
+    darkMode: boolean;
+    theme: any;
+  }>();
   const gradeReport = location.state as GradeReport | undefined;
   const { questions: storeQuestions } = useExamStore();
   const [reviewQuestions, setReviewQuestions] = useState<ReviewQuestion[]>([]);
@@ -77,25 +81,30 @@ export default function ReviewPage() {
         display: "grid",
         gridTemplateColumns: "280px 1fr",
         gap: 16,
-        height: "100vh",
+        minHeight: "calc(100vh - 80px)",
+        backgroundColor: theme.bg,
       }}
     >
       {/* Sidebar Navigator */}
       <aside
         style={{
           padding: "16px",
-          backgroundColor: "#f8f9fa",
+          backgroundColor: theme.navBg,
           overflow: "auto",
         }}
       >
         <div style={{ marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 8px 0", fontSize: "18px" }}>Results</h3>
+          <h3
+            style={{ margin: "0 0 8px 0", fontSize: "18px", color: theme.text }}
+          >
+            Results
+          </h3>
           <div
             style={{ fontSize: "24px", fontWeight: "bold", color: "#28a745" }}
           >
             {gradeReport.scorePct.toFixed(1)}%
           </div>
-          <div style={{ fontSize: "14px", color: "#666" }}>
+          <div style={{ fontSize: "14px", color: theme.textSecondary }}>
             {correctCount} / {totalCount} correct
           </div>
         </div>
@@ -114,11 +123,23 @@ export default function ReviewPage() {
               style={{
                 padding: 8,
                 borderRadius: 6,
-                border: "1px solid #ddd",
-                background: q.isCorrect ? "#d4edda" : "#f8d7da",
+                border: `1px solid ${theme.border}`,
+                background: q.isCorrect
+                  ? darkMode
+                    ? "#1a3d1a"
+                    : "#d4edda"
+                  : darkMode
+                  ? "#3d1a1a"
+                  : "#f8d7da",
                 cursor: "pointer",
                 fontWeight: "bold",
-                color: q.isCorrect ? "#155724" : "#721c24",
+                color: q.isCorrect
+                  ? darkMode
+                    ? "#66bb6a"
+                    : "#155724"
+                  : darkMode
+                  ? "#ef5350"
+                  : "#721c24",
               }}
               title={`Question ${idx + 1} - ${
                 q.isCorrect ? "Correct" : "Incorrect"
@@ -139,7 +160,7 @@ export default function ReviewPage() {
             gap: 12,
             marginBottom: 24,
             padding: "12px 0",
-            borderBottom: "2px solid #dee2e6",
+            borderBottom: `2px solid ${theme.border}`,
           }}
         >
           <button
@@ -192,7 +213,13 @@ export default function ReviewPage() {
                 }`,
                 borderRadius: 8,
                 padding: 16,
-                backgroundColor: question.isCorrect ? "#f8fff9" : "#fff8f8",
+                backgroundColor: question.isCorrect
+                  ? darkMode
+                    ? "#1e2e1e"
+                    : "#f8fff9"
+                  : darkMode
+                  ? "#2e1e1e"
+                  : "#fff8f8",
               }}
             >
               <div
@@ -203,7 +230,13 @@ export default function ReviewPage() {
                   marginBottom: 12,
                 }}
               >
-                <h3 style={{ margin: 0, fontSize: "16px", color: "#666" }}>
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: "16px",
+                    color: theme.textSecondary,
+                  }}
+                >
                   Question {index + 1}
                 </h3>
                 <div
@@ -227,6 +260,7 @@ export default function ReviewPage() {
                   lineHeight: "1.5",
                   marginBottom: 16,
                   whiteSpace: "pre-wrap",
+                  color: theme.text,
                 }}
               >
                 {question.stem}
@@ -246,14 +280,14 @@ export default function ReviewPage() {
                         (Array.isArray(question.correctAnswer) &&
                           question.correctAnswer.includes(option));
 
-                      let backgroundColor = "#fff";
-                      let borderColor = "#e9ecef";
+                      let backgroundColor = darkMode ? "#4d4d4d" : "#d8dce0";
+                      let borderColor = theme.border;
 
                       if (isCorrectAnswer) {
-                        backgroundColor = "#d4edda";
+                        backgroundColor = darkMode ? "#1a3d1a" : "#d4edda";
                         borderColor = "#28a745";
                       } else if (isUserAnswer && !isCorrectAnswer) {
-                        backgroundColor = "#f8d7da";
+                        backgroundColor = darkMode ? "#3d1a1a" : "#f8d7da";
                         borderColor = "#dc3545";
                       }
 
@@ -268,13 +302,15 @@ export default function ReviewPage() {
                             position: "relative",
                           }}
                         >
-                          <span style={{ fontSize: "15px" }}>{option}</span>
+                          <span style={{ fontSize: "15px", color: theme.text }}>
+                            {option}
+                          </span>
                           {isCorrectAnswer && (
                             <span
                               style={{
                                 marginLeft: 8,
                                 fontWeight: "bold",
-                                color: "#28a745",
+                                color: darkMode ? "#66bb6a" : "#28a745",
                               }}
                             >
                               Correct Answer
@@ -285,7 +321,7 @@ export default function ReviewPage() {
                               style={{
                                 marginLeft: 8,
                                 fontWeight: "bold",
-                                color: "#dc3545",
+                                color: darkMode ? "#ef5350" : "#dc3545",
                               }}
                             >
                               Your Answer
@@ -306,14 +342,14 @@ export default function ReviewPage() {
                     const isCorrectAnswer =
                       String(question.correctAnswer).toLowerCase() === option;
 
-                    let backgroundColor = "#fff";
-                    let borderColor = "#e9ecef";
+                    let backgroundColor = darkMode ? "#4d4d4d" : "#d8dce0";
+                    let borderColor = theme.border;
 
                     if (isCorrectAnswer) {
-                      backgroundColor = "#d4edda";
+                      backgroundColor = darkMode ? "#1a3d1a" : "#d4edda";
                       borderColor = "#28a745";
                     } else if (isUserAnswer && !isCorrectAnswer) {
-                      backgroundColor = "#f8d7da";
+                      backgroundColor = darkMode ? "#3d1a1a" : "#f8d7da";
                       borderColor = "#dc3545";
                     }
 
@@ -328,13 +364,15 @@ export default function ReviewPage() {
                           textTransform: "capitalize",
                         }}
                       >
-                        <span style={{ fontSize: "15px" }}>{option}</span>
+                        <span style={{ fontSize: "15px", color: theme.text }}>
+                          {option}
+                        </span>
                         {isCorrectAnswer && (
                           <span
                             style={{
                               marginLeft: 8,
                               fontWeight: "bold",
-                              color: "#28a745",
+                              color: darkMode ? "#66bb6a" : "#28a745",
                             }}
                           >
                             ✓ Correct Answer
@@ -345,7 +383,7 @@ export default function ReviewPage() {
                             style={{
                               marginLeft: 8,
                               fontWeight: "bold",
-                              color: "#dc3545",
+                              color: darkMode ? "#ef5350" : "#dc3545",
                             }}
                           >
                             Your Answer
@@ -368,14 +406,26 @@ export default function ReviewPage() {
                       }`,
                       borderRadius: 4,
                       backgroundColor: question.isCorrect
-                        ? "#d4edda"
+                        ? darkMode
+                          ? "#1a3d1a"
+                          : "#d4edda"
+                        : darkMode
+                        ? "#3d1a1a"
                         : "#f8d7da",
                     }}
                   >
-                    <div style={{ fontWeight: "bold", marginBottom: 4 }}>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        marginBottom: 4,
+                        color: theme.text,
+                      }}
+                    >
                       Your Answer:
                     </div>
-                    <div>{String(question.userAnswer)}</div>
+                    <div style={{ color: theme.text }}>
+                      {String(question.userAnswer)}
+                    </div>
                   </div>
                   {!question.isCorrect && (
                     <div
@@ -383,13 +433,21 @@ export default function ReviewPage() {
                         padding: "12px",
                         border: "2px solid #28a745",
                         borderRadius: 4,
-                        backgroundColor: "#d4edda",
+                        backgroundColor: darkMode ? "#1a3d1a" : "#d4edda",
                       }}
                     >
-                      <div style={{ fontWeight: "bold", marginBottom: 4 }}>
+                      <div
+                        style={{
+                          fontWeight: "bold",
+                          marginBottom: 4,
+                          color: theme.text,
+                        }}
+                      >
                         Correct Answer:
                       </div>
-                      <div>{String(question.correctAnswer)}</div>
+                      <div style={{ color: theme.text }}>
+                        {String(question.correctAnswer)}
+                      </div>
                     </div>
                   )}
                 </div>

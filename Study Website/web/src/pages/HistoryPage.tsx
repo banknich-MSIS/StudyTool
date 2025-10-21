@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { fetchRecentAttempts, deleteAttempt } from "../api/client";
 import type { AttemptSummary } from "../types";
 import ExamHistory from "../components/ExamHistory";
 
 export default function HistoryPage() {
   const navigate = useNavigate();
+  const { darkMode, theme } = useOutletContext<{
+    darkMode: boolean;
+    theme: any;
+  }>();
   const [attempts, setAttempts] = useState<AttemptSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +72,9 @@ export default function HistoryPage() {
           justifyContent: "space-between",
         }}
       >
-        <h2 style={{ margin: 0, fontSize: 28 }}>Exam History</h2>
+        <h2 style={{ margin: 0, fontSize: 28, color: theme.text }}>
+          Exam History
+        </h2>
         <button
           onClick={() => navigate("/")}
           style={{
@@ -89,21 +95,23 @@ export default function HistoryPage() {
           attempts={attempts}
           onReviewAttempt={handleReviewAttempt}
           onDeleteAttempt={handleDeleteAttempt}
+          darkMode={darkMode}
+          theme={theme}
         />
       ) : (
         <div
           style={{
             padding: 48,
             textAlign: "center",
-            backgroundColor: "#f8f9fa",
+            backgroundColor: theme.navBg,
             borderRadius: 8,
-            border: "2px dashed #dee2e6",
+            border: `2px dashed ${theme.border}`,
           }}
         >
-          <h3 style={{ margin: "0 0 8px 0", color: "#6c757d" }}>
+          <h3 style={{ margin: "0 0 8px 0", color: theme.textSecondary }}>
             No exam history yet
           </h3>
-          <p style={{ margin: "0 0 16px 0", color: "#6c757d" }}>
+          <p style={{ margin: "0 0 16px 0", color: theme.textSecondary }}>
             Take your first exam to see your history here.
           </p>
           <button

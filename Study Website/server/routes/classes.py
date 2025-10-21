@@ -17,7 +17,8 @@ def create_class(payload: ClassCreate, db: Session = Depends(get_db)) -> ClassOu
     """Create a new class"""
     new_class = ClassModel(
         name=payload.name,
-        description=payload.description
+        description=payload.description,
+        color=payload.color
     )
     db.add(new_class)
     db.commit()
@@ -37,6 +38,7 @@ def get_all_classes(db: Session = Depends(get_db)) -> List[ClassSummary]:
                 id=cls.id,
                 name=cls.name,
                 description=cls.description,
+                color=cls.color,
                 created_at=cls.created_at,
                 upload_count=len(cls.uploads)
             )
@@ -69,6 +71,8 @@ def update_class(
         cls.name = payload.name
     if payload.description is not None:
         cls.description = payload.description
+    if payload.color is not None:
+        cls.color = payload.color
     
     db.commit()
     db.refresh(cls)

@@ -104,17 +104,20 @@ class AttemptDetail(BaseModel):
 class ClassCreate(BaseModel):
     name: str
     description: Optional[str] = None
+    color: Optional[str] = "#007bff"
 
 
 class ClassUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    color: Optional[str] = None
 
 
 class ClassOut(BaseModel):
     id: int
     name: str
     description: Optional[str] = None
+    color: Optional[str] = None
     created_at: datetime
 
     model_config = dict(from_attributes=True)
@@ -124,6 +127,7 @@ class ClassSummary(BaseModel):
     id: int
     name: str
     description: Optional[str] = None
+    color: Optional[str] = None
     created_at: datetime
     upload_count: int
 

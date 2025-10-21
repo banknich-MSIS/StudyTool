@@ -10,6 +10,8 @@ import ReviewPage from "./pages/ReviewPage";
 import AttemptReviewPage from "./pages/AttemptReviewPage";
 import HistoryPage from "./pages/HistoryPage";
 import ClassesPage from "./pages/ClassesPage";
+import SupportPage from "./pages/SupportPage";
+import UtilitiesPage from "./pages/UtilitiesPage";
 
 const router = createBrowserRouter([
   {
@@ -24,6 +26,8 @@ const router = createBrowserRouter([
       { path: "classes", element: <ClassesPage /> },
       { path: "history", element: <HistoryPage /> },
       { path: "history/:attemptId", element: <AttemptReviewPage /> },
+      { path: "support", element: <SupportPage /> },
+      { path: "utilities", element: <UtilitiesPage /> },
     ],
   },
 ]);

@@ -126,7 +126,7 @@ export default function ExamPage() {
           display: "grid",
           gridTemplateColumns: "280px 1fr",
           gap: 16,
-          height: "100vh",
+          minHeight: "calc(100vh - 80px)",
           backgroundColor: theme.bg,
         }}
       >
@@ -217,7 +217,7 @@ export default function ExamPage() {
                 marginRight: "12px",
               }}
             >
-              Exam Summary
+              Exam Answers
             </button>
             <button
               onClick={handleSubmitClick}
@@ -236,7 +236,7 @@ export default function ExamPage() {
           </div>
         </main>
 
-        {/* Exam Summary Modal */}
+        {/* Exam Answers Modal */}
         {showExamSummary && (
           <div
             style={{
@@ -274,7 +274,7 @@ export default function ExamPage() {
                 }}
               >
                 <h2 style={{ margin: 0, color: theme.text }}>
-                  Exam Summary (Preview Only)
+                  Exam Answers (Preview Only)
                 </h2>
                 <button
                   onClick={() => setShowExamSummary(false)}
@@ -293,13 +293,13 @@ export default function ExamPage() {
               <div style={{ padding: "20px", overflow: "auto", flex: 1 }}>
                 <div
                   style={{
-                    backgroundColor: "#fff3cd",
-                    border: "1px solid #ffc107",
+                    backgroundColor: darkMode ? "#4d4520" : "#fff3cd",
+                    border: `1px solid ${darkMode ? "#5d5530" : "#ffc107"}`,
                     borderRadius: "6px",
                     padding: "12px",
                     marginBottom: "20px",
                     fontSize: "14px",
-                    color: "#856404",
+                    color: darkMode ? "#ffb74d" : "#856404",
                   }}
                 >
                   <strong>Note:</strong> This is a preview only. You can see
@@ -329,10 +329,12 @@ export default function ExamPage() {
                       <div
                         key={question.id}
                         style={{
-                          border: "1px solid #ddd",
+                          border: `1px solid ${theme.border}`,
                           borderRadius: "8px",
                           padding: "16px",
-                          backgroundColor: hasAnswer ? "#f8f9fa" : "#fff",
+                          backgroundColor: hasAnswer
+                            ? theme.navBg
+                            : theme.cardBg,
                         }}
                       >
                         <div
@@ -340,12 +342,17 @@ export default function ExamPage() {
                             fontWeight: "bold",
                             marginBottom: "8px",
                             fontSize: "16px",
+                            color: theme.text,
                           }}
                         >
                           Question {index + 1} {!hasAnswer && "(Not Answered)"}
                         </div>
                         <div
-                          style={{ marginBottom: "12px", lineHeight: "1.5" }}
+                          style={{
+                            marginBottom: "12px",
+                            lineHeight: "1.5",
+                            color: theme.text,
+                          }}
                         >
                           {question.stem}
                         </div>
@@ -366,10 +373,13 @@ export default function ExamPage() {
                                     style={{
                                       padding: "8px 12px",
                                       borderRadius: "4px",
-                                      border: "2px solid #e9ecef",
+                                      border: `2px solid ${theme.border}`,
                                       backgroundColor: isUserAnswer
-                                        ? "#e3f2fd"
-                                        : "#fff",
+                                        ? darkMode
+                                          ? "#2a4a62"
+                                          : "#e3f2fd"
+                                        : theme.cardBg,
+                                      color: theme.text,
                                     }}
                                   >
                                     {option}
@@ -378,7 +388,9 @@ export default function ExamPage() {
                                         style={{
                                           marginLeft: "8px",
                                           fontWeight: "bold",
-                                          color: "#1976d2",
+                                          color: darkMode
+                                            ? "#64b5f6"
+                                            : "#1976d2",
                                         }}
                                       >
                                         (Your Answer)

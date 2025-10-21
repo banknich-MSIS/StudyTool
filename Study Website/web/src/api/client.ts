@@ -109,9 +109,10 @@ export async function previewExamAnswers(
 // Class management API methods
 export async function createClass(
   name: string,
-  description?: string
+  description?: string,
+  color?: string
 ): Promise<import("../types").Class> {
-  const { data } = await api.post("/classes", { name, description });
+  const { data } = await api.post("/classes", { name, description, color });
   return data;
 }
 
@@ -125,9 +126,14 @@ export async function fetchClasses(): Promise<
 export async function updateClass(
   id: number,
   name?: string,
-  description?: string
+  description?: string,
+  color?: string
 ): Promise<import("../types").Class> {
-  const { data } = await api.put(`/classes/${id}`, { name, description });
+  const { data } = await api.put(`/classes/${id}`, {
+    name,
+    description,
+    color,
+  });
   return data;
 }
 
