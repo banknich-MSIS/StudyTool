@@ -109,72 +109,81 @@ export default function ExamHistory({
       >
         <div
           style={{
-            padding: 16,
-            backgroundColor: darkMode ? "#1a3a52" : "#e3f2fd",
-            borderRadius: 8,
+            padding: 20,
+            background: theme.cardBg,
+            backdropFilter: theme.glassBlur,
+            WebkitBackdropFilter: theme.glassBlur,
+            borderRadius: 12,
             textAlign: "center",
-            border: `1px solid ${darkMode ? "#2a4a62" : "#bbdefb"}`,
+            border: `1px solid ${theme.glassBorder}`,
+            boxShadow: theme.glassShadow,
           }}
         >
           <div
             style={{
-              fontSize: 24,
-              fontWeight: "bold",
-              color: darkMode ? "#64b5f6" : "#1976d2",
+              fontSize: 32,
+              fontWeight: 700,
+              color: theme.crimson,
             }}
           >
             {totalAttempts}
           </div>
           <div
-            style={{ fontSize: 14, color: darkMode ? "#64b5f6" : "#1976d2" }}
+            style={{ fontSize: 14, color: theme.textSecondary, marginTop: 4 }}
           >
             Total Exams
           </div>
         </div>
         <div
           style={{
-            padding: 16,
-            backgroundColor: darkMode ? "#1a3d1a" : "#e8f5e8",
-            borderRadius: 8,
+            padding: 20,
+            background: theme.cardBg,
+            backdropFilter: theme.glassBlur,
+            WebkitBackdropFilter: theme.glassBlur,
+            borderRadius: 12,
             textAlign: "center",
-            border: `1px solid ${darkMode ? "#2a4d2a" : "#c8e6c9"}`,
+            border: `1px solid ${theme.glassBorder}`,
+            boxShadow: theme.glassShadow,
           }}
         >
           <div
             style={{
-              fontSize: 24,
-              fontWeight: "bold",
-              color: darkMode ? "#66bb6a" : "#2e7d32",
+              fontSize: 32,
+              fontWeight: 700,
+              color: theme.btnSuccess,
             }}
           >
             {averageScore}%
           </div>
           <div
-            style={{ fontSize: 14, color: darkMode ? "#66bb6a" : "#2e7d32" }}
+            style={{ fontSize: 14, color: theme.textSecondary, marginTop: 4 }}
           >
             Average Score
           </div>
         </div>
         <div
           style={{
-            padding: 16,
-            backgroundColor: darkMode ? "#3d3520" : "#fff3e0",
-            borderRadius: 8,
+            padding: 20,
+            background: theme.cardBg,
+            backdropFilter: theme.glassBlur,
+            WebkitBackdropFilter: theme.glassBlur,
+            borderRadius: 12,
             textAlign: "center",
-            border: `1px solid ${darkMode ? "#4d4530" : "#ffcc02"}`,
+            border: `1px solid ${theme.glassBorder}`,
+            boxShadow: theme.glassShadow,
           }}
         >
           <div
             style={{
-              fontSize: 24,
-              fontWeight: "bold",
-              color: darkMode ? "#ffb74d" : "#f57c00",
+              fontSize: 32,
+              fontWeight: 700,
+              color: theme.amber,
             }}
           >
             {bestScore}%
           </div>
           <div
-            style={{ fontSize: 14, color: darkMode ? "#ffb74d" : "#f57c00" }}
+            style={{ fontSize: 14, color: theme.textSecondary, marginTop: 4 }}
           >
             Best Score
           </div>
@@ -182,40 +191,24 @@ export default function ExamHistory({
         {recentImprovement !== 0 && (
           <div
             style={{
-              padding: 16,
-              backgroundColor:
-                recentImprovement > 0
-                  ? darkMode
-                    ? "#1a3d1a"
-                    : "#e8f5e8"
-                  : darkMode
-                  ? "#3d1a1a"
-                  : "#ffebee",
-              borderRadius: 8,
+              padding: 20,
+              background: theme.cardBg,
+              backdropFilter: theme.glassBlur,
+              WebkitBackdropFilter: theme.glassBlur,
+              borderRadius: 12,
               textAlign: "center",
               border: `1px solid ${
-                recentImprovement > 0
-                  ? darkMode
-                    ? "#2a4d2a"
-                    : "#c8e6c9"
-                  : darkMode
-                  ? "#4d2a2a"
-                  : "#ffcdd2"
+                recentImprovement > 0 ? theme.btnSuccess : theme.btnDanger
               }`,
+              boxShadow: theme.glassShadow,
             }}
           >
             <div
               style={{
-                fontSize: 24,
-                fontWeight: "bold",
+                fontSize: 32,
+                fontWeight: 700,
                 color:
-                  recentImprovement > 0
-                    ? darkMode
-                      ? "#66bb6a"
-                      : "#2e7d32"
-                    : darkMode
-                    ? "#ef5350"
-                    : "#c62828",
+                  recentImprovement > 0 ? theme.btnSuccess : theme.btnDanger,
               }}
             >
               {recentImprovement > 0 ? "+" : ""}
@@ -224,14 +217,8 @@ export default function ExamHistory({
             <div
               style={{
                 fontSize: 14,
-                color:
-                  recentImprovement > 0
-                    ? darkMode
-                      ? "#66bb6a"
-                      : "#2e7d32"
-                    : darkMode
-                    ? "#ef5350"
-                    : "#c62828",
+                color: theme.textSecondary,
+                marginTop: 4,
               }}
             >
               Recent Change
@@ -240,24 +227,28 @@ export default function ExamHistory({
         )}
       </div>
 
-      {/* Attempts Table */}
+      {/* Attempts Table - Glassmorphism */}
       <div
         style={{
-          border: `1px solid ${theme.border}`,
-          borderRadius: 8,
+          border: `1px solid ${theme.glassBorder}`,
+          borderRadius: 12,
           overflow: "hidden",
+          background: theme.cardBg,
+          backdropFilter: theme.glassBlur,
+          WebkitBackdropFilter: theme.glassBlur,
+          boxShadow: theme.glassShadow,
         }}
       >
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr 1fr 1fr 80px",
-            backgroundColor: theme.navBg,
-            padding: 12,
-            fontWeight: "bold",
+            background: theme.navBg,
+            padding: 16,
+            fontWeight: 700,
             fontSize: 14,
-            borderBottom: `1px solid ${theme.border}`,
-            color: theme.text,
+            borderBottom: `1px solid ${theme.glassBorder}`,
+            color: theme.crimson,
           }}
         >
           <div
@@ -367,17 +358,21 @@ export default function ExamHistory({
               onMouseLeave={() => setHoveredButton(null)}
               style={{
                 padding: "6px 12px",
-                backgroundColor: "#dc3545",
+                background:
+                  hoveredButton === `delete-${attempt.id}`
+                    ? theme.btnDangerHover
+                    : theme.btnDanger,
                 color: "white",
                 border: "none",
-                borderRadius: 4,
+                borderRadius: 6,
                 cursor: "pointer",
-                fontSize: "13px",
-                filter:
-                  hoveredButton === `delete-${attempt.id}`
-                    ? "brightness(0.85)"
-                    : "brightness(1)",
+                fontSize: "12px",
+                fontWeight: 600,
                 transition: "all 0.2s ease",
+                boxShadow:
+                  hoveredButton === `delete-${attempt.id}`
+                    ? "0 4px 12px rgba(220, 53, 69, 0.4)"
+                    : "0 2px 8px rgba(220, 53, 69, 0.3)",
               }}
               title="Delete attempt"
             >

@@ -250,14 +250,25 @@ export default function AttemptReviewPage() {
           <button
             onClick={() => navigate("/settings")}
             style={{
-              padding: "10px 20px",
-              backgroundColor: "#dc3545",
+              padding: "10px 24px",
+              background: theme.crimson,
               color: "white",
               border: "none",
               borderRadius: 6,
               cursor: "pointer",
-              fontWeight: "bold",
-              fontSize: "15px",
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
+              fontSize: 15,
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: "0 2px 8px rgba(196, 30, 58, 0.25)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(196, 30, 58, 0.35)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(196, 30, 58, 0.25)";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
             Start Over
@@ -265,13 +276,25 @@ export default function AttemptReviewPage() {
           <button
             onClick={() => navigate("/")}
             style={{
-              padding: "10px 20px",
-              backgroundColor: "#6c757d",
+              padding: "10px 24px",
+              background: theme.amber,
               color: "white",
               border: "none",
               borderRadius: 6,
               cursor: "pointer",
-              fontSize: "15px",
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
+              fontSize: 15,
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: "0 2px 8px rgba(212, 166, 80, 0.25)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(212, 166, 80, 0.35)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(212, 166, 80, 0.25)";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
             Home
@@ -279,14 +302,31 @@ export default function AttemptReviewPage() {
           <button
             onClick={() => setShowWrongOnly(!showWrongOnly)}
             style={{
-              padding: "10px 20px",
-              backgroundColor: showWrongOnly ? "#ffc107" : "#007bff",
-              color: showWrongOnly ? "#000" : "white",
+              padding: "10px 24px",
+              background: showWrongOnly ? theme.btnWarning : theme.crimson,
+              color: "white",
               border: "none",
               borderRadius: 6,
               cursor: "pointer",
-              fontSize: "15px",
-              fontWeight: showWrongOnly ? "bold" : "normal",
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
+              fontSize: 15,
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: showWrongOnly
+                ? "0 2px 8px rgba(255, 193, 7, 0.25)"
+                : "0 2px 8px rgba(196, 30, 58, 0.25)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = showWrongOnly
+                ? "0 4px 12px rgba(255, 193, 7, 0.35)"
+                : "0 4px 12px rgba(196, 30, 58, 0.35)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = showWrongOnly
+                ? "0 2px 8px rgba(255, 193, 7, 0.25)"
+                : "0 2px 8px rgba(196, 30, 58, 0.25)";
             }}
           >
             {showWrongOnly ? "Show All Questions" : "Show Wrong Answers Only"}

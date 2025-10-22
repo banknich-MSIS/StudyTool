@@ -39,49 +39,34 @@ export default function PerformanceAnalytics({
     return acc;
   }, {} as Record<string, { count: number; totalScore: number; scores: number[] }>);
 
-  // Improvement suggestions
-  const getImprovementSuggestions = () => {
-    const suggestions = [];
+  // Performance by class analysis
+  const getPerformanceByClass = () => {
+    // Group attempts by class tags
+    const classPerformance = attempts.reduce((acc, attempt) => {
+      const classTags = attempt.class_tags || ["Unassigned"];
+      classTags.forEach((tag) => {
+        if (!acc[tag]) {
+          acc[tag] = { scores: [], count: 0, totalScore: 0 };
+        }
+        acc[tag].scores.push(attempt.score_pct);
+        acc[tag].count++;
+        acc[tag].totalScore += attempt.score_pct;
+      });
+      return acc;
+    }, {} as Record<string, { scores: number[]; count: number; totalScore: number }>);
 
-    if (averageScore < 70) {
-      suggestions.push(
-        "Focus on reviewing incorrect answers and understanding concepts"
-      );
-    }
-
-    if (worstScore < 50) {
-      suggestions.push(
-        "Consider taking more practice exams to build confidence"
-      );
-    }
-
-    if (scoreTrend.length >= 3) {
-      const recentTrend = scoreTrend.slice(-3);
-      const isDeclining =
-        recentTrend[0] < recentTrend[1] && recentTrend[1] < recentTrend[2];
-      if (isDeclining) {
-        suggestions.push(
-          "Your scores are declining - consider reviewing study materials"
-        );
-      }
-    }
-
-    const lowPerformingSources = Object.entries(sourceStats)
-      .filter(([_, stats]) => stats.totalScore / stats.count < 60)
-      .map(([source, _]) => source);
-
-    if (lowPerformingSources.length > 0) {
-      suggestions.push(
-        `Focus on improving performance in: ${lowPerformingSources.join(", ")}`
-      );
-    }
-
-    return suggestions.length > 0
-      ? suggestions
-      : ["Keep up the great work! Continue practicing regularly."];
+    return Object.entries(classPerformance)
+      .map(([className, stats]) => ({
+        className,
+        averageScore: stats.totalScore / stats.count,
+        count: stats.count,
+        bestScore: Math.max(...stats.scores),
+        worstScore: Math.min(...stats.scores),
+      }))
+      .sort((a, b) => b.averageScore - a.averageScore);
   };
 
-  const suggestions = getImprovementSuggestions();
+  const performanceByClass = getPerformanceByClass();
 
   // Simple trend visualization
   const maxScore = Math.max(...scoreTrend);
@@ -91,13 +76,23 @@ export default function PerformanceAnalytics({
   return (
     <div
       style={{
-        padding: 20,
-        backgroundColor: theme.navBg,
-        borderRadius: 8,
-        border: `1px solid ${theme.border}`,
+        padding: 24,
+        background: theme.cardBg,
+        backdropFilter: theme.glassBlur,
+        WebkitBackdropFilter: theme.glassBlur,
+        borderRadius: 12,
+        border: `1px solid ${theme.glassBorder}`,
+        boxShadow: theme.glassShadow,
       }}
     >
-      <h3 style={{ margin: "0 0 16px 0", fontSize: 18, color: theme.text }}>
+      <h3
+        style={{
+          margin: "0 0 20px 0",
+          fontSize: 24,
+          fontWeight: 700,
+          color: theme.crimson,
+        }}
+      >
         📊 Performance Analytics
       </h3>
 
@@ -109,73 +104,97 @@ export default function PerformanceAnalytics({
           marginBottom: 20,
         }}
       >
-        {/* Key Metrics */}
+        {/* Key Metrics - Glassmorphism */}
         <div
           style={{
-            padding: 16,
-            backgroundColor: theme.cardBg,
-            borderRadius: 6,
-            border: `1px solid ${theme.border}`,
+            padding: 18,
+            background: "rgba(255, 255, 255, 0.05)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            borderRadius: 10,
+            border: `1px solid ${theme.glassBorder}`,
           }}
         >
           <div
             style={{
               fontSize: 12,
               color: theme.textSecondary,
-              marginBottom: 4,
+              marginBottom: 6,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
             }}
           >
             Average Score
           </div>
-          <div style={{ fontSize: 24, fontWeight: "bold", color: "#28a745" }}>
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              color: theme.btnSuccess,
+            }}
+          >
             {Math.round(averageScore)}%
           </div>
         </div>
 
         <div
           style={{
-            padding: 16,
-            backgroundColor: theme.cardBg,
-            borderRadius: 6,
-            border: `1px solid ${theme.border}`,
+            padding: 18,
+            background: "rgba(255, 255, 255, 0.05)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            borderRadius: 10,
+            border: `1px solid ${theme.glassBorder}`,
           }}
         >
           <div
             style={{
               fontSize: 12,
               color: theme.textSecondary,
-              marginBottom: 4,
+              marginBottom: 6,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
             }}
           >
             Best Score
           </div>
-          <div style={{ fontSize: 24, fontWeight: "bold", color: "#007bff" }}>
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              color: theme.crimson,
+            }}
+          >
             {Math.round(bestScore)}%
           </div>
         </div>
 
         <div
           style={{
-            padding: 16,
-            backgroundColor: theme.cardBg,
-            borderRadius: 6,
-            border: `1px solid ${theme.border}`,
+            padding: 18,
+            background: "rgba(255, 255, 255, 0.05)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            borderRadius: 10,
+            border: `1px solid ${theme.glassBorder}`,
           }}
         >
           <div
             style={{
               fontSize: 12,
               color: theme.textSecondary,
-              marginBottom: 4,
+              marginBottom: 6,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
             }}
           >
             Total Exams
           </div>
           <div
             style={{
-              fontSize: 24,
-              fontWeight: "bold",
-              color: theme.textSecondary,
+              fontSize: 28,
+              fontWeight: 700,
+              color: theme.amber,
             }}
           >
             {totalAttempts}
@@ -183,15 +202,17 @@ export default function PerformanceAnalytics({
         </div>
       </div>
 
-      {/* Score Trend Chart */}
+      {/* Score Trend Chart - Glassmorphism */}
       {scoreTrend.length > 1 && (
         <div
           style={{
             marginBottom: 20,
-            padding: 16,
-            backgroundColor: theme.cardBg,
-            borderRadius: 6,
-            border: `1px solid ${theme.border}`,
+            padding: 18,
+            background: "rgba(255, 255, 255, 0.03)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            borderRadius: 10,
+            border: `1px solid ${theme.glassBorder}`,
           }}
         >
           <div
@@ -249,15 +270,17 @@ export default function PerformanceAnalytics({
         </div>
       )}
 
-      {/* Performance by Source */}
+      {/* Performance by Source - Glassmorphism */}
       {Object.keys(sourceStats).length > 1 && (
         <div
           style={{
             marginBottom: 20,
-            padding: 16,
-            backgroundColor: theme.cardBg,
-            borderRadius: 6,
-            border: `1px solid ${theme.border}`,
+            padding: 18,
+            background: "rgba(255, 255, 255, 0.03)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            borderRadius: 10,
+            border: `1px solid ${theme.glassBorder}`,
           }}
         >
           <div
@@ -326,40 +349,101 @@ export default function PerformanceAnalytics({
         </div>
       )}
 
-      {/* Improvement Suggestions */}
-      <div
-        style={{
-          padding: 16,
-          backgroundColor: darkMode ? "#1a3a52" : "#e3f2fd",
-          borderRadius: 6,
-          border: `1px solid ${darkMode ? "#2a4a62" : "#bbdefb"}`,
-        }}
-      >
+      {/* Performance by Class - Glassmorphism */}
+      {performanceByClass.length > 0 && (
         <div
           style={{
-            fontSize: 14,
-            fontWeight: "bold",
-            marginBottom: 8,
-            color: darkMode ? "#64b5f6" : "#1976d2",
+            padding: 18,
+            background: "rgba(255, 255, 255, 0.03)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            borderRadius: 10,
+            border: `1px solid ${theme.glassBorder}`,
           }}
         >
-          💡 Improvement Suggestions
+          <div
+            style={{
+              fontSize: 16,
+              fontWeight: 700,
+              marginBottom: 12,
+              color: theme.crimson,
+            }}
+          >
+            Performance by Class
+          </div>
+          <div style={{ display: "grid", gap: 10 }}>
+            {performanceByClass.map((classData) => {
+              const scoreColor =
+                classData.averageScore >= 80
+                  ? theme.btnSuccess
+                  : classData.averageScore >= 60
+                  ? theme.amber
+                  : theme.btnDanger;
+              
+              return (
+                <div
+                  key={classData.className}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    background: darkMode
+                      ? "rgba(255, 255, 255, 0.03)"
+                      : "rgba(0, 0, 0, 0.02)",
+                    borderRadius: 8,
+                    border: `1px solid ${theme.glassBorder}`,
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: theme.text,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {classData.className}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: theme.textSecondary,
+                      }}
+                    >
+                      {classData.count} exam{classData.count > 1 ? "s" : ""}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: scoreColor,
+                    }}
+                  >
+                    {Math.round(classData.averageScore)}%
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div
+            style={{
+              marginTop: 12,
+              padding: 10,
+              background: darkMode
+                ? "rgba(212, 166, 80, 0.05)"
+                : "rgba(196, 30, 58, 0.05)",
+              borderRadius: 6,
+              fontSize: 12,
+              color: theme.textSecondary,
+            }}
+          >
+            💡 Focus on classes with lower averages to improve overall performance
+          </div>
         </div>
-        <ul
-          style={{
-            margin: 0,
-            paddingLeft: 20,
-            fontSize: 13,
-            color: darkMode ? "#90caf9" : "#1976d2",
-          }}
-        >
-          {suggestions.map((suggestion, index) => (
-            <li key={index} style={{ marginBottom: 4 }}>
-              {suggestion}
-            </li>
-          ))}
-        </ul>
-      </div>
+      )}
     </div>
   );
 }

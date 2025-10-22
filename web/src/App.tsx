@@ -32,6 +32,11 @@ export default function App() {
     };
   }, []);
 
+  // Update body class for dark/light mode
+  useEffect(() => {
+    document.body.className = darkMode ? "dark-mode" : "light-mode";
+  }, [darkMode]);
+
   const toggleDarkMode = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
@@ -42,20 +47,67 @@ export default function App() {
     window.open("https://github.com/banknich-MSIS/StudyTool", "_blank");
   };
 
-  // Theme colors
+  // Glassmorphism Theme
+  // DARK MODE ACCENT: Muted Amber (less bright than original)
+  const DARK_ACCENT = "#C29B4A";
+  const DARK_ACCENT_LIGHT = "#D4AD5E";
+  const DARK_ACCENT_DARK = "#A88438";
+
   const theme = {
-    bg: darkMode ? "#1e1e1e" : "#ffffff",
-    cardBg: darkMode ? "#2d2d2d" : "#ffffff",
-    text: darkMode ? "#e0e0e0" : "#333333",
-    textSecondary: darkMode ? "#a0a0a0" : "#6c757d",
-    border: darkMode ? "#3d3d3d" : "#dee2e6",
-    navBg: darkMode ? "#2d2d2d" : "#f8f9fa",
-    navHover: darkMode ? "#3d3d3d" : "#e9ecef",
-    modalBg: darkMode ? "#2d2d2d" : "#ffffff",
+    // Background
+    bg: darkMode ? "#1A0E0E" : "#F5F3ED",
+    bgGradient: darkMode
+      ? "linear-gradient(135deg, #1A0E0E 0%, #2D1819 100%)"
+      : "linear-gradient(135deg, #F5F3ED 0%, #FAF8F2 100%)",
+
+    // Cards & Surfaces
+    cardBg: darkMode ? "rgba(61, 35, 37, 0.4)" : "rgba(255, 255, 255, 0.7)",
+    cardBgSolid: darkMode ? "#3D2325" : "#FFFFFF",
+    navBg: darkMode ? "rgba(45, 24, 25, 0.6)" : "rgba(255, 255, 255, 0.6)",
+    navHover: darkMode ? "rgba(61, 35, 37, 0.8)" : "rgba(255, 255, 255, 0.9)",
+    modalBg: darkMode ? "rgba(45, 24, 25, 0.95)" : "rgba(255, 255, 255, 0.95)",
+
+    // Text
+    text: darkMode ? "#F5F3ED" : "#262626",
+    textSecondary: darkMode ? "#D4D4D4" : "#525252",
+
+    // Borders
+    border: darkMode ? "rgba(194, 155, 74, 0.2)" : "rgba(196, 30, 58, 0.12)",
+    borderSolid: darkMode ? "#4D2E30" : "#EBE8DF",
+
+    // Glass Effects
+    glassBlur: "blur(12px)",
+    glassShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
+    glassShadowHover: "0 12px 40px 0 rgba(31, 38, 135, 0.25)",
+    glassBorder: darkMode
+      ? "rgba(194, 155, 74, 0.15)"
+      : "rgba(255, 255, 255, 0.18)",
+
+    // Brand Colors
+    crimson: "#C41E3A",
+    crimsonLight: "#D94A5F",
+    crimsonDark: "#990F26",
+    amber: darkMode ? DARK_ACCENT : "#D4A650",
+    amberLight: darkMode ? DARK_ACCENT_LIGHT : "#E0BB71",
+    amberDark: darkMode ? DARK_ACCENT_DARK : "#B88B3A",
+
+    // Action Buttons
+    btnPrimary: "#C41E3A",
+    btnPrimaryHover: "#990F26",
+    btnSecondary: darkMode ? DARK_ACCENT : "#D4A650",
+    btnSecondaryHover: darkMode ? DARK_ACCENT_DARK : "#B88B3A",
+    btnSuccess: "#28a745",
+    btnSuccessHover: "#218838",
+    btnInfo: "#17a2b8",
+    btnInfoHover: "#138496",
+    btnWarning: "#ffc107",
+    btnDanger: "#dc3545",
+    btnDangerHover: "#c82333",
   };
 
   const navItems = [
     { path: "/", label: "Dashboard" },
+    { path: "/ai-exam-creator", label: "AI Exam Creator" },
     { path: "/upload", label: "Upload CSV" },
     { path: "/classes", label: "Classes" },
     { path: "/history", label: "History" },
@@ -65,23 +117,26 @@ export default function App() {
     <div
       style={{
         fontFamily: "system-ui, Arial, sans-serif",
-        backgroundColor: theme.bg,
+        background: theme.bgGradient,
         color: theme.text,
         minHeight: "100vh",
-        transition: "background-color 0.3s ease, color 0.3s ease",
+        transition: "background 0.3s ease, color 0.3s ease",
       }}
     >
-      {/* Full-width Navigation Ribbon */}
+      {/* Full-width Navigation Ribbon - Glassmorphism */}
       <nav
         style={{
           position: "sticky",
           top: 0,
           zIndex: 1000,
-          backgroundColor: theme.navBg,
-          borderBottom: `1px solid ${theme.border}`,
+          background: theme.navBg,
+          backdropFilter: theme.glassBlur,
+          WebkitBackdropFilter: theme.glassBlur,
+          borderBottom: `1px solid ${theme.glassBorder}`,
           padding: "12px 0",
           marginBottom: 24,
-          transition: "background-color 0.3s ease",
+          boxShadow: theme.glassShadow,
+          transition: "all 0.3s ease",
         }}
       >
         <div
@@ -115,27 +170,46 @@ export default function App() {
                   onClick={() => navigate(item.path)}
                   style={{
                     padding: "8px 16px",
-                    backgroundColor:
+                    background:
                       location.pathname === item.path
-                        ? "#007bff"
+                        ? theme.crimson
                         : "transparent",
                     color:
                       location.pathname === item.path ? "white" : theme.text,
-                    border: "none",
-                    borderRadius: 6,
+                    border:
+                      location.pathname === item.path
+                        ? "none"
+                        : `1px solid ${theme.glassBorder}`,
+                    borderRadius: 8,
                     cursor: "pointer",
                     fontSize: 14,
                     fontWeight: 500,
+                    backdropFilter:
+                      location.pathname === item.path
+                        ? "none"
+                        : theme.glassBlur,
+                    WebkitBackdropFilter:
+                      location.pathname === item.path
+                        ? "none"
+                        : theme.glassBlur,
                     transition: "all 0.2s ease",
+                    boxShadow:
+                      location.pathname === item.path
+                        ? "0 4px 12px rgba(196, 30, 58, 0.3)"
+                        : "none",
                   }}
                   onMouseEnter={(e) => {
                     if (location.pathname !== item.path) {
-                      e.currentTarget.style.backgroundColor = theme.navHover;
+                      e.currentTarget.style.background = theme.navHover;
+                    } else {
+                      e.currentTarget.style.background = theme.crimsonDark;
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (location.pathname !== item.path) {
-                      e.currentTarget.style.backgroundColor = "transparent";
+                      e.currentTarget.style.background = "transparent";
+                    } else {
+                      e.currentTarget.style.background = theme.crimson;
                     }
                   }}
                 >
@@ -154,23 +228,29 @@ export default function App() {
               flexWrap: "wrap",
             }}
           >
-            {/* GitHub Section */}
+            {/* GitHub Section - Glass Style */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
                 padding: "8px 12px",
-                backgroundColor: darkMode ? "#3d3d3d" : "#fff3cd",
-                border: `1px solid ${darkMode ? "#4d4d4d" : "#ffc107"}`,
-                borderRadius: 6,
+                background: darkMode
+                  ? "rgba(194, 155, 74, 0.1)"
+                  : "rgba(212, 166, 80, 0.15)",
+                backdropFilter: theme.glassBlur,
+                WebkitBackdropFilter: theme.glassBlur,
+                border: `1px solid ${theme.amber}`,
+                borderRadius: 8,
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
               }}
             >
               <span
                 style={{
                   fontSize: 13,
-                  color: darkMode ? "#ffd54f" : "#856404",
+                  color: darkMode ? theme.amberLight : "#B88B3A",
                   fontStyle: "italic",
+                  fontWeight: 500,
                 }}
               >
                 Enjoying the tool? Star it on GitHub! - Banks
@@ -179,20 +259,25 @@ export default function App() {
                 onClick={handleGitHubClick}
                 style={{
                   padding: "6px 12px",
-                  backgroundColor: "#dc3545",
+                  background: theme.crimson,
                   color: "white",
                   border: "none",
-                  borderRadius: 4,
+                  borderRadius: 6,
                   cursor: "pointer",
                   fontSize: 12,
                   fontWeight: "bold",
-                  transition: "opacity 0.2s ease",
+                  transition: "all 0.2s ease",
+                  boxShadow: "0 2px 8px rgba(196, 30, 58, 0.3)",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "0.9";
+                  e.currentTarget.style.background = theme.crimsonDark;
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(196, 30, 58, 0.4)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "1";
+                  e.currentTarget.style.background = theme.crimson;
+                  e.currentTarget.style.boxShadow =
+                    "0 2px 8px rgba(196, 30, 58, 0.3)";
                 }}
               >
                 <svg
@@ -210,25 +295,30 @@ export default function App() {
               </button>
             </div>
 
-            {/* Help Button */}
+            {/* Help Button - Glass Style */}
             <button
               onClick={() => setShowTutorial(true)}
               style={{
                 padding: "8px 16px",
-                backgroundColor: "#17a2b8",
+                background: theme.btnInfo,
                 color: "white",
                 border: "none",
-                borderRadius: 6,
+                borderRadius: 8,
                 cursor: "pointer",
                 fontSize: 14,
                 fontWeight: 500,
                 transition: "all 0.2s ease",
+                boxShadow: "0 2px 8px rgba(23, 162, 184, 0.3)",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = "0.9";
+                e.currentTarget.style.background = theme.btnInfoHover;
+                e.currentTarget.style.boxShadow =
+                  "0 4px 12px rgba(23, 162, 184, 0.4)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = "1";
+                e.currentTarget.style.background = theme.btnInfo;
+                e.currentTarget.style.boxShadow =
+                  "0 2px 8px rgba(23, 162, 184, 0.3)";
               }}
             >
               Help
@@ -249,14 +339,17 @@ export default function App() {
         <Outlet context={{ darkMode, theme }} />
       </div>
 
-      {/* Footer */}
+      {/* Footer - Glassmorphism */}
       <footer
         style={{
           marginTop: "auto",
           padding: "20px 16px",
-          borderTop: `1px solid ${theme.border}`,
-          backgroundColor: theme.navBg,
+          borderTop: `1px solid ${theme.glassBorder}`,
+          background: theme.navBg,
+          backdropFilter: theme.glassBlur,
+          WebkitBackdropFilter: theme.glassBlur,
           textAlign: "center",
+          boxShadow: "0 -4px 16px rgba(0, 0, 0, 0.1)",
         }}
       >
         <div
@@ -343,33 +436,45 @@ export default function App() {
         theme={theme}
       />
 
-      {/* Floating Dark Mode Toggle - Bottom Left */}
+      {/* Floating Dark Mode Toggle - Bottom Left - Glassmorphism */}
       <div
         onClick={toggleDarkMode}
         style={{
           position: "fixed",
           bottom: 24,
           left: 24,
-          width: 56,
-          height: 56,
+          width: 60,
+          height: 60,
           borderRadius: "50%",
-          backgroundColor: darkMode ? "#1976d2" : "#ffc107",
-          border: `3px solid ${darkMode ? "#0d47a1" : "#ff9800"}`,
+          background: darkMode
+            ? `linear-gradient(135deg, ${theme.amber} 0%, ${theme.amberDark} 100%)`
+            : `linear-gradient(135deg, ${theme.crimson} 0%, ${theme.crimsonDark} 100%)`,
+          border: `3px solid ${
+            darkMode ? theme.amberLight : theme.crimsonLight
+          }`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+          boxShadow: darkMode
+            ? "0 8px 24px rgba(194, 155, 74, 0.4)"
+            : "0 8px 24px rgba(196, 30, 58, 0.4)",
           zIndex: 9999,
           transition: "all 0.3s ease",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "scale(1.1)";
-          e.currentTarget.style.boxShadow = "0 6px 16px rgba(0, 0, 0, 0.4)";
+          e.currentTarget.style.transform = "scale(1.1) rotate(15deg)";
+          e.currentTarget.style.boxShadow = darkMode
+            ? "0 12px 32px rgba(194, 155, 74, 0.6)"
+            : "0 12px 32px rgba(196, 30, 58, 0.6)";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "scale(1)";
-          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3)";
+          e.currentTarget.style.transform = "scale(1) rotate(0deg)";
+          e.currentTarget.style.boxShadow = darkMode
+            ? "0 8px 24px rgba(194, 155, 74, 0.4)"
+            : "0 8px 24px rgba(196, 30, 58, 0.4)";
         }}
         title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
       >

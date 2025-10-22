@@ -72,18 +72,38 @@ export default function HistoryPage() {
           justifyContent: "space-between",
         }}
       >
-        <h2 style={{ margin: 0, fontSize: 28, color: theme.text }}>
+        <h2
+          style={{
+            margin: 0,
+            fontSize: 28,
+            fontWeight: 700,
+            color: theme.crimson,
+            letterSpacing: "-0.5px",
+          }}
+        >
           Exam History
         </h2>
         <button
           onClick={() => navigate("/")}
           style={{
-            padding: "8px 16px",
-            backgroundColor: "#6c757d",
+            padding: "10px 24px",
+            background: theme.amber,
             color: "white",
             border: "none",
             borderRadius: 6,
             cursor: "pointer",
+            fontWeight: 600,
+            letterSpacing: "-0.2px",
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+            boxShadow: "0 2px 8px rgba(212, 166, 80, 0.25)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = "0 4px 12px rgba(212, 166, 80, 0.35)";
+            e.currentTarget.style.transform = "translateY(-1px)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = "0 2px 8px rgba(212, 166, 80, 0.25)";
+            e.currentTarget.style.transform = "translateY(0)";
           }}
         >
           Back to Dashboard
@@ -103,9 +123,12 @@ export default function HistoryPage() {
           style={{
             padding: 48,
             textAlign: "center",
-            backgroundColor: theme.navBg,
-            borderRadius: 8,
-            border: `2px dashed ${theme.border}`,
+            background: theme.cardBg,
+            backdropFilter: theme.glassBlur,
+            WebkitBackdropFilter: theme.glassBlur,
+            borderRadius: 12,
+            border: `2px dashed ${theme.glassBorder}`,
+            boxShadow: theme.glassShadow,
           }}
         >
           <h3 style={{ margin: "0 0 8px 0", color: theme.textSecondary }}>
@@ -117,12 +140,24 @@ export default function HistoryPage() {
           <button
             onClick={() => navigate("/upload")}
             style={{
-              padding: "8px 16px",
-              backgroundColor: "#007bff",
+              padding: "10px 24px",
+              background: theme.crimson,
               color: "white",
               border: "none",
               borderRadius: 6,
               cursor: "pointer",
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: "0 2px 8px rgba(196, 30, 58, 0.25)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(196, 30, 58, 0.35)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(196, 30, 58, 0.25)";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
             Upload CSV

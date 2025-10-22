@@ -223,14 +223,26 @@ export default function ExamPage() {
             <button
               onClick={handleShowSummary}
               style={{
-                padding: "12px 24px",
-                backgroundColor: "#6c757d",
+                padding: "10px 24px",
+                background: theme.amber,
                 color: "white",
                 border: "none",
-                borderRadius: "6px",
-                fontSize: "16px",
+                borderRadius: 6,
+                fontSize: 15,
+                fontWeight: 600,
+                letterSpacing: "-0.2px",
                 cursor: "pointer",
-                marginRight: "12px",
+                marginRight: 12,
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: "0 2px 8px rgba(212, 166, 80, 0.25)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(212, 166, 80, 0.35)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(212, 166, 80, 0.25)";
+                e.currentTarget.style.transform = "translateY(0)";
               }}
             >
               Exam Answers
@@ -238,13 +250,25 @@ export default function ExamPage() {
             <button
               onClick={handleSubmitClick}
               style={{
-                padding: "12px 24px",
-                backgroundColor: "#dc3545",
+                padding: "10px 24px",
+                background: theme.crimson,
                 color: "white",
                 border: "none",
-                borderRadius: "6px",
-                fontSize: "16px",
+                borderRadius: 6,
+                fontSize: 15,
+                fontWeight: 600,
+                letterSpacing: "-0.2px",
                 cursor: "pointer",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: "0 2px 8px rgba(196, 30, 58, 0.25)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(196, 30, 58, 0.35)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(196, 30, 58, 0.25)";
+                e.currentTarget.style.transform = "translateY(0)";
               }}
             >
               Submit Exam
@@ -262,23 +286,30 @@ export default function ExamPage() {
               right: 0,
               bottom: 0,
               backgroundColor: "rgba(0, 0, 0, 0.6)",
+              backdropFilter: "blur(8px)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               zIndex: 1000,
-              padding: "20px",
+              padding: 20,
             }}
+            onClick={() => setShowExamSummary(false)}
           >
             <div
               style={{
-                backgroundColor: theme.modalBg,
-                borderRadius: "8px",
-                maxWidth: "900px",
+                background: theme.modalBg,
+                backdropFilter: theme.glassBlur,
+                WebkitBackdropFilter: theme.glassBlur,
+                borderRadius: 12,
+                maxWidth: 900,
                 width: "100%",
                 maxHeight: "90vh",
                 display: "flex",
                 flexDirection: "column",
+                border: `1px solid ${theme.glassBorder}`,
+                boxShadow: theme.glassShadowHover,
               }}
+              onClick={(e) => e.stopPropagation()}
             >
               <div
                 style={{
@@ -295,12 +326,22 @@ export default function ExamPage() {
                 <button
                   onClick={() => setShowExamSummary(false)}
                   style={{
-                    padding: "8px 16px",
-                    backgroundColor: "#6c757d",
+                    padding: "8px 20px",
+                    background: theme.textSecondary,
                     color: "white",
                     border: "none",
-                    borderRadius: "4px",
+                    borderRadius: 6,
                     cursor: "pointer",
+                    fontWeight: 600,
+                    letterSpacing: "-0.2px",
+                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.25)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.15)";
                   }}
                 >
                   Close
@@ -518,23 +559,36 @@ export default function ExamPage() {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              backgroundColor: "rgba(0, 0, 0, 0.6)",
+              backdropFilter: "blur(8px)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               zIndex: 1000,
             }}
+            onClick={() => setShowUnansweredAlert(false)}
           >
             <div
               style={{
-                backgroundColor: theme.modalBg,
-                padding: "24px",
-                borderRadius: "8px",
-                maxWidth: "400px",
+                background: theme.modalBg,
+                backdropFilter: theme.glassBlur,
+                WebkitBackdropFilter: theme.glassBlur,
+                padding: 24,
+                borderRadius: 12,
+                maxWidth: 400,
                 width: "90%",
+                border: `1px solid ${theme.glassBorder}`,
+                boxShadow: theme.glassShadowHover,
               }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <h3 style={{ margin: "0 0 16px 0", color: "#dc3545" }}>
+              <h3
+                style={{
+                  margin: "0 0 16px 0",
+                  color: theme.crimson,
+                  fontWeight: 700,
+                }}
+              >
                 Please Answer All Questions
               </h3>
               <p
@@ -561,13 +615,23 @@ export default function ExamPage() {
                 <button
                   onClick={() => setShowUnansweredAlert(false)}
                   style={{
-                    padding: "8px 24px",
-                    backgroundColor: "#007bff",
+                    padding: "10px 28px",
+                    background: theme.crimson,
                     color: "white",
                     border: "none",
-                    borderRadius: "4px",
+                    borderRadius: 6,
                     cursor: "pointer",
-                    fontSize: "15px",
+                    fontSize: 15,
+                    fontWeight: 600,
+                    letterSpacing: "-0.2px",
+                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                    boxShadow: "0 2px 8px rgba(196, 30, 58, 0.25)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(196, 30, 58, 0.35)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "0 2px 8px rgba(196, 30, 58, 0.25)";
                   }}
                 >
                   OK
@@ -586,29 +650,42 @@ export default function ExamPage() {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              backgroundColor: "rgba(0, 0, 0, 0.6)",
+              backdropFilter: "blur(8px)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               zIndex: 1000,
             }}
+            onClick={cancelSubmit}
           >
             <div
               style={{
-                backgroundColor: theme.modalBg,
-                padding: "24px",
-                borderRadius: "8px",
-                maxWidth: "400px",
+                background: theme.modalBg,
+                backdropFilter: theme.glassBlur,
+                WebkitBackdropFilter: theme.glassBlur,
+                padding: 24,
+                borderRadius: 12,
+                maxWidth: 400,
                 width: "90%",
+                border: `1px solid ${theme.glassBorder}`,
+                boxShadow: theme.glassShadowHover,
               }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <h3 style={{ margin: "0 0 16px 0", color: theme.text }}>
+              <h3
+                style={{
+                  margin: "0 0 16px 0",
+                  color: theme.crimson,
+                  fontWeight: 700,
+                }}
+              >
                 Submit Exam
               </h3>
               <p
                 style={{
                   margin: "0 0 24px 0",
-                  lineHeight: "1.5",
+                  lineHeight: 1.5,
                   color: theme.text,
                 }}
               >
@@ -618,19 +695,28 @@ export default function ExamPage() {
               <div
                 style={{
                   display: "flex",
-                  gap: "12px",
+                  gap: 12,
                   justifyContent: "flex-end",
                 }}
               >
                 <button
                   onClick={cancelSubmit}
                   style={{
-                    padding: "8px 16px",
-                    backgroundColor: "#6c757d",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
+                    padding: "8px 20px",
+                    background: "transparent",
+                    color: theme.text,
+                    border: `1px solid ${theme.glassBorder}`,
+                    borderRadius: 6,
                     cursor: "pointer",
+                    fontWeight: 600,
+                    letterSpacing: "-0.2px",
+                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(196, 30, 58, 0.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
                   }}
                 >
                   Cancel
@@ -638,12 +724,22 @@ export default function ExamPage() {
                 <button
                   onClick={confirmSubmit}
                   style={{
-                    padding: "8px 16px",
-                    backgroundColor: "#dc3545",
+                    padding: "8px 20px",
+                    background: theme.crimson,
                     color: "white",
                     border: "none",
-                    borderRadius: "4px",
+                    borderRadius: 6,
                     cursor: "pointer",
+                    fontWeight: 600,
+                    letterSpacing: "-0.2px",
+                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                    boxShadow: "0 2px 8px rgba(196, 30, 58, 0.25)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(196, 30, 58, 0.35)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "0 2px 8px rgba(196, 30, 58, 0.25)";
                   }}
                 >
                   Submit

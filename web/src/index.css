@@ -3,16 +3,240 @@
   box-sizing: border-box;
 }
 
+/* Glassmorphism Color Palette - Indiana University Inspired */
+:root {
+  /* Light Mode - Base Colors */
+  --cream-base: #f5f3ed;
+  --cream-lighter: #fafaf7;
+  --cream-darker: #ebe8df;
+
+  /* IU Crimson - Accent */
+  --crimson: #c41e3a;
+  --crimson-light: #d94a5f;
+  --crimson-dark: #990f26;
+
+  /* Amber Gold - Action (Light Mode) */
+  --amber: #d4a650;
+  --amber-light: #e0bb71;
+  --amber-dark: #b88b3a;
+
+  /* Muted Amber - Dark Mode Accent (less bright) */
+  --amber-muted: #c29b4a;
+  --amber-muted-light: #d4ad5e;
+  --amber-muted-dark: #a88438;
+
+  /* Neutral Grays */
+  --gray-50: #fafafa;
+  --gray-100: #f5f5f5;
+  --gray-200: #e8e8e8;
+  --gray-300: #d4d4d4;
+  --gray-400: #a3a3a3;
+  --gray-500: #737373;
+  --gray-600: #525252;
+  --gray-700: #404040;
+  --gray-800: #262626;
+  --gray-900: #171717;
+
+  /* Light Mode Colors */
+  --bg-light: #f5f3ed;
+  --bg-gradient-light: linear-gradient(135deg, #f5f3ed 0%, #faf8f2 100%);
+  --card-bg-light: rgba(255, 255, 255, 0.7);
+  --nav-bg-light: rgba(255, 255, 255, 0.6);
+  --text-light: #262626;
+  --text-secondary-light: #525252;
+  --border-light: rgba(196, 30, 58, 0.12);
+
+  /* Dark Mode - Deep Burgundy Charcoal */
+  --burgundy-darkest: #1a0e0e;
+  --burgundy-darker: #2d1819;
+  --burgundy-dark: #3d2325;
+  --burgundy-medium: #4d2e30;
+
+  /* Dark Mode Colors */
+  --bg-dark: #1a0e0e;
+  --bg-gradient-dark: linear-gradient(135deg, #1a0e0e 0%, #2d1819 100%);
+  --card-bg-dark: rgba(61, 35, 37, 0.4);
+  --nav-bg-dark: rgba(45, 24, 25, 0.6);
+  --text-dark: #f5f3ed;
+  --text-secondary-dark: #d4d4d4;
+  --border-dark: rgba(212, 166, 80, 0.2);
+
+  /* Glassmorphism Effects */
+  --glass-blur: blur(12px);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  --glass-shadow-hover: 0 12px 40px 0 rgba(31, 38, 135, 0.25);
+  --glass-border-light: rgba(255, 255, 255, 0.18);
+  --glass-border-dark: rgba(212, 166, 80, 0.15);
+
+  /* Action Button Colors */
+  --btn-primary: #c41e3a;
+  --btn-primary-hover: #990f26;
+  --btn-secondary: #d4a650;
+  --btn-secondary-hover: #b88b3a;
+  --btn-success: #28a745;
+  --btn-success-hover: #218838;
+  --btn-info: #17a2b8;
+  --btn-info-hover: #138496;
+  --btn-warning: #ffc107;
+  --btn-warning-hover: #e0a800;
+  --btn-danger: #dc3545;
+  --btn-danger-hover: #c82333;
+}
+
 body {
   margin: 0 !important;
   padding: 0 !important;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable",
+    "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.3s ease;
+  letter-spacing: -0.01em;
+}
+
+body.light-mode {
+  background: var(--bg-gradient-light);
+}
+
+body.dark-mode {
+  background: var(--bg-gradient-dark);
 }
 
 #root {
   margin: 0;
   padding: 0;
+}
+
+/* Glassmorphism Utility Classes */
+.glass-card {
+  background: var(--card-bg-light);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border-light);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  box-shadow: var(--glass-shadow-hover);
+}
+
+.glass-nav {
+  background: var(--nav-bg-light);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border-light);
+}
+
+.dark-mode .glass-card {
+  background: var(--card-bg-dark);
+  border: 1px solid var(--glass-border-dark);
+}
+
+.dark-mode .glass-nav {
+  background: var(--nav-bg-dark);
+  border: 1px solid var(--glass-border-dark);
+}
+
+/* Custom Scrollbar Styling - Matches Page Background */
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* Light mode scrollbar track - cream background */
+::-webkit-scrollbar-track {
+  background: #ebe8df;
+  margin: 2px;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(196, 30, 58, 0.6);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(196, 30, 58, 0.9);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #c41e3a;
+}
+
+/* Firefox - basic support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 30, 58, 0.6) #ebe8df;
+}
+
+/* Dark mode scrollbars - Burgundy track + Muted Amber thumb */
+.dark-mode ::-webkit-scrollbar-track {
+  background: #2d1819;
+  border-radius: 5px;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: rgba(194, 155, 74, 0.6);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: rgba(194, 155, 74, 0.9);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:active {
+  background: #c29b4a;
+}
+
+.dark-mode * {
+  scrollbar-color: rgba(194, 155, 74, 0.6) #2d1819;
+}
+
+/* ALTERNATIVE COLORS (uncomment to test):
+
+Amber/Gold:
+.dark-mode ::-webkit-scrollbar-thumb { background: rgba(212, 166, 80, 0.5); }
+.dark-mode ::-webkit-scrollbar-thumb:hover { background: rgba(212, 166, 80, 0.8); }
+.dark-mode * { scrollbar-color: rgba(212, 166, 80, 0.5) transparent; }
+
+Purple:
+.dark-mode ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.5); }
+.dark-mode ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.8); }
+.dark-mode * { scrollbar-color: rgba(139, 92, 246, 0.5) transparent; }
+
+Rose Pink:
+.dark-mode ::-webkit-scrollbar-thumb { background: rgba(244, 114, 182, 0.5); }
+.dark-mode ::-webkit-scrollbar-thumb:hover { background: rgba(244, 114, 182, 0.8); }
+.dark-mode * { scrollbar-color: rgba(244, 114, 182, 0.5) transparent; }
+*/
+
+/* Number Input Styling - Clean & Minimal */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+/* For browsers that support it, show custom styled spinners */
+@supports selector(::-webkit-inner-spin-button) {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: inner-spin-button;
+    opacity: 0.5;
+    cursor: pointer;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button:hover,
+  input[type="number"]::-webkit-outer-spin-button:hover {
+    opacity: 0.8;
+  }
 }

@@ -102,31 +102,65 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div style={{ padding: 24, textAlign: "center" }}>
-        <div>Loading dashboard...</div>
+      <div
+        style={{
+          padding: 48,
+          textAlign: "center",
+          background: theme.cardBg,
+          backdropFilter: theme.glassBlur,
+          WebkitBackdropFilter: theme.glassBlur,
+          borderRadius: 12,
+          boxShadow: theme.glassShadow,
+        }}
+      >
+        <div style={{ color: theme.text, fontSize: 18, fontWeight: 500 }}>
+          Loading dashboard...
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ padding: 24, color: "crimson" }}>
-        <div>Error: {error}</div>
+      <div
+        style={{
+          padding: 32,
+          background: theme.cardBg,
+          backdropFilter: theme.glassBlur,
+          WebkitBackdropFilter: theme.glassBlur,
+          borderRadius: 12,
+          boxShadow: theme.glassShadow,
+          border: `1px solid ${theme.crimson}`,
+        }}
+      >
+        <div
+          style={{
+            color: theme.crimson,
+            fontSize: 16,
+            fontWeight: 600,
+            marginBottom: 16,
+          }}
+        >
+          Error: {error}
+        </div>
         <button
           onClick={loadDashboardData}
           onMouseEnter={() => setHoveredButton("retry")}
           onMouseLeave={() => setHoveredButton(null)}
           style={{
-            marginTop: 12,
-            padding: "8px 16px",
-            backgroundColor: "#007bff",
+            padding: "10px 24px",
+            background:
+              hoveredButton === "retry" ? theme.crimsonDark : theme.crimson,
             color: "white",
             border: "none",
-            borderRadius: 6,
+            borderRadius: 8,
             cursor: "pointer",
-            filter:
-              hoveredButton === "retry" ? "brightness(0.85)" : "brightness(1)",
-            transition: "all 0.2s ease",
+            fontWeight: 600,
+            transition: "all 0.3s ease",
+            boxShadow:
+              hoveredButton === "retry"
+                ? "0 6px 20px rgba(196, 30, 58, 0.4)"
+                : "0 3px 12px rgba(196, 30, 58, 0.3)",
           }}
         >
           Retry
@@ -148,7 +182,15 @@ export default function Dashboard() {
 
       {/* Recent Exam History */}
       <section>
-        <h2 style={{ margin: "0 0 16px 0", fontSize: 24, color: theme.text }}>
+        <h2
+          style={{
+            margin: "0 0 16px 0",
+            fontSize: 28,
+            fontWeight: 700,
+            color: theme.crimson,
+            letterSpacing: "-0.5px",
+          }}
+        >
           Recent Exam History
         </h2>
         {attempts.length > 0 ? (
@@ -162,17 +204,28 @@ export default function Dashboard() {
         ) : (
           <div
             style={{
-              padding: 32,
+              padding: 48,
               textAlign: "center",
-              backgroundColor: theme.navBg,
-              borderRadius: 8,
-              border: `2px dashed ${theme.border}`,
+              background: theme.cardBg,
+              backdropFilter: theme.glassBlur,
+              WebkitBackdropFilter: theme.glassBlur,
+              borderRadius: 12,
+              border: `2px dashed ${theme.glassBorder}`,
+              boxShadow: theme.glassShadow,
             }}
           >
-            <h3 style={{ margin: "0 0 8px 0", color: theme.textSecondary }}>
+            <h3
+              style={{
+                margin: "0 0 8px 0",
+                color: theme.textSecondary,
+                fontSize: 18,
+              }}
+            >
               No exams taken yet
             </h3>
-            <p style={{ margin: "0", color: theme.textSecondary }}>
+            <p
+              style={{ margin: "0", color: theme.textSecondary, fontSize: 14 }}
+            >
               Upload a CSV and take your first exam to see your history here.
             </p>
           </div>
@@ -181,7 +234,15 @@ export default function Dashboard() {
 
       {/* CSV Library */}
       <section>
-        <h2 style={{ margin: "0 0 16px 0", fontSize: 24, color: theme.text }}>
+        <h2
+          style={{
+            margin: "0 0 16px 0",
+            fontSize: 28,
+            fontWeight: 700,
+            color: theme.crimson,
+            letterSpacing: "-0.5px",
+          }}
+        >
           CSV Library
         </h2>
         <CSVLibrary

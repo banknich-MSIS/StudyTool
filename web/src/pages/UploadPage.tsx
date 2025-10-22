@@ -9,6 +9,8 @@ export default function UploadPage() {
     theme: any;
   }>();
   const [file, setFile] = useState<File | null>(null);
+  const [csvText, setCsvText] = useState<string>("");
+  const [uploadedFromPaste, setUploadedFromPaste] = useState(false);
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
   const [uploadId, setUploadId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -17,18 +19,45 @@ export default function UploadPage() {
   const nav = useNavigate();
 
   const onUpload = async () => {
-    if (!file) return;
+    if (!file && !csvText.trim()) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await uploadCsv(file);
+      let fileToUpload = file;
+      const wasPasted = !file && csvText.trim();
+
+      // If CSV text is provided instead of file, convert it to a File
+      if (!fileToUpload && csvText.trim()) {
+        const blob = new Blob([csvText], { type: "text/csv" });
+        fileToUpload = new File([blob], "pasted-csv.csv", { type: "text/csv" });
+      }
+
+      if (!fileToUpload) return;
+
+      const res = await uploadCsv(fileToUpload);
       setUploadId(res.uploadId);
       setStats(res.stats);
+      setUploadedFromPaste(wasPasted);
+      // Clear inputs after successful upload
+      setFile(null);
+      setCsvText("");
     } catch (e: any) {
       setError(e?.response?.data?.detail || e.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const downloadPastedCsv = () => {
+    if (!stats) return;
+    const csvContent = stats.raw_csv_content || "No CSV content available";
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "generated-study-set.csv";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const downloadTemplate = () => {
@@ -57,140 +86,297 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      {/* Gemini Workflow Instructions */}
+      {/* Gemini Workflow Instructions - Glassmorphism */}
       <div
         style={{
-          background: darkMode ? "#1a3a52" : "#f0f7ff",
-          padding: 16,
-          borderRadius: 8,
-          border: `1px solid ${darkMode ? "#2a4a62" : "#b3d9ff"}`,
+          background: theme.cardBg,
+          backdropFilter: theme.glassBlur,
+          WebkitBackdropFilter: theme.glassBlur,
+          padding: 20,
+          borderRadius: 12,
+          border: `1px solid ${theme.glassBorder}`,
+          boxShadow: theme.glassShadow,
         }}
       >
         <h3
           style={{
             margin: "0 0 12px 0",
-            color: darkMode ? "#64b5f6" : "#0066cc",
+            color: theme.crimson,
+            fontWeight: 600,
+            letterSpacing: "-0.3px",
           }}
         >
-          How to use this tool:
+          Two Ways to Create Exams:
         </h3>
-        <ol
-          style={{
-            margin: 0,
-            paddingLeft: 20,
-            color: darkMode ? "#90caf9" : theme.text,
-          }}
-        >
-          <li>Upload your study materials (PDF/PowerPoint) to Gemini AI</li>
-          <li>Ask Gemini to create a study CSV using the format</li>
-          <li>Download the CSV and upload it here</li>
-        </ol>
+        <div style={{ marginBottom: 16 }}>
+          <div
+            style={{ fontWeight: 600, color: theme.crimson, marginBottom: 6 }}
+          >
+            Option 1: AI Exam Creator (Built-in, Fast)
+          </div>
+          <p
+            style={{
+              margin: "0 0 12px 0",
+              color: theme.text,
+              fontSize: 14,
+              lineHeight: 1.6,
+              paddingLeft: 12,
+            }}
+          >
+            Use our built-in AI generator for quick, streamlined exam creation.
+            Upload files, set parameters, and generate instantly.
+          </p>
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontWeight: 600, color: theme.amber, marginBottom: 6 }}>
+            Option 2: Gemini Gem (Consultative, Interactive)
+          </div>
+          <p
+            style={{
+              margin: 0,
+              color: theme.text,
+              fontSize: 14,
+              lineHeight: 1.6,
+              paddingLeft: 12,
+            }}
+          >
+            For a guided, conversational experience, use the{" "}
+            <a
+              href="https://gemini.google.com/gem/582bd1e1e16d"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: theme.amber, textDecoration: "underline" }}
+            >
+              Gemini Gem
+            </a>
+            . It walks you through Q&A to refine your exam, then outputs a CSV
+            to upload here.
+          </p>
+        </div>
         <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
           <button
             onClick={showTutorial}
             onMouseEnter={() => setHoveredButton("viewGuide")}
             onMouseLeave={() => setHoveredButton(null)}
             style={{
-              padding: "6px 12px",
-              border: `1px solid ${darkMode ? "#64b5f6" : "#0066cc"}`,
-              borderRadius: 4,
-              backgroundColor: theme.cardBg,
-              color: darkMode ? "#64b5f6" : "#0066cc",
+              padding: "10px 20px",
+              border: `1px solid ${theme.glassBorder}`,
+              borderRadius: 6,
+              background: "transparent",
+              color: theme.crimson,
               cursor: "pointer",
-              filter:
-                hoveredButton === "viewGuide"
-                  ? "brightness(0.85)"
-                  : "brightness(1)",
-              transition: "all 0.2s ease",
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: "none",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(196, 30, 58, 0.05)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
-            View detailed guide
+            View Guide
           </button>
           <button
             onClick={downloadTemplate}
             onMouseEnter={() => setHoveredButton("downloadTemplate")}
             onMouseLeave={() => setHoveredButton(null)}
             style={{
-              padding: "6px 12px",
-              border: `1px solid ${darkMode ? "#64b5f6" : "#0066cc"}`,
-              borderRadius: 4,
-              backgroundColor: theme.cardBg,
-              color: darkMode ? "#64b5f6" : "#0066cc",
+              padding: "10px 20px",
+              border: "none",
+              borderRadius: 6,
+              background: theme.amber,
+              color: "white",
               cursor: "pointer",
-              filter:
-                hoveredButton === "downloadTemplate"
-                  ? "brightness(0.85)"
-                  : "brightness(1)",
-              transition: "all 0.2s ease",
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: "0 2px 8px rgba(212, 166, 80, 0.25)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow =
+                "0 4px 12px rgba(212, 166, 80, 0.35)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow =
+                "0 2px 8px rgba(212, 166, 80, 0.25)";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
-            Download CSV template
+            Download Template
           </button>
         </div>
       </div>
 
-      {/* CSV Upload Section */}
+      {/* CSV Upload Section - Glassmorphism */}
       <div
         style={{
-          border: `2px dashed ${theme.border}`,
-          borderRadius: 8,
+          border: `2px dashed ${theme.glassBorder}`,
+          borderRadius: 12,
           padding: 24,
           textAlign: "center",
-          backgroundColor: file ? theme.navBg : theme.cardBg,
+          background: file ? theme.navHover : theme.cardBg,
+          backdropFilter: theme.glassBlur,
+          WebkitBackdropFilter: theme.glassBlur,
+          boxShadow: file ? theme.glassShadowHover : theme.glassShadow,
+          transition: "all 0.3s ease",
         }}
       >
-        <h3 style={{ margin: "0 0 16px 0", color: theme.text }}>
+        <h3
+          style={{
+            margin: "0 0 16px 0",
+            color: theme.crimson,
+            fontWeight: 600,
+            textAlign: "center",
+          }}
+        >
           Upload Study CSV
         </h3>
-        <input
-          type="file"
-          accept=".csv"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(e) => {
+              setFile(e.target.files?.[0] || null);
+              if (e.target.files?.[0]) setCsvText("");
+            }}
+            style={{
+              color: theme.text,
+              backgroundColor: theme.cardBgSolid,
+              padding: 16,
+              borderRadius: 8,
+              border: `2px solid ${theme.glassBorder}`,
+              fontSize: 15,
+              fontWeight: 500,
+              cursor: "pointer",
+              maxWidth: 400,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* CSV Text Paste Section - Glassmorphism */}
+      <div
+        style={{
+          border: `2px dashed ${theme.glassBorder}`,
+          borderRadius: 12,
+          padding: 24,
+          background: csvText.trim() ? theme.navHover : theme.cardBg,
+          backdropFilter: theme.glassBlur,
+          WebkitBackdropFilter: theme.glassBlur,
+          boxShadow: csvText.trim()
+            ? theme.glassShadowHover
+            : theme.glassShadow,
+          transition: "all 0.3s ease",
+        }}
+      >
+        <h3
           style={{
-            marginBottom: 16,
-            color: theme.text,
-            backgroundColor: theme.cardBg,
-            padding: 8,
-            borderRadius: 4,
+            margin: "0 0 8px 0",
+            color: theme.crimson,
+            fontWeight: 600,
+          }}
+        >
+          Or Paste CSV Text (Gemini format)
+        </h3>
+        <p
+          style={{
+            margin: "0 0 12px 0",
+            fontSize: 14,
+            color: theme.textSecondary,
+            lineHeight: 1.5,
+          }}
+        >
+          Paste the CSV text code outputted in the format delivered from Gemini
+        </p>
+        <textarea
+          value={csvText}
+          onChange={(e) => {
+            setCsvText(e.target.value);
+            if (e.target.value.trim()) setFile(null);
+          }}
+          placeholder="Paste your CSV content here..."
+          style={{
+            width: "100%",
+            minHeight: 200,
+            padding: 16,
+            borderRadius: 8,
             border: `1px solid ${theme.border}`,
+            background: theme.cardBgSolid,
+            color: theme.text,
+            fontFamily: "monospace",
+            fontSize: 13,
+            resize: "vertical",
+            outline: "none",
           }}
         />
-        <div>
-          <button
-            onClick={onUpload}
-            disabled={!file || loading}
-            onMouseEnter={() =>
-              !loading && file && setHoveredButton("uploadCsv")
+      </div>
+
+      {/* Upload Button - Glassmorphism */}
+      <div style={{ textAlign: "center" }}>
+        <button
+          onClick={onUpload}
+          disabled={(!file && !csvText.trim()) || loading}
+          onMouseEnter={() =>
+            !loading &&
+            (file || csvText.trim()) &&
+            setHoveredButton("uploadCsv")
+          }
+          onMouseLeave={() => setHoveredButton(null)}
+          style={{
+            padding: "12px 32px",
+            background: file || csvText.trim() ? theme.crimson : theme.border,
+            color: "white",
+            border: "none",
+            borderRadius: 6,
+            cursor: file || csvText.trim() ? "pointer" : "not-allowed",
+            fontSize: 16,
+            fontWeight: 600,
+            letterSpacing: "-0.2px",
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+            boxShadow:
+              file || csvText.trim()
+                ? "0 2px 8px rgba(196, 30, 58, 0.25)"
+                : "none",
+            transform:
+              hoveredButton === "uploadCsv" ? "translateY(-1px)" : "none",
+          }}
+          onMouseEnter={(e) => {
+            if (file || csvText.trim()) {
+              e.currentTarget.style.boxShadow =
+                "0 4px 12px rgba(196, 30, 58, 0.35)";
             }
-            onMouseLeave={() => setHoveredButton(null)}
-            style={{
-              padding: "12px 24px",
-              backgroundColor: file ? "#007bff" : theme.border,
-              color: "white",
-              border: "none",
-              borderRadius: 6,
-              cursor: file ? "pointer" : "not-allowed",
-              fontSize: 16,
-              filter:
-                hoveredButton === "uploadCsv"
-                  ? "brightness(0.85)"
-                  : "brightness(1)",
-              transition: "all 0.2s ease",
-            }}
-          >
-            {loading ? "Uploading..." : "Upload CSV"}
-          </button>
-        </div>
+          }}
+          onMouseLeave={(e) => {
+            if (file || csvText.trim()) {
+              e.currentTarget.style.boxShadow =
+                "0 2px 8px rgba(196, 30, 58, 0.25)";
+            }
+          }}
+        >
+          {loading ? "Uploading..." : "Upload CSV"}
+        </button>
       </div>
 
       {error && (
         <div
           style={{
-            color: darkMode ? "#ef5350" : "crimson",
-            padding: 12,
-            backgroundColor: darkMode ? "#3d1a1a" : "#ffe6e6",
-            borderRadius: 6,
-            border: `1px solid ${darkMode ? "#4d2a2a" : "#ffcccc"}`,
+            color: darkMode ? "#ef5350" : "#c41e3a",
+            padding: 16,
+            background: darkMode
+              ? "rgba(196, 30, 58, 0.1)"
+              : "rgba(196, 30, 58, 0.08)",
+            backdropFilter: theme.glassBlur,
+            WebkitBackdropFilter: theme.glassBlur,
+            borderRadius: 10,
+            border: `1px solid ${theme.crimson}`,
+            boxShadow: theme.glassShadow,
+            fontWeight: 500,
           }}
         >
           {error}
@@ -200,11 +386,13 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
       {uploadId && (
         <div
           style={{
-            borderTop: `1px solid ${theme.border}`,
-            paddingTop: 16,
-            backgroundColor: theme.navBg,
-            borderRadius: 8,
-            padding: 16,
+            background: theme.cardBg,
+            backdropFilter: theme.glassBlur,
+            WebkitBackdropFilter: theme.glassBlur,
+            borderRadius: 12,
+            padding: 20,
+            border: `1px solid ${theme.glassBorder}`,
+            boxShadow: theme.glassShadowHover,
           }}
         >
           <h3
@@ -265,27 +453,76 @@ What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
             </pre>
           </div>
 
-          <button
-            onClick={() => nav("/settings", { state: { uploadId, metadata } })}
-            onMouseEnter={() => setHoveredButton("continueToSettings")}
-            onMouseLeave={() => setHoveredButton(null)}
-            style={{
-              padding: "12px 24px",
-              backgroundColor: "#28a745",
-              color: "white",
-              border: "none",
-              borderRadius: 6,
-              cursor: "pointer",
-              fontSize: 16,
-              filter:
-                hoveredButton === "continueToSettings"
-                  ? "brightness(0.85)"
-                  : "brightness(1)",
-              transition: "all 0.2s ease",
-            }}
-          >
-            Continue to Settings →
-          </button>
+          <div style={{ display: "flex", gap: 12 }}>
+            {uploadedFromPaste && (
+              <button
+                onClick={downloadPastedCsv}
+                style={{
+                  padding: "12px 28px",
+                  background: theme.amber,
+                  color: "white",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  fontSize: 16,
+                  fontWeight: 600,
+                  letterSpacing: "-0.2px",
+                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                  boxShadow: "0 2px 8px rgba(212, 166, 80, 0.25)",
+                  transform:
+                    hoveredButton === "downloadCsv"
+                      ? "translateY(-1px)"
+                      : "none",
+                }}
+                onMouseEnter={(e) => {
+                  setHoveredButton("downloadCsv");
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(212, 166, 80, 0.35)";
+                }}
+                onMouseLeave={(e) => {
+                  setHoveredButton(null);
+                  e.currentTarget.style.boxShadow =
+                    "0 2px 8px rgba(212, 166, 80, 0.25)";
+                }}
+              >
+                Download CSV File
+              </button>
+            )}
+            <button
+              onClick={() =>
+                nav("/settings", { state: { uploadId, metadata } })
+              }
+              style={{
+                padding: "12px 28px",
+                background: theme.btnSuccess,
+                color: "white",
+                border: "none",
+                borderRadius: 6,
+                cursor: "pointer",
+                fontSize: 16,
+                fontWeight: 600,
+                letterSpacing: "-0.2px",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: "0 2px 8px rgba(40, 167, 69, 0.25)",
+                transform:
+                  hoveredButton === "continueToSettings"
+                    ? "translateY(-1px)"
+                    : "none",
+              }}
+              onMouseEnter={(e) => {
+                setHoveredButton("continueToSettings");
+                e.currentTarget.style.boxShadow =
+                  "0 4px 12px rgba(40, 167, 69, 0.35)";
+              }}
+              onMouseLeave={(e) => {
+                setHoveredButton(null);
+                e.currentTarget.style.boxShadow =
+                  "0 2px 8px rgba(40, 167, 69, 0.25)";
+              }}
+            >
+              Continue to Settings →
+            </button>
+          </div>
         </div>
       )}
     </div>

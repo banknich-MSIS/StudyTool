@@ -148,10 +148,10 @@ export default function PracticeModePage() {
 
   const getQuestionStatusColor = (index: number) => {
     if (index === currentQuestionIndex) {
-      return darkMode ? "#007bff" : "#0056b3";
+      return theme.crimson;
     }
     if (completedQuestions.has(questions[index].id)) {
-      return darkMode ? "#28a745" : "#1e7e34";
+      return theme.btnSuccess;
     }
     return darkMode ? "#4d4d4d" : "#e9ecef";
   };
@@ -262,9 +262,9 @@ export default function PracticeModePage() {
         </h3>
         <div
           style={{
-            fontSize: "24px",
-            fontWeight: "bold",
-            color: "#007bff",
+            fontSize: 28,
+            fontWeight: 700,
+            color: theme.crimson,
             marginBottom: 16,
           }}
         >
@@ -286,11 +286,11 @@ export default function PracticeModePage() {
                 padding: 8,
                 borderRadius: 6,
                 border: `2px solid ${
-                  idx === currentQuestionIndex ? "#007bff" : theme.border
+                  idx === currentQuestionIndex ? theme.crimson : theme.border
                 }`,
                 background: getQuestionStatusColor(idx),
                 cursor: "pointer",
-                fontWeight: "bold",
+                fontWeight: 700,
                 color:
                   idx === currentQuestionIndex || completedQuestions.has(q.id)
                     ? "white"
@@ -422,15 +422,32 @@ export default function PracticeModePage() {
             onClick={previousQuestion}
             disabled={currentQuestionIndex === 0}
             style={{
-              padding: "12px 24px",
-              backgroundColor:
-                currentQuestionIndex === 0 ? "#6c757d" : "#007bff",
+              padding: "10px 24px",
+              background:
+                currentQuestionIndex === 0 ? theme.border : theme.amber,
               color: "white",
               border: "none",
               borderRadius: 6,
-              fontSize: 16,
+              fontSize: 15,
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
               cursor: currentQuestionIndex === 0 ? "not-allowed" : "pointer",
               opacity: currentQuestionIndex === 0 ? 0.5 : 1,
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow:
+                currentQuestionIndex === 0
+                  ? "none"
+                  : "0 2px 8px rgba(212, 166, 80, 0.25)",
+            }}
+            onMouseEnter={(e) => {
+              if (currentQuestionIndex !== 0) {
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(212, 166, 80, 0.35)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (currentQuestionIndex !== 0) {
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(212, 166, 80, 0.25)";
+              }
             }}
           >
             ← Previous
@@ -441,13 +458,24 @@ export default function PracticeModePage() {
               onClick={checkAnswer}
               style={{
                 padding: "12px 32px",
-                backgroundColor: "#28a745",
+                background: theme.btnSuccess,
                 color: "white",
                 border: "none",
                 borderRadius: 6,
                 fontSize: 16,
-                fontWeight: "bold",
+                fontWeight: 600,
+                letterSpacing: "-0.2px",
                 cursor: "pointer",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: "0 2px 8px rgba(40, 167, 69, 0.25)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(40, 167, 69, 0.35)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(40, 167, 69, 0.25)";
+                e.currentTarget.style.transform = "translateY(0)";
               }}
             >
               Check Answer
@@ -457,13 +485,24 @@ export default function PracticeModePage() {
               onClick={nextQuestion}
               style={{
                 padding: "12px 32px",
-                backgroundColor: "#007bff",
+                background: theme.crimson,
                 color: "white",
                 border: "none",
                 borderRadius: 6,
                 fontSize: 16,
-                fontWeight: "bold",
+                fontWeight: 600,
+                letterSpacing: "-0.2px",
                 cursor: "pointer",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: "0 2px 8px rgba(196, 30, 58, 0.25)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(196, 30, 58, 0.35)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(196, 30, 58, 0.25)";
+                e.currentTarget.style.transform = "translateY(0)";
               }}
             >
               {currentQuestionIndex < questions.length - 1

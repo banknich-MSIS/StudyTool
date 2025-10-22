@@ -5,6 +5,7 @@ import App from "./App";
 import "./index.css";
 import Dashboard from "./pages/Dashboard";
 import UploadPage from "./pages/UploadPage";
+import SmartExamCreator from "./pages/SmartExamCreator";
 import SettingsPage from "./pages/SettingsPage";
 import ExamPage from "./pages/ExamPage";
 import PracticeModePage from "./pages/PracticeModePage";
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <Dashboard /> },
+      { path: "ai-exam-creator", element: <SmartExamCreator /> },
       { path: "upload", element: <UploadPage /> },
       { path: "settings", element: <SettingsPage /> },
       { path: "exam/:examId", element: <ExamPage /> },

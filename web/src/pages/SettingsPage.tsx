@@ -5,6 +5,7 @@ import {
   fetchAllUploads,
   fetchClasses,
   createClass,
+  validateGeminiKey,
 } from "../api/client";
 import type {
   QuestionType,
@@ -50,12 +51,66 @@ export default function SettingsPage() {
   const [uploadData, setUploadData] = useState<UploadSummary | null>(null);
   const [classes, setClasses] = useState<ClassSummary[]>([]);
 
+  // API Key management state
+  const [apiKey, setApiKey] = useState("");
+  const [apiKeyValid, setApiKeyValid] = useState<boolean | null>(null);
+  const [validatingKey, setValidatingKey] = useState(false);
+
+  // Load API key on mount
+  useEffect(() => {
+    const encrypted = localStorage.getItem("gemini_api_key");
+    if (encrypted) {
+      try {
+        const decrypted = atob(encrypted);
+        setApiKey(decrypted);
+        setApiKeyValid(true); // Assume valid if stored
+      } catch (e) {
+        console.error("Failed to decrypt API key");
+      }
+    }
+  }, []);
+
   // Load classes
   useEffect(() => {
     fetchClasses()
       .then((data) => setClasses(data))
       .catch((e) => console.error("Failed to load classes:", e));
   }, []);
+
+  const handleValidateAndSaveKey = async () => {
+    if (!apiKey.trim()) {
+      setError("Please enter an API key");
+      return;
+    }
+
+    setValidatingKey(true);
+    setError(null);
+
+    try {
+      const isValid = await validateGeminiKey(apiKey);
+      setApiKeyValid(isValid);
+
+      if (isValid) {
+        // Encrypt and save
+        const encrypted = btoa(apiKey);
+        localStorage.setItem("gemini_api_key", encrypted);
+        setError(null);
+      } else {
+        setError("API key is invalid. Please check and try again.");
+      }
+    } catch (e: any) {
+      setError("Failed to validate API key. Please try again.");
+      setApiKeyValid(false);
+    } finally {
+      setValidatingKey(false);
+    }
+  };
+
+  const handleClearApiKey = () => {
+    localStorage.removeItem("gemini_api_key");
+    setApiKey("");
+    setApiKeyValid(null);
+  };
 
   // Fetch upload details to get question type counts
   useEffect(() => {
@@ -154,7 +209,149 @@ export default function SettingsPage() {
   };
 
   return (
-    <div style={{ display: "grid", gap: 16, color: theme.text }}>
+    <div style={{ display: "grid", gap: 24, color: theme.text }}>
+      {/* API Key Management Section */}
+      <section
+        style={{
+          background: theme.cardBg,
+          backdropFilter: theme.glassBlur,
+          WebkitBackdropFilter: theme.glassBlur,
+          borderRadius: 12,
+          padding: 24,
+          border: `1px solid ${theme.glassBorder}`,
+          boxShadow: theme.glassShadow,
+        }}
+      >
+        <h2
+          style={{
+            margin: "0 0 12px 0",
+            fontSize: 24,
+            fontWeight: 700,
+            color: theme.crimson,
+          }}
+        >
+          🤖 Gemini API Configuration
+        </h2>
+        <p style={{ margin: "0 0 16px 0", color: theme.textSecondary }}>
+          Enable AI-powered exam generation by setting up your free Gemini API
+          key.{" "}
+          <a
+            href="https://makersuite.google.com/app/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: theme.crimson, textDecoration: "underline" }}
+          >
+            Get your free key here
+          </a>
+        </p>
+
+        <div style={{ marginBottom: 16 }}>
+          <label
+            style={{
+              display: "block",
+              marginBottom: 8,
+              color: theme.text,
+              fontWeight: 500,
+            }}
+          >
+            Gemini API Key
+          </label>
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="AIza..."
+            style={{
+              width: "100%",
+              padding: 12,
+              borderRadius: 8,
+              border: `1px solid ${theme.border}`,
+              backgroundColor: theme.cardBgSolid,
+              color: theme.text,
+              fontSize: 14,
+              fontFamily: "monospace",
+            }}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <button
+            onClick={handleValidateAndSaveKey}
+            disabled={!apiKey.trim() || validatingKey}
+            style={{
+              padding: "10px 24px",
+              background:
+                apiKey.trim() && !validatingKey ? theme.crimson : theme.border,
+              color: "white",
+              border: "none",
+              borderRadius: 8,
+              cursor:
+                apiKey.trim() && !validatingKey ? "pointer" : "not-allowed",
+              fontWeight: 600,
+              boxShadow:
+                apiKey.trim() && !validatingKey
+                  ? "0 3px 12px rgba(196, 30, 58, 0.3)"
+                  : "none",
+            }}
+          >
+            {validatingKey ? "Validating..." : "Save & Validate"}
+          </button>
+
+          {apiKeyValid !== null && (
+            <div
+              style={{
+                padding: "8px 16px",
+                background: apiKeyValid
+                  ? "rgba(40, 167, 69, 0.1)"
+                  : "rgba(220, 53, 69, 0.1)",
+                color: apiKeyValid ? theme.btnSuccess : theme.btnDanger,
+                borderRadius: 8,
+                border: `1px solid ${
+                  apiKeyValid ? theme.btnSuccess : theme.btnDanger
+                }`,
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              {apiKeyValid ? "✅ Key is valid" : "❌ Invalid key"}
+            </div>
+          )}
+
+          {apiKey && (
+            <button
+              onClick={handleClearApiKey}
+              style={{
+                padding: "8px 16px",
+                background: "transparent",
+                color: theme.textSecondary,
+                border: `1px solid ${theme.border}`,
+                borderRadius: 8,
+                cursor: "pointer",
+                fontSize: 14,
+              }}
+            >
+              Clear Key
+            </button>
+          )}
+        </div>
+
+        <div
+          style={{
+            marginTop: 16,
+            padding: 12,
+            background: darkMode
+              ? "rgba(212, 166, 80, 0.08)"
+              : "rgba(212, 166, 80, 0.1)",
+            borderRadius: 8,
+            fontSize: 13,
+            color: theme.textSecondary,
+          }}
+        >
+          <strong style={{ color: theme.amber }}>Free Tier Limits:</strong> 1M
+          tokens/day (~100 exams), 60 requests/hour • No credit card required
+        </div>
+      </section>
+
       {!uploadId && (
         <div style={{ color: "crimson" }}>
           No upload selected. Go back to Upload.
@@ -180,30 +377,34 @@ export default function SettingsPage() {
         </div>
       ) : uploadData ? (
         <>
-          {/* Questions Available Section */}
+          {/* Questions Available Section - Glassmorphism */}
           <section
             style={{
-              backgroundColor: darkMode ? "#1a3a52" : "#e3f2fd",
-              border: `1px solid ${darkMode ? "#2a4a62" : "#bbdefb"}`,
-              borderRadius: 8,
-              padding: 20,
+              background: theme.cardBg,
+              backdropFilter: theme.glassBlur,
+              WebkitBackdropFilter: theme.glassBlur,
+              border: `1px solid ${theme.glassBorder}`,
+              borderRadius: 12,
+              padding: 24,
+              boxShadow: theme.glassShadow,
             }}
           >
             <h3
               style={{
                 margin: "0 0 12px 0",
-                fontSize: 20,
-                color: darkMode ? "#64b5f6" : "#1976d2",
+                fontSize: 22,
+                fontWeight: 700,
+                color: theme.crimson,
               }}
             >
               Questions Available in CSV
             </h3>
             <div
               style={{
-                fontSize: 16,
+                fontSize: 18,
                 marginBottom: 16,
-                fontWeight: "bold",
-                color: darkMode ? "#90caf9" : "#1976d2",
+                fontWeight: 700,
+                color: theme.amber,
               }}
             >
               Total: {availableQuestions} questions
@@ -214,8 +415,10 @@ export default function SettingsPage() {
                   style={{
                     fontSize: 14,
                     marginBottom: 8,
-                    color: darkMode ? "#64b5f6" : "#1976d2",
-                    fontWeight: 500,
+                    color: theme.textSecondary,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
                   }}
                 >
                   Breakdown by Type:
@@ -226,12 +429,12 @@ export default function SettingsPage() {
                       key={type}
                       style={{
                         fontSize: 14,
-                        color: darkMode ? "#90caf9" : "#1565c0",
+                        color: theme.text,
                         paddingLeft: 12,
                       }}
                     >
                       • {QUESTION_TYPE_LABELS[type as QuestionType] || type}:{" "}
-                      {count}
+                      <strong style={{ color: theme.crimson }}>{count}</strong>
                     </div>
                   ))}
                 </div>
@@ -239,13 +442,16 @@ export default function SettingsPage() {
             )}
           </section>
 
-          {/* Mode Selection */}
+          {/* Mode Selection - Glassmorphism */}
           <section
             style={{
-              backgroundColor: darkMode ? "#2a3a4a" : "#e8f4f8",
-              border: `1px solid ${darkMode ? "#3a4a5a" : "#b3d9e6"}`,
-              borderRadius: 8,
-              padding: 20,
+              background: theme.cardBg,
+              backdropFilter: theme.glassBlur,
+              WebkitBackdropFilter: theme.glassBlur,
+              border: `1px solid ${theme.glassBorder}`,
+              borderRadius: 12,
+              padding: 24,
+              boxShadow: theme.glassShadow,
             }}
           >
             <h3
@@ -269,25 +475,32 @@ export default function SettingsPage() {
                 style={{
                   padding: "20px",
                   border: `2px solid ${
-                    examMode === "exam" ? "#dc3545" : theme.border
+                    examMode === "exam" ? theme.crimson : theme.glassBorder
                   }`,
-                  borderRadius: 8,
-                  backgroundColor:
+                  borderRadius: 12,
+                  background:
                     examMode === "exam"
                       ? darkMode
-                        ? "#3d1a1a"
-                        : "#fff0f0"
+                        ? "rgba(196, 30, 58, 0.15)"
+                        : "rgba(196, 30, 58, 0.1)"
                       : theme.cardBg,
+                  backdropFilter: theme.glassBlur,
+                  WebkitBackdropFilter: theme.glassBlur,
                   cursor: "pointer",
                   textAlign: "left",
+                  boxShadow:
+                    examMode === "exam"
+                      ? theme.glassShadowHover
+                      : theme.glassShadow,
+                  transition: "all 0.3s ease",
                 }}
               >
                 <div
                   style={{
                     fontSize: 18,
-                    fontWeight: "bold",
+                    fontWeight: 700,
                     marginBottom: 8,
-                    color: examMode === "exam" ? "#dc3545" : theme.text,
+                    color: examMode === "exam" ? theme.crimson : theme.text,
                   }}
                 >
                   📝 Exam Mode
@@ -307,25 +520,32 @@ export default function SettingsPage() {
                 style={{
                   padding: "20px",
                   border: `2px solid ${
-                    examMode === "practice" ? "#007bff" : theme.border
+                    examMode === "practice" ? theme.amber : theme.glassBorder
                   }`,
-                  borderRadius: 8,
-                  backgroundColor:
+                  borderRadius: 12,
+                  background:
                     examMode === "practice"
                       ? darkMode
-                        ? "#1a2a3a"
-                        : "#f0f8ff"
+                        ? "rgba(212, 166, 80, 0.15)"
+                        : "rgba(212, 166, 80, 0.1)"
                       : theme.cardBg,
+                  backdropFilter: theme.glassBlur,
+                  WebkitBackdropFilter: theme.glassBlur,
                   cursor: "pointer",
                   textAlign: "left",
+                  boxShadow:
+                    examMode === "practice"
+                      ? theme.glassShadowHover
+                      : theme.glassShadow,
+                  transition: "all 0.3s ease",
                 }}
               >
                 <div
                   style={{
                     fontSize: 18,
-                    fontWeight: "bold",
+                    fontWeight: 700,
                     marginBottom: 8,
-                    color: examMode === "practice" ? "#007bff" : theme.text,
+                    color: examMode === "practice" ? theme.amber : theme.text,
                   }}
                 >
                   🎯 Practice Mode
@@ -473,13 +693,15 @@ export default function SettingsPage() {
                           onClick={handleCreateNewClass}
                           style={{
                             flex: 1,
-                            padding: "6px 12px",
-                            backgroundColor: "#007bff",
+                            padding: "8px 16px",
+                            background: theme.crimson,
                             color: "white",
                             border: "none",
-                            borderRadius: 4,
+                            borderRadius: 6,
                             cursor: "pointer",
                             fontSize: 13,
+                            fontWeight: 600,
+                            boxShadow: "0 2px 8px rgba(196, 30, 58, 0.3)",
                           }}
                         >
                           Create
@@ -492,13 +714,15 @@ export default function SettingsPage() {
                           }}
                           style={{
                             flex: 1,
-                            padding: "6px 12px",
-                            backgroundColor: "#6c757d",
+                            padding: "8px 16px",
+                            background: theme.textSecondary,
                             color: "white",
                             border: "none",
-                            borderRadius: 4,
+                            borderRadius: 6,
                             cursor: "pointer",
                             fontSize: 13,
+                            fontWeight: 600,
+                            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
                           }}
                         >
                           Cancel
@@ -599,32 +823,46 @@ export default function SettingsPage() {
             )}
           </section>
 
-          {/* Start Exam Button */}
+          {/* Start Exam Button - Glassmorphism */}
           <button
             onClick={onStart}
             disabled={!uploadId || loading || !isCountValid}
             style={{
-              padding: "12px 24px",
-              backgroundColor:
-                uploadId && !loading && isCountValid ? "#dc3545" : "#6c757d",
+              padding: "12px 36px",
+              background:
+                uploadId && !loading && isCountValid
+                  ? theme.crimson
+                  : theme.border,
               color: "white",
               border: "none",
-              borderRadius: "6px",
+              borderRadius: 6,
               cursor:
                 uploadId && !loading && isCountValid
                   ? "pointer"
                   : "not-allowed",
-              fontSize: "16px",
-              fontWeight: "bold",
-              transition: "all 0.2s ease",
+              fontSize: 16,
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow:
+                uploadId && !loading && isCountValid
+                  ? "0 2px 8px rgba(196, 30, 58, 0.25)"
+                  : "none",
+              transform: "translateY(0)",
             }}
             onMouseEnter={(e) => {
               if (uploadId && !loading && isCountValid) {
-                e.currentTarget.style.filter = "brightness(0.85)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 12px rgba(196, 30, 58, 0.35)";
               }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.filter = "brightness(1)";
+              if (uploadId && !loading && isCountValid) {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 2px 8px rgba(196, 30, 58, 0.25)";
+              }
             }}
           >
             {loading ? "Starting..." : "Start Exam"}

@@ -124,23 +124,28 @@ export default function ClassesPage() {
 
   if (error) {
     return (
-      <div style={{ padding: 24, color: "crimson" }}>
-        <div>Error: {error}</div>
+      <div style={{ padding: 24 }}>
+        <div style={{ color: theme.crimson, marginBottom: 12 }}>
+          Error: {error}
+        </div>
         <button
           onClick={loadClasses}
           onMouseEnter={() => setHoveredButton("retry")}
           onMouseLeave={() => setHoveredButton(null)}
           style={{
-            marginTop: 12,
-            padding: "8px 16px",
-            backgroundColor: "#007bff",
+            padding: "10px 20px",
+            background:
+              hoveredButton === "retry" ? theme.crimsonDark : theme.crimson,
             color: "white",
             border: "none",
-            borderRadius: 6,
+            borderRadius: 8,
             cursor: "pointer",
-            filter:
-              hoveredButton === "retry" ? "brightness(0.85)" : "brightness(1)",
-            transition: "all 0.2s ease",
+            fontWeight: 600,
+            transition: "all 0.3s ease",
+            boxShadow:
+              hoveredButton === "retry"
+                ? "0 6px 20px rgba(196, 30, 58, 0.4)"
+                : "0 3px 12px rgba(196, 30, 58, 0.3)",
           }}
         >
           Retry
@@ -165,42 +170,62 @@ export default function ClassesPage() {
         <div style={{ display: "flex", gap: 12 }}>
           <button
             onClick={() => setShowCreateModal(true)}
-            onMouseEnter={() => setHoveredButton("createNew")}
-            onMouseLeave={() => setHoveredButton(null)}
             style={{
-              padding: "10px 20px",
-              backgroundColor: "#007bff",
+              padding: "10px 24px",
+              background: theme.crimson,
               color: "white",
               border: "none",
               borderRadius: 6,
               cursor: "pointer",
               fontSize: 15,
-              filter:
-                hoveredButton === "createNew"
-                  ? "brightness(0.85)"
-                  : "brightness(1)",
-              transition: "all 0.2s ease",
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: "0 2px 8px rgba(196, 30, 58, 0.25)",
+              transform:
+                hoveredButton === "createNew" ? "translateY(-1px)" : "none",
+            }}
+            onMouseEnter={(e) => {
+              setHoveredButton("createNew");
+              e.currentTarget.style.boxShadow =
+                "0 4px 12px rgba(196, 30, 58, 0.35)";
+            }}
+            onMouseLeave={(e) => {
+              setHoveredButton(null);
+              e.currentTarget.style.boxShadow =
+                "0 2px 8px rgba(196, 30, 58, 0.25)";
             }}
           >
             Create New Class
           </button>
           <button
             onClick={() => navigate("/")}
-            onMouseEnter={() => setHoveredButton("backToDashboard")}
-            onMouseLeave={() => setHoveredButton(null)}
             style={{
-              padding: "10px 20px",
-              backgroundColor: "#6c757d",
+              padding: "10px 24px",
+              background: theme.amber,
               color: "white",
               border: "none",
               borderRadius: 6,
               cursor: "pointer",
               fontSize: 15,
-              filter:
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: "0 2px 8px rgba(212, 166, 80, 0.25)",
+              transform:
                 hoveredButton === "backToDashboard"
-                  ? "brightness(0.85)"
-                  : "brightness(1)",
-              transition: "all 0.2s ease",
+                  ? "translateY(-1px)"
+                  : "none",
+            }}
+            onMouseEnter={(e) => {
+              setHoveredButton("backToDashboard");
+              e.currentTarget.style.boxShadow =
+                "0 4px 12px rgba(212, 166, 80, 0.35)";
+            }}
+            onMouseLeave={(e) => {
+              setHoveredButton(null);
+              e.currentTarget.style.boxShadow =
+                "0 2px 8px rgba(212, 166, 80, 0.25)";
             }}
           >
             Back to Dashboard

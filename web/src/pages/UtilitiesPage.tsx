@@ -70,14 +70,26 @@ export default function UtilitiesPage() {
           <button
             onClick={() => navigate("/upload")}
             style={{
-              padding: "8px 16px",
-              backgroundColor: "#007bff",
+              padding: "10px 20px",
+              background: theme.crimson,
               color: "white",
               border: "none",
-              borderRadius: 4,
+              borderRadius: 6,
               cursor: "pointer",
               fontSize: 14,
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
               width: "100%",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: "0 2px 8px rgba(196, 30, 58, 0.25)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(196, 30, 58, 0.35)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(196, 30, 58, 0.25)";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
             Go to Upload Page

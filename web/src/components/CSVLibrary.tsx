@@ -40,6 +40,9 @@ export default function CSVLibrary({
   const [selectedClassFilter, setSelectedClassFilter] = useState<string | null>(
     null
   );
+  const [openClassDropdown, setOpenClassDropdown] = useState<number | null>(
+    null
+  );
 
   // Load classes to get actual colors
   useEffect(() => {
@@ -132,9 +135,12 @@ export default function CSVLibrary({
         style={{
           padding: 48,
           textAlign: "center",
-          backgroundColor: theme.navBg,
-          borderRadius: 8,
-          border: `2px dashed ${theme.border}`,
+          background: theme.cardBg,
+          backdropFilter: theme.glassBlur,
+          WebkitBackdropFilter: theme.glassBlur,
+          borderRadius: 12,
+          border: `2px dashed ${theme.glassBorder}`,
+          boxShadow: theme.glassShadow,
         }}
       >
         <h3 style={{ margin: "0 0 8px 0", color: theme.textSecondary }}>
@@ -148,18 +154,27 @@ export default function CSVLibrary({
           onMouseEnter={() => setHoveredButton("uploadFirst")}
           onMouseLeave={() => setHoveredButton(null)}
           style={{
-            padding: "12px 24px",
-            backgroundColor: "#007bff",
+            padding: "12px 32px",
+            background: theme.crimson,
             color: "white",
             border: "none",
             borderRadius: 6,
             cursor: "pointer",
             fontSize: 16,
-            filter:
-              hoveredButton === "uploadFirst"
-                ? "brightness(0.85)"
-                : "brightness(1)",
-            transition: "all 0.2s ease",
+            fontWeight: 600,
+            letterSpacing: "-0.2px",
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+            boxShadow: "0 2px 8px rgba(196, 30, 58, 0.25)",
+            transform:
+              hoveredButton === "uploadFirst" ? "translateY(-1px)" : "none",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow =
+              "0 4px 12px rgba(196, 30, 58, 0.35)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow =
+              "0 2px 8px rgba(196, 30, 58, 0.25)";
           }}
         >
           Upload Your First CSV
@@ -189,22 +204,24 @@ export default function CSVLibrary({
             onMouseEnter={() => setHoveredButton("filterAll")}
             onMouseLeave={() => setHoveredButton(null)}
             style={{
-              padding: "6px 12px",
-              backgroundColor: !selectedClassFilter
-                ? darkMode
-                  ? "#2a4a62"
-                  : "#007bff"
-                : theme.cardBg,
+              padding: "8px 16px",
+              background: !selectedClassFilter ? theme.crimson : theme.cardBg,
+              backdropFilter: !selectedClassFilter ? "none" : theme.glassBlur,
+              WebkitBackdropFilter: !selectedClassFilter
+                ? "none"
+                : theme.glassBlur,
               color: !selectedClassFilter ? "white" : theme.text,
-              border: `1px solid ${theme.border}`,
-              borderRadius: 4,
+              border: `1px solid ${
+                !selectedClassFilter ? theme.crimson : theme.glassBorder
+              }`,
+              borderRadius: 8,
               cursor: "pointer",
-              fontSize: 12,
+              fontSize: 13,
+              fontWeight: !selectedClassFilter ? 600 : 500,
               transition: "all 0.2s ease",
-              filter:
-                hoveredButton === "filterAll"
-                  ? "brightness(0.85)"
-                  : "brightness(1)",
+              boxShadow: !selectedClassFilter
+                ? "0 2px 8px rgba(196, 30, 58, 0.3)"
+                : "none",
             }}
           >
             All
@@ -219,20 +236,22 @@ export default function CSVLibrary({
                 onMouseEnter={() => setHoveredButton(`filter-${tag}`)}
                 onMouseLeave={() => setHoveredButton(null)}
                 style={{
-                  padding: "6px 12px",
-                  backgroundColor: isSelected ? classColor : theme.cardBg,
+                  padding: "8px 16px",
+                  background: isSelected ? classColor : theme.cardBg,
+                  backdropFilter: isSelected ? "none" : theme.glassBlur,
+                  WebkitBackdropFilter: isSelected ? "none" : theme.glassBlur,
                   color: isSelected
                     ? getContrastTextColor(classColor)
                     : theme.text,
-                  border: `1px solid ${isSelected ? classColor : theme.border}`,
-                  borderRadius: 4,
+                  border: `1px solid ${
+                    isSelected ? classColor : theme.glassBorder
+                  }`,
+                  borderRadius: 8,
                   cursor: "pointer",
-                  fontSize: 12,
+                  fontSize: 13,
+                  fontWeight: isSelected ? 600 : 500,
                   transition: "all 0.2s ease",
-                  filter:
-                    hoveredButton === `filter-${tag}`
-                      ? "brightness(0.85)"
-                      : "brightness(1)",
+                  boxShadow: isSelected ? `0 2px 8px ${classColor}40` : "none",
                 }}
               >
                 {tag}
@@ -242,7 +261,7 @@ export default function CSVLibrary({
         </div>
       )}
 
-      {/* Multi-select Actions */}
+      {/* Multi-select Actions - Glassmorphism */}
       {uploads.length > 0 && (
         <div
           style={{
@@ -250,36 +269,40 @@ export default function CSVLibrary({
             justifyContent: "space-between",
             alignItems: "center",
             marginBottom: 16,
-            padding: 12,
-            backgroundColor:
+            padding: 16,
+            background:
               selectedUploads.size > 0
                 ? darkMode
-                  ? "rgba(25, 118, 210, 0.1)"
-                  : "#e3f2fd"
-                : theme.navBg,
-            borderRadius: 6,
+                  ? "rgba(196, 30, 58, 0.15)"
+                  : "rgba(196, 30, 58, 0.1)"
+                : theme.cardBg,
+            backdropFilter: theme.glassBlur,
+            WebkitBackdropFilter: theme.glassBlur,
+            borderRadius: 12,
             border: `1px solid ${
-              selectedUploads.size > 0
-                ? darkMode
-                  ? "#1565c0"
-                  : "#2196f3"
-                : theme.border
+              selectedUploads.size > 0 ? theme.crimson : theme.glassBorder
             }`,
+            boxShadow:
+              selectedUploads.size > 0
+                ? theme.glassShadowHover
+                : theme.glassShadow,
+            transition: "all 0.3s ease",
           }}
         >
           <div>
             {selectedUploads.size > 0 ? (
               <span
                 style={{
-                  color: darkMode ? "#90caf9" : "#1976d2",
-                  fontWeight: "bold",
+                  color: theme.crimson,
+                  fontWeight: 700,
+                  fontSize: 15,
                 }}
               >
                 {selectedUploads.size} CSV{selectedUploads.size > 1 ? "s" : ""}{" "}
                 selected
               </span>
             ) : (
-              <span style={{ color: theme.textSecondary }}>
+              <span style={{ color: theme.textSecondary, fontSize: 14 }}>
                 Select CSVs to create a combined exam
               </span>
             )}
@@ -287,20 +310,32 @@ export default function CSVLibrary({
           {selectedUploads.size > 0 && (
             <button
               onClick={handleCreateExamFromSelected}
-              onMouseEnter={() => setHoveredButton("createFromSelected")}
-              onMouseLeave={() => setHoveredButton(null)}
               style={{
-                padding: "8px 16px",
-                backgroundColor: "#28a745",
+                padding: "10px 24px",
+                background: theme.btnSuccess,
                 color: "white",
                 border: "none",
                 borderRadius: 6,
                 cursor: "pointer",
-                filter:
+                fontWeight: 600,
+                fontSize: 14,
+                letterSpacing: "-0.2px",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: "0 2px 8px rgba(40, 167, 69, 0.25)",
+                transform:
                   hoveredButton === "createFromSelected"
-                    ? "brightness(0.85)"
-                    : "brightness(1)",
-                transition: "all 0.2s ease",
+                    ? "translateY(-1px)"
+                    : "none",
+              }}
+              onMouseEnter={(e) => {
+                setHoveredButton("createFromSelected");
+                e.currentTarget.style.boxShadow =
+                  "0 4px 12px rgba(40, 167, 69, 0.35)";
+              }}
+              onMouseLeave={(e) => {
+                setHoveredButton(null);
+                e.currentTarget.style.boxShadow =
+                  "0 2px 8px rgba(40, 167, 69, 0.25)";
               }}
             >
               Create Exam from Selected
@@ -322,59 +357,160 @@ export default function CSVLibrary({
             key={upload.id}
             style={{
               border: selectedUploads.has(upload.id)
+                ? `2px solid ${theme.crimson}`
+                : `1px solid ${theme.glassBorder}`,
+              borderRadius: 12,
+              padding: 18,
+              background: selectedUploads.has(upload.id)
                 ? darkMode
-                  ? "2px solid #1565c0"
-                  : "2px solid #2196f3"
-                : `1px solid ${theme.border}`,
-              borderRadius: 8,
-              padding: 16,
-              backgroundColor: selectedUploads.has(upload.id)
-                ? darkMode
-                  ? theme.cardBg
-                  : "#f3f9ff"
+                  ? "rgba(196, 30, 58, 0.12)"
+                  : "rgba(196, 30, 58, 0.08)"
                 : theme.cardBg,
+              backdropFilter: theme.glassBlur,
+              WebkitBackdropFilter: theme.glassBlur,
               cursor: "pointer",
-              transition: "all 0.2s ease",
+              transition: "all 0.3s ease",
               position: "relative",
+              boxShadow: selectedUploads.has(upload.id)
+                ? theme.glassShadowHover
+                : theme.glassShadow,
             }}
             onClick={() => toggleSelection(upload.id)}
+            onMouseEnter={(e) => {
+              if (!selectedUploads.has(upload.id)) {
+                e.currentTarget.style.boxShadow = theme.glassShadowHover;
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!selectedUploads.has(upload.id)) {
+                e.currentTarget.style.boxShadow = theme.glassShadow;
+                e.currentTarget.style.transform = "translateY(0)";
+              }
+            }}
           >
-            {/* Class Tags in Top Right */}
-            {upload.class_tags && upload.class_tags.length > 0 && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 4,
-                  maxWidth: "60%",
-                  justifyContent: "flex-end",
-                }}
-              >
-                {upload.class_tags.map((tag, index) => {
-                  const classColor = getClassColor(tag);
-                  const textColor = getContrastTextColor(classColor);
-                  return (
-                    <span
-                      key={index}
-                      style={{
-                        padding: "3px 8px",
-                        backgroundColor: classColor,
-                        color: textColor,
-                        borderRadius: 4,
-                        fontSize: 11,
-                        fontWeight: "bold",
-                        whiteSpace: "nowrap",
+            {/* Class Tags & Assignment in Top Right */}
+            <div
+              style={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                maxWidth: "70%",
+                justifyContent: "flex-end",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {upload.class_tags && upload.class_tags.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {upload.class_tags.map((tag, index) => {
+                    const classColor = getClassColor(tag);
+                    const textColor = getContrastTextColor(classColor);
+                    return (
+                      <span
+                        key={index}
+                        style={{
+                          padding: "3px 8px",
+                          backgroundColor: classColor,
+                          color: textColor,
+                          borderRadius: 4,
+                          fontSize: 11,
+                          fontWeight: "bold",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Graduation Cap - Class Assignment */}
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenClassDropdown(
+                      openClassDropdown === upload.id ? null : upload.id
+                    );
+                  }}
+                  title="Assign to class"
+                  style={{
+                    padding: "6px",
+                    background:
+                      openClassDropdown === upload.id
+                        ? "rgba(196, 30, 58, 0.15)"
+                        : "rgba(196, 30, 58, 0.08)",
+                    border: `1px solid ${theme.glassBorder}`,
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (openClassDropdown !== upload.id) {
+                      e.currentTarget.style.background =
+                        "rgba(196, 30, 58, 0.15)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (openClassDropdown !== upload.id) {
+                      e.currentTarget.style.background =
+                        "rgba(196, 30, 58, 0.08)";
+                    }
+                  }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={theme.crimson}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                  </svg>
+                </button>
+
+                {/* Dropdown for class assignment */}
+                {openClassDropdown === upload.id && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 4px)",
+                      right: 0,
+                      minWidth: 200,
+                      background: theme.cardBg,
+                      backdropFilter: theme.glassBlur,
+                      WebkitBackdropFilter: theme.glassBlur,
+                      border: `1px solid ${theme.glassBorder}`,
+                      borderRadius: 8,
+                      boxShadow: theme.glassShadowHover,
+                      padding: 8,
+                      zIndex: 100,
+                    }}
+                  >
+                    <ClassTagSelector
+                      uploadId={upload.id}
+                      currentTags={upload.class_tags || []}
+                      onUpdate={() => {
+                        onUpdate();
+                        setOpenClassDropdown(null);
                       }}
-                    >
-                      {tag}
-                    </span>
-                  );
-                })}
+                      darkMode={darkMode}
+                      theme={theme}
+                    />
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Selection Checkbox */}
             <div style={{ marginBottom: 12 }}>
@@ -385,7 +521,18 @@ export default function CSVLibrary({
                 style={{ marginRight: 8 }}
               />
               <span
-                style={{ fontWeight: "bold", fontSize: 16, color: theme.text }}
+                title={upload.filename}
+                style={{
+                  fontWeight: "bold",
+                  fontSize: 16,
+                  color: theme.text,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  display: "inline-block",
+                  maxWidth: "calc(100% - 100px)",
+                  verticalAlign: "middle",
+                }}
               >
                 {upload.filename}
               </span>
@@ -480,7 +627,8 @@ export default function CSVLibrary({
                 borderTop: `1px solid ${theme.border}`,
               }}
             >
-              <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {/* Create Exam - with + icon */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -489,23 +637,39 @@ export default function CSVLibrary({
                   onMouseEnter={() => setHoveredButton(`create-${upload.id}`)}
                   onMouseLeave={() => setHoveredButton(null)}
                   style={{
-                    flex: 1,
-                    padding: "6px 12px",
-                    backgroundColor: "#007bff",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 4,
-                    cursor: "pointer",
-                    fontSize: 12,
-                    filter:
+                    padding: "8px 14px",
+                    background:
                       hoveredButton === `create-${upload.id}`
-                        ? "brightness(0.85)"
-                        : "brightness(1)",
+                        ? "rgba(196, 30, 58, 0.15)"
+                        : "rgba(196, 30, 58, 0.08)",
+                    color: theme.crimson,
+                    border: `1px solid ${theme.glassBorder}`,
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    fontSize: 13,
+                    fontWeight: 500,
                     transition: "all 0.2s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
                   }}
                 >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
                   Create Exam
                 </button>
+
+                {/* Download - icon only */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -513,23 +677,38 @@ export default function CSVLibrary({
                   }}
                   onMouseEnter={() => setHoveredButton(`download-${upload.id}`)}
                   onMouseLeave={() => setHoveredButton(null)}
+                  title="Download CSV"
                   style={{
-                    padding: "6px 12px",
-                    backgroundColor: "#6c757d",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 4,
+                    padding: "8px",
+                    background: "transparent",
+                    color: theme.textSecondary,
+                    border: `1px solid ${theme.glassBorder}`,
+                    borderRadius: 6,
                     cursor: "pointer",
-                    fontSize: 12,
-                    filter:
-                      hoveredButton === `download-${upload.id}`
-                        ? "brightness(0.85)"
-                        : "brightness(1)",
                     transition: "all 0.2s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    opacity:
+                      hoveredButton === `download-${upload.id}` ? 1 : 0.7,
                   }}
                 >
-                  Download
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
                 </button>
+
+                {/* Delete - icon only */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -543,32 +722,36 @@ export default function CSVLibrary({
                   }}
                   onMouseEnter={() => setHoveredButton(`delete-${upload.id}`)}
                   onMouseLeave={() => setHoveredButton(null)}
+                  title="Delete CSV"
                   style={{
-                    padding: "6px 12px",
-                    backgroundColor: "#dc3545",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 4,
+                    padding: "8px",
+                    background: "transparent",
+                    color: theme.textSecondary,
+                    border: `1px solid ${theme.glassBorder}`,
+                    borderRadius: 6,
                     cursor: "pointer",
-                    fontSize: 12,
-                    filter:
-                      hoveredButton === `delete-${upload.id}`
-                        ? "brightness(0.85)"
-                        : "brightness(1)",
                     transition: "all 0.2s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    opacity: hoveredButton === `delete-${upload.id}` ? 1 : 0.7,
                   }}
                 >
-                  Delete
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
                 </button>
-              </div>
-              <div onClick={(e) => e.stopPropagation()}>
-                <ClassTagSelector
-                  uploadId={upload.id}
-                  currentTags={upload.class_tags || []}
-                  onUpdate={onUpdate}
-                  darkMode={darkMode}
-                  theme={theme}
-                />
               </div>
             </div>
           </div>

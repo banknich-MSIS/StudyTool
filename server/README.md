@@ -50,8 +50,66 @@ uvicorn server.main:app --reload
 - `answer`: string (mcq/short/cloze/truefalse) or pipe-list (multi)
 - `concepts`: comma separated concept names (optional)
 
+## AI-Powered Exam Generation (NEW!)
+
+### Quick Setup (2 minutes)
+
+1. **Get a free Gemini API key:**
+
+   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Sign in with your Google account
+   - Click "Create API Key"
+   - Copy the key (starts with "AIza...")
+
+2. **Configure in app:**
+
+   - Open the app at `http://127.0.0.1:5173`
+   - Go to Settings page
+   - Paste your API key
+   - Click "Save & Validate"
+
+3. **Generate exams instantly:**
+   - Click "AI Exam Creator" in navigation
+   - Upload study files (PDF, PowerPoint, Word, images)
+   - Configure exam settings (question count, difficulty, types)
+   - Click "Generate Exam with AI"
+   - Done! Take your exam immediately.
+
+### Supported File Formats
+
+- **Documents:** PDF (.pdf), Word (.docx, .doc), PowerPoint (.pptx, .ppt)
+- **Images:** PNG, JPG, JPEG (with OCR)
+- **Text:** Plain text (.txt), Markdown (.md)
+
+### Free Tier Limits
+
+**More than enough for students:**
+
+- 1 million tokens per day (~100-150 exams)
+- 60 requests per hour
+- Files up to 20MB each
+- **No credit card required!**
+
+### How It Works
+
+1. You upload study materials to the local app
+2. Backend extracts text from files locally
+3. Sends extracted content + your settings to Gemini API (using YOUR key)
+4. Gemini returns structured exam questions in JSON
+5. Backend saves questions to local SQLite database
+6. You take the exam immediately - no CSV needed!
+
+**Privacy:** Files are processed locally. Only extracted text (not files) is sent to Gemini API.
+
+### New API Endpoints
+
+- `POST /api/ai/validate-key` → Validate Gemini API key
+- `POST /api/ai/generate-exam` → Generate exam from uploaded files
+- `GET /api/ai/supported-formats` → List supported file formats
+
 ## Notes
 
 - SQLite db file: `exam.db` (created in project root)
-- Everything runs locally, no API keys needed
-- YAKE fallback is used if KeyBERT/sentence-transformers aren’t available
+- Core features run locally, Gemini API is optional (CSV upload still works)
+- YAKE fallback is used if KeyBERT/sentence-transformers aren't available
+- Each user provides their own free Gemini API key (zero backend costs!)

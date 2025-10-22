@@ -154,3 +154,43 @@ export async function removeUploadFromClass(
 ): Promise<void> {
   await api.delete(`/uploads/${uploadId}/classes/${classId}`);
 }
+
+// AI Generation API methods
+export async function validateGeminiKey(apiKey: string): Promise<boolean> {
+  try {
+    const { data } = await api.post("/ai/validate-key", { api_key: apiKey });
+    return data.valid;
+  } catch {
+    return false;
+  }
+}
+
+export async function generateExamFromFiles(params: {
+  files: FormData;
+  questionCount: number;
+  difficulty: string;
+  questionTypes: string[];
+  focusConcepts: string[];
+  apiKey: string;
+}): Promise<{ exam_id: number; upload_id: number; stats: any }> {
+  const formData = params.files;
+  formData.append("question_count", params.questionCount.toString());
+  formData.append("difficulty", params.difficulty);
+  formData.append("question_types", params.questionTypes.join(","));
+  if (params.focusConcepts.length > 0) {
+    formData.append("focus_concepts", params.focusConcepts.join(","));
+  }
+
+  const { data } = await api.post("/ai/generate-exam", formData, {
+    headers: {
+      "X-Gemini-API-Key": params.apiKey,
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return data;
+}
+
+export async function getSupportedFormats(): Promise<{ formats: string[] }> {
+  const { data } = await api.get("/ai/supported-formats");
+  return data;
+}

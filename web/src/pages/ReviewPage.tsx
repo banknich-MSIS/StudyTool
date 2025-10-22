@@ -181,13 +181,25 @@ export default function ReviewPage() {
           <button
             onClick={() => nav("/")}
             style={{
-              padding: "10px 20px",
-              backgroundColor: "#6c757d",
+              padding: "10px 24px",
+              background: theme.amber,
               color: "white",
               border: "none",
               borderRadius: 6,
               cursor: "pointer",
-              fontSize: "15px",
+              fontWeight: 600,
+              letterSpacing: "-0.2px",
+              fontSize: 15,
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: "0 2px 8px rgba(212, 166, 80, 0.25)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(212, 166, 80, 0.35)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "0 2px 8px rgba(212, 166, 80, 0.25)";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
             Home

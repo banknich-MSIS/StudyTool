@@ -7,6 +7,7 @@ from .routes import concepts as concepts_routes
 from .routes import exam as exam_routes
 from .routes import dashboard as dashboard_routes
 from .routes import classes as classes_routes
+from .routes import ai_generation as ai_routes
 
 
 def create_app() -> FastAPI:
@@ -31,6 +32,7 @@ def create_app() -> FastAPI:
     app.include_router(exam_routes.router, prefix="/api")
     app.include_router(dashboard_routes.router, prefix="/api")
     app.include_router(classes_routes.router, prefix="/api")
+    app.include_router(ai_routes.router, prefix="/api")
 
     @app.on_event("startup")
     def _startup() -> None:

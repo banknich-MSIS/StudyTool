@@ -111,7 +111,7 @@ if (!(Test-Path $pythonExe)) {
 Write-Host "Installing backend dependencies..."
 & $pythonExe -m pip install --upgrade pip
 Write-Host "Installing Python packages (this may take a few minutes)..."
-$installResult = & $pythonExe -m pip install -r (Join-Path $serverDir 'requirements.txt') --no-cache-dir
+$installResult = & $pythonExe -m pip install -r (Join-Path $serverDir 'requirements.txt')
 if ($LASTEXITCODE -ne 0) {
   Write-Warning "Some packages failed to install, but continuing..."
   Write-Host "Install output: $installResult"

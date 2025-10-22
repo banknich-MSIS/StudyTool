@@ -60,7 +60,7 @@ export default function SupportPage() {
             <strong>Email:</strong>{" "}
             <a
               href="mailto:banknich@iu.edu"
-              style={{ color: "#007bff", textDecoration: "underline" }}
+              style={{ color: theme.crimson, textDecoration: "underline" }}
             >
               banknich@iu.edu
             </a>
@@ -71,7 +71,7 @@ export default function SupportPage() {
               href="https://github.com/banknich-MSIS/StudyTool"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "#007bff", textDecoration: "underline" }}
+              style={{ color: theme.crimson, textDecoration: "underline" }}
             >
               github.com/banknich-MSIS/StudyTool
             </a>
@@ -82,7 +82,7 @@ export default function SupportPage() {
               href="https://github.com/banknich-MSIS/StudyTool/issues"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "#007bff", textDecoration: "underline" }}
+              style={{ color: theme.crimson, textDecoration: "underline" }}
             >
               Submit an issue on GitHub
             </a>
