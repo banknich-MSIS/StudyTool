@@ -7,6 +7,10 @@ from pydantic import BaseModel
 
 from ..services import file_processor, gemini_service
 from ..services.gemini_service import ExamConfig
+import google.generativeai as genai
+import pkg_resources
+import socket
+import ssl
 from ..db import SessionLocal
 from ..models import Upload, Question, Concept
 from datetime import datetime
@@ -33,6 +37,32 @@ class GenerateExamResponse(BaseModel):
     upload_id: int
     question_count: int
     stats: dict
+@router.get("/ai/env-diagnostics")
+async def env_diagnostics():
+    """Return environment details helpful for debugging Gemini issues."""
+    info = {
+        "google_generativeai_version": None,
+        "can_resolve_google": False,
+        "can_https_googleapis": False,
+    }
+    try:
+        info["google_generativeai_version"] = pkg_resources.get_distribution("google-generativeai").version
+    except Exception:
+        info["google_generativeai_version"] = "unknown"
+    try:
+        socket.gethostbyname("generativelanguage.googleapis.com")
+        info["can_resolve_google"] = True
+    except Exception:
+        info["can_resolve_google"] = False
+    try:
+        ctx = ssl.create_default_context()
+        with ctx.wrap_socket(socket.socket(), server_hostname="generativelanguage.googleapis.com") as s:
+            s.settimeout(3.0)
+            s.connect(("generativelanguage.googleapis.com", 443))
+            info["can_https_googleapis"] = True
+    except Exception:
+        info["can_https_googleapis"] = False
+    return info
 
 
 @router.post("/ai/validate-key", response_model=ValidateKeyResponse)
@@ -120,7 +150,7 @@ async def generate_exam_from_files(
             created_at=datetime.now(),
             metadata=json.dumps({
                 "source": "ai_generated",
-                "gemini_model": "gemini-1.5-flash",
+                "gemini_model": "gemini-1.5-flash-latest",
                 "generation_timestamp": datetime.now().isoformat(),
                 "original_files": file_names,
                 "themes": generated_exam.metadata.themes,
