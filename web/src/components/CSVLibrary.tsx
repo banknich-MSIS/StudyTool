@@ -100,7 +100,10 @@ export default function CSVLibrary({
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    // Normalize to local time; if timestamp lacks timezone, assume UTC
+    const hasTZ = /[zZ]|[+-]\d{2}:?\d{2}$/.test(date);
+    const d = new Date(hasTZ ? date : `${date}Z`);
+    return d.toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -389,46 +392,15 @@ export default function CSVLibrary({
               }
             }}
           >
-            {/* Class Tags & Assignment in Top Right */}
+            {/* Assignment button (cap) in Top Right */}
             <div
               style={{
                 position: "absolute",
                 top: 8,
                 right: 8,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                maxWidth: "70%",
-                justifyContent: "flex-end",
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {upload.class_tags && upload.class_tags.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                  {upload.class_tags.map((tag, index) => {
-                    const classColor = getClassColor(tag);
-                    const textColor = getContrastTextColor(classColor);
-                    return (
-                      <span
-                        key={index}
-                        style={{
-                          padding: "3px 8px",
-                          backgroundColor: classColor,
-                          color: textColor,
-                          borderRadius: 4,
-                          fontSize: 11,
-                          fontWeight: "bold",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {tag}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Graduation Cap - Class Assignment */}
               <div style={{ position: "relative" }}>
                 <button
                   onClick={(e) => {
@@ -537,6 +509,34 @@ export default function CSVLibrary({
                 {upload.filename}
               </span>
             </div>
+
+            {/* Class Tags under header */}
+            {upload.class_tags && upload.class_tags.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {upload.class_tags.map((tag, index) => {
+                    const classColor = getClassColor(tag);
+                    const textColor = getContrastTextColor(classColor);
+                    return (
+                      <span
+                        key={index}
+                        style={{
+                          padding: "3px 8px",
+                          backgroundColor: classColor,
+                          color: textColor,
+                          borderRadius: 4,
+                          fontSize: 11,
+                          fontWeight: "bold",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {tag.length > 12 ? `${tag.slice(0, 12)}…` : tag}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Upload Info */}
             <div

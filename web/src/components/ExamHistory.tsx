@@ -331,7 +331,11 @@ export default function ExamHistory({
               style={{
                 fontSize: 14,
                 color: theme.textSecondary,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
+              title={attempt.upload_filename}
             >
               {attempt.upload_filename}
             </div>

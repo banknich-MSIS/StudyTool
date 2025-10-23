@@ -344,8 +344,71 @@ export default function SmartExamCreator() {
         </h2>
 
         <div style={{ display: "grid", gap: 20 }}>
-          {/* Question Count */}
-          <div>
+          {/* Row 1: Question Count + Difficulty */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            {/* Question Count */}
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: 8,
+                  color: theme.text,
+                  fontWeight: 500,
+                }}
+              >
+                Number of Questions
+              </label>
+              <input
+                type="number"
+                value={questionCount}
+                onChange={(e) => setQuestionCount(parseInt(e.target.value))}
+                min={5}
+                max={100}
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`,
+                  backgroundColor: theme.cardBgSolid,
+                  color: theme.text,
+                  fontSize: 16,
+                }}
+              />
+            </div>
+
+            {/* Difficulty */}
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: 8,
+                  color: theme.text,
+                  fontWeight: 500,
+                }}
+              >
+                Difficulty Level
+              </label>
+              <select
+                value={difficulty}
+                onChange={(e) =>
+                  setDifficulty(e.target.value as "easy" | "medium" | "hard")
+                }
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`,
+                  backgroundColor: theme.cardBgSolid,
+                  color: theme.text,
+                  fontSize: 16,
+                }}
+              >
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+          </div>
             <label
               style={{
                 display: "block",
@@ -419,7 +482,7 @@ export default function SmartExamCreator() {
             >
               Question Types (select at least one)
             </label>
-            <div style={{ display: "grid", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {questionTypeOptions.map((option) => (
                 <label
                   key={option.value}

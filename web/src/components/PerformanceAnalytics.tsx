@@ -93,7 +93,7 @@ export default function PerformanceAnalytics({
           color: theme.crimson,
         }}
       >
-        📊 Performance Analytics
+        Performance Analytics
       </h3>
 
       <div

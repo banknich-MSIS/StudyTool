@@ -168,6 +168,67 @@ export default function SupportPage() {
               prompt template.
             </p>
           </div>
+          <div>
+            <h4
+              style={{
+                margin: "0 0 8px 0",
+                fontSize: 16,
+                color: theme.text,
+              }}
+            >
+              Why do I get a permission error opening the Gemini Gem?
+            </h4>
+            <p
+              style={{
+                margin: 0,
+                color: theme.textSecondary,
+                lineHeight: 1.6,
+              }}
+            >
+              Gemini Gems may require a paid-enabled personal Google account.
+              School-managed accounts often block access. Sign out of your
+              school account in the browser or open the link in a personal
+              account to avoid the error.
+            </p>
+          </div>
+          <div>
+            <h4
+              style={{
+                margin: "0 0 8px 0",
+                fontSize: 16,
+                color: theme.text,
+              }}
+            >
+              CSV format expectations
+            </h4>
+            <p
+              style={{
+                margin: 0,
+                color: theme.textSecondary,
+                lineHeight: 1.6,
+              }}
+            >
+              Use the template from the Upload page. Ensure headers and column
+              order match exactly. Save as UTF-8 CSV. If pasting text, ensure
+              commas separate fields and options use the pipe (|) delimiter.
+            </p>
+          </div>
+          <div>
+            <h4
+              style={{
+                margin: "0 0 8px 0",
+                fontSize: 16,
+                color: theme.text,
+              }}
+            >
+              Common errors and fixes
+            </h4>
+            <ul style={{ margin: 0, paddingLeft: 18, color: theme.textSecondary, lineHeight: 1.6 }}>
+              <li>"Invalid API key": trim whitespace; ensure API enabled; use personal account.</li>
+              <li>"Could not extract enough content": upload files with selectable text.</li>
+              <li>CSV parse errors: check headers; quote fields containing commas; use UTF-8.</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

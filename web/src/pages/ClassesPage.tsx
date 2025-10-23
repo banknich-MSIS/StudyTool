@@ -306,18 +306,21 @@ export default function ClassesPage() {
                     onMouseLeave={() => setHoveredButton(null)}
                     style={{
                       flex: 1,
-                      padding: "8px 12px",
-                      backgroundColor: "#ffc107",
-                      color: "#000",
-                      border: "none",
-                      borderRadius: 4,
-                      cursor: "pointer",
-                      fontSize: 14,
-                      filter:
+                      padding: "8px 14px",
+                      background:
                         hoveredButton === `edit-${cls.id}`
-                          ? "brightness(0.85)"
-                          : "brightness(1)",
-                      transition: "all 0.2s ease",
+                          ? "rgba(196, 30, 58, 0.15)"
+                          : "rgba(196, 30, 58, 0.08)",
+                      color: theme.crimson,
+                      border: `1px solid ${theme.glassBorder}`,
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      transition: "0.2s",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
                     }}
                   >
                     Edit
@@ -328,18 +331,21 @@ export default function ClassesPage() {
                     onMouseLeave={() => setHoveredButton(null)}
                     style={{
                       flex: 1,
-                      padding: "8px 12px",
-                      backgroundColor: "#dc3545",
-                      color: "white",
-                      border: "none",
-                      borderRadius: 4,
-                      cursor: "pointer",
-                      fontSize: 14,
-                      filter:
+                      padding: "8px 14px",
+                      background:
                         hoveredButton === `delete-${cls.id}`
-                          ? "brightness(0.85)"
-                          : "brightness(1)",
-                      transition: "all 0.2s ease",
+                          ? "rgba(196, 30, 58, 0.15)"
+                          : "rgba(196, 30, 58, 0.08)",
+                      color: theme.crimson,
+                      border: `1px solid ${theme.glassBorder}`,
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      transition: "0.2s",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
                     }}
                   >
                     Delete

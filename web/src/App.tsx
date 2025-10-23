@@ -1,6 +1,8 @@
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useState, useEffect } from "react";
 import TutorialModal from "./components/TutorialModal";
+import IURedLogo from "./assets/IURedLogo.svg";
+import IUGreyLogo from "./assets/IUGreyLogo.svg";
 
 export default function App() {
   const navigate = useNavigate();
@@ -108,7 +110,8 @@ export default function App() {
   const navItems = [
     { path: "/", label: "Dashboard" },
     { path: "/ai-exam-creator", label: "AI Exam Creator" },
-    { path: "/upload", label: "Upload CSV" },
+    { path: "/upload", label: "Manual Creator" },
+    { path: "/library", label: "Library" },
     { path: "/classes", label: "Classes" },
     { path: "/history", label: "History" },
   ];
@@ -153,12 +156,17 @@ export default function App() {
         >
           {/* Left: Brand and Main Nav */}
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+            <img
+              src={darkMode ? IURedLogo : IUGreyLogo}
+              alt="IU Logo"
+              style={{ height: 24 }}
+            />
             <h1
               style={{
                 margin: 0,
                 fontSize: 20,
                 fontWeight: "bold",
-                color: theme.text,
+                color: darkMode ? theme.text : "#404040",
               }}
             >
               Hoosier Prep Portal

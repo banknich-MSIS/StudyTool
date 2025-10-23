@@ -163,7 +163,7 @@ export default function AttemptReviewPage() {
           padding: "16px",
           backgroundColor: theme.navBg,
           position: "sticky",
-          top: 0,
+          top: 80,
           height: "fit-content",
           maxHeight: "100vh",
           overflow: "auto",

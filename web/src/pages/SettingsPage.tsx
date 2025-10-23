@@ -87,16 +87,28 @@ export default function SettingsPage() {
     setError(null);
 
     try {
-      const isValid = await validateGeminiKey(apiKey);
-      setApiKeyValid(isValid);
+      // Use detailed variant for clearer feedback
+      const { valid, message } = await (async () => {
+        try {
+          const mod = await import("../api/client");
+          return await mod.validateGeminiKeyDetailed(apiKey.trim());
+        } catch (e: any) {
+          return {
+            valid: false,
+            message: e?.message || "Failed to validate key",
+          };
+        }
+      })();
 
-      if (isValid) {
+      setApiKeyValid(valid);
+
+      if (valid) {
         // Encrypt and save
         const encrypted = btoa(apiKey);
         localStorage.setItem("gemini_api_key", encrypted);
         setError(null);
       } else {
-        setError("API key is invalid. Please check and try again.");
+        setError(message || "API key is invalid. Please check and try again.");
       }
     } catch (e: any) {
       setError("Failed to validate API key. Please try again.");
@@ -230,7 +242,7 @@ export default function SettingsPage() {
             color: theme.crimson,
           }}
         >
-          🤖 Gemini API Configuration
+          Gemini API Configuration
         </h2>
         <p style={{ margin: "0 0 16px 0", color: theme.textSecondary }}>
           Enable AI-powered exam generation by setting up your free Gemini API
@@ -244,6 +256,27 @@ export default function SettingsPage() {
             Get your free key here
           </a>
         </p>
+        <div
+          style={{
+            marginTop: 8,
+            color: theme.textSecondary,
+            fontSize: 13,
+          }}
+        >
+          Note: If you’re signed into an IU email account in this browser, you
+          may encounter an error due to administrator restrictions.
+        </div>
+        <div
+          style={{
+            marginTop: 8,
+            color: theme.textSecondary,
+            fontSize: 13,
+          }}
+        >
+          Disclosure: The linked Gemini Gem may require a paid-enabled personal
+          Google account. Visiting with a school-managed account can cause
+          permission errors. Use a non-school personal account.
+        </div>
 
         <div style={{ marginBottom: 16 }}>
           <label
@@ -313,7 +346,7 @@ export default function SettingsPage() {
                 fontWeight: 500,
               }}
             >
-              {apiKeyValid ? "✅ Key is valid" : "❌ Invalid key"}
+              {apiKeyValid ? "Key is valid" : "Invalid key"}
             </div>
           )}
 
@@ -661,8 +694,10 @@ export default function SettingsPage() {
                       <input
                         type="text"
                         value={newClassName}
-                        onChange={(e) => setNewClassName(e.target.value)}
-                        placeholder="Class name (e.g., CPA Review)"
+                        onChange={(e) =>
+                          setNewClassName(e.target.value.slice(0, 12))
+                        }
+                        placeholder="Class name (max 12 chars)"
                         style={{
                           width: "100%",
                           padding: "8px 12px",
@@ -673,6 +708,15 @@ export default function SettingsPage() {
                           color: theme.text,
                         }}
                       />
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: theme.textSecondary,
+                          textAlign: "right",
+                        }}
+                      >
+                        {newClassName.length}/12
+                      </div>
                       <input
                         type="text"
                         value={newClassDescription}

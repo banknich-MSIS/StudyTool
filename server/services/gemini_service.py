@@ -252,24 +252,33 @@ async def generate_exam_from_content(
 async def validate_api_key(api_key: str) -> bool:
     """
     Validate that the provided Gemini API key works.
-    
-    Returns:
-        True if key is valid, False otherwise
+    Returns True if key is valid; raises with a descriptive error otherwise.
     """
-    try:
-        configure_gemini(api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        # Simple test generation
-        response = model.generate_content(
-            "Say 'OK' if you can read this.",
-            generation_config=genai.GenerationConfig(
-                max_output_tokens=10,
-            )
+    # Configure and attempt a minimal generation
+    configure_gemini(api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+
+    response = model.generate_content(
+        "Say 'OK' if you can read this.",
+        generation_config=genai.GenerationConfig(
+            max_output_tokens=10,
         )
-        
-        return response.text is not None and len(response.text) > 0
-        
-    except Exception:
-        return False
+    )
+
+    # Some SDK versions don't populate response.text reliably
+    text = getattr(response, 'text', None)
+    if not text:
+        try:
+            # Attempt to pull from candidates
+            candidates = getattr(response, 'candidates', []) or []
+            if candidates and candidates[0].content and candidates[0].content.parts:
+                part0 = candidates[0].content.parts[0]
+                text = getattr(part0, 'text', None)
+        except Exception:
+            pass
+
+    if not text:
+        raise ValueError("Empty response from model while validating API key")
+
+    return True
 

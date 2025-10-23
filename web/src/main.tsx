@@ -24,6 +24,7 @@ const router = createBrowserRouter([
       { index: true, element: <Dashboard /> },
       { path: "ai-exam-creator", element: <SmartExamCreator /> },
       { path: "upload", element: <UploadPage /> },
+      { path: "library", element: <Dashboard /> },
       { path: "settings", element: <SettingsPage /> },
       { path: "exam/:examId", element: <ExamPage /> },
       { path: "practice/:examId", element: <PracticeModePage /> },

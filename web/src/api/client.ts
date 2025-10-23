@@ -158,10 +158,26 @@ export async function removeUploadFromClass(
 // AI Generation API methods
 export async function validateGeminiKey(apiKey: string): Promise<boolean> {
   try {
-    const { data } = await api.post("/ai/validate-key", { api_key: apiKey });
+    const { data } = await api.post("/ai/validate-key", {
+      api_key: apiKey.trim(),
+    });
     return data.valid;
   } catch {
     return false;
+  }
+}
+
+export async function validateGeminiKeyDetailed(
+  apiKey: string
+): Promise<{ valid: boolean; message: string }> {
+  try {
+    const { data } = await api.post("/ai/validate-key", {
+      api_key: apiKey.trim(),
+    });
+    return { valid: !!data.valid, message: data.message };
+  } catch (e: any) {
+    const msg = e?.response?.data?.message || e?.message || "Unknown error";
+    return { valid: false, message: msg };
   }
 }
 

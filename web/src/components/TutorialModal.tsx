@@ -68,6 +68,10 @@ const TutorialModal: React.FC<TutorialModalProps> = ({
             >
               Open Gemini Gem →
             </a>
+            <div style={{ marginTop: 8, fontSize: 12, color: theme.textSecondary }}>
+              Note: Access may require a paid-enabled personal Google account. Using
+              a school-managed account can cause permission errors.
+            </div>
           </div>
         </div>
       ),
@@ -98,6 +102,10 @@ const TutorialModal: React.FC<TutorialModalProps> = ({
             Gemini's recommendations.
           </p>
           <p>You can still customize the settings if needed.</p>
+          <div style={{ marginTop: 8, fontSize: 12, color: theme.textSecondary }}>
+            Tip: Ensure your CSV matches the expected template (headers and
+            column order). See the Upload page for the downloadable template.
+          </div>
         </div>
       ),
     },
