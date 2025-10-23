@@ -8,4 +8,17 @@ __pycache__/
 **/__pycache__/
 *.pyc
 
+# Node / frontend
+web/node_modules/
+web/dist/
+web/.vite/
+web/node_modules/.vite/
+
+# Python caches (explicit server path)
+server/__pycache__/
+
+# Local database and logs
+exam.db
+*.log
+
 
