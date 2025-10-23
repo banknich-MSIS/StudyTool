@@ -8,8 +8,8 @@ python-multipart==0.0.9
 keybert==0.8.5
 yake==0.4.8
 
-# Gemini API & File Processing
-google-generativeai>=0.3.0
+# Gemini API & File Processing (v1 API requires >=0.4.0; prefer 0.8+)
+google-generativeai>=0.8.0
 PyPDF2>=3.0.0
 python-docx>=1.0.0
 python-pptx>=0.6.21

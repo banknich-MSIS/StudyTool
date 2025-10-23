@@ -204,6 +204,53 @@ def parse_gemini_response(response_text: str) -> GeneratedExam:
         raise ValueError(f"Failed to validate exam structure: {str(e)}")
 
 
+async def resolve_model_for_key(api_key: str) -> str:
+    """Resolve the best available Gemini model for the provided API key.
+
+    Preference order:
+    - gemini-1.5-pro (highest quality)
+    - gemini-1.5-flash
+    - gemini-1.5-flash-8b (cheapest)
+
+    Falls back to 'gemini-1.5-flash' if discovery fails.
+    """
+    # Ensure SDK is configured with the key
+    configure_gemini(api_key)
+
+    preferred_order = [
+        'gemini-1.5-pro',
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-8b',
+    ]
+
+    try:
+        # Some SDKs return names like 'models/gemini-1.5-flash' and include supported methods
+        models = list(genai.list_models())
+        supported_plain_names = set()
+        for m in models:
+            try:
+                methods = getattr(m, 'supported_generation_methods', []) or []
+                if 'generateContent' not in methods:
+                    continue
+                # Normalize to plain model id without 'models/' prefix or '-latest' suffix
+                name_raw = getattr(m, 'name', '') or ''
+                plain = name_raw.split('/')[-1]
+                if plain.endswith('-latest'):
+                    plain = plain[:-7]
+                supported_plain_names.add(plain)
+            except Exception:
+                continue
+
+        for candidate in preferred_order:
+            if candidate in supported_plain_names:
+                return candidate
+    except Exception:
+        # If listing models fails (network, permission), fall back to a sensible default
+        pass
+
+    return 'gemini-1.5-flash'
+
+
 async def generate_exam_from_content(
     content: str,
     config: ExamConfig,
@@ -227,8 +274,9 @@ async def generate_exam_from_content(
         # Build prompt
         prompt = build_exam_prompt(content, config)
         
-        # Initialize Gemini model
-        model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
+        # Resolve and initialize Gemini model
+        model_name = await resolve_model_for_key(api_key)
+        model = genai.GenerativeModel(model_name)
         
         # Generate content
         response = model.generate_content(
@@ -243,9 +291,22 @@ async def generate_exam_from_content(
         
         # Parse response
         exam = parse_gemini_response(response.text)
-        
+
+        # Attach the chosen model name on the fly for upstream usage (stored in metadata by route)
+        # We return a tuple via an attribute to avoid breaking existing types elsewhere
+        setattr(exam, '_model_name', model_name)
         return exam
-        
+
+    except google_exceptions.NotFound as e:
+        raise ValueError(
+            "Requested model is not found or unsupported by your key. "
+            "The app automatically tries free models like 'gemini-1.5-flash'."
+        )
+    except google_exceptions.PermissionDenied as e:
+        raise ValueError(
+            "Your API key lacks access to the selected model. "
+            "Please check AI Studio quotas or try a free model like 'gemini-1.5-flash'."
+        )
     except Exception as e:
         raise ValueError(f"Failed to generate exam with Gemini: {str(e)}")
 
@@ -255,9 +316,10 @@ async def validate_api_key(api_key: str) -> bool:
     Validate that the provided Gemini API key works.
     Returns True if key is valid; raises with a descriptive error otherwise.
     """
-    # Configure and attempt a minimal generation
+    # Configure and attempt a minimal generation on a resolved, supported model
     configure_gemini(api_key)
-    model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
+    model_name = await resolve_model_for_key(api_key)
+    model = genai.GenerativeModel(model_name)
 
     try:
         response = model.generate_content(
@@ -266,6 +328,10 @@ async def validate_api_key(api_key: str) -> bool:
                 max_output_tokens=10,
             )
         )
+    except google_exceptions.NotFound as e:
+        raise ValueError("Model not found or unsupported by your key. Try 'gemini-1.5-flash' or check AI Studio quotas.")
+    except google_exceptions.PermissionDenied as e:
+        raise ValueError("Your key lacks access to this model. Falling back to a free model may help.")
     except google_exceptions.GoogleAPIError as e:
         # Surface specific Google API errors to the caller
         raise ValueError(f"Gemini API error ({e.__class__.__name__}): {str(e)}")

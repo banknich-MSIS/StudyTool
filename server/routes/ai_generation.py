@@ -65,6 +65,30 @@ async def env_diagnostics():
     return info
 
 
+@router.get("/ai/models")
+async def list_available_models(x_gemini_api_key: str = Header(..., alias="X-Gemini-API-Key")):
+    """List available models that support generateContent for the provided key."""
+    try:
+        genai.configure(api_key=x_gemini_api_key)
+        models = list(genai.list_models())
+        result = []
+        for m in models:
+            try:
+                methods = getattr(m, 'supported_generation_methods', []) or []
+                if 'generateContent' not in methods:
+                    continue
+                name_raw = getattr(m, 'name', '') or ''
+                plain = name_raw.split('/')[-1]
+                if plain.endswith('-latest'):
+                    plain = plain[:-7]
+                result.append(plain)
+            except Exception:
+                continue
+        # Prefer unique sorted output
+        return {"models": sorted(set(result))}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to list models: {str(e)}")
+
 @router.post("/ai/validate-key", response_model=ValidateKeyResponse)
 async def validate_gemini_key(request: ValidateKeyRequest):
     """
@@ -145,12 +169,15 @@ async def generate_exam_from_files(
         # Step 4: Create upload record in database
         file_names = [f.filename for f in files]
         
+        # Determine model used (service attaches _model_name on the returned object)
+        used_model = getattr(generated_exam, '_model_name', 'gemini-1.5-flash')
+
         upload = Upload(
             filename=f"AI_Generated_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             created_at=datetime.now(),
             metadata=json.dumps({
                 "source": "ai_generated",
-                "gemini_model": "models/gemini-1.5-flash-latest",
+                "gemini_model": used_model,
                 "generation_timestamp": datetime.now().isoformat(),
                 "original_files": file_names,
                 "themes": generated_exam.metadata.themes,
