@@ -228,7 +228,7 @@ async def generate_exam_from_content(
         prompt = build_exam_prompt(content, config)
         
         # Initialize Gemini model
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
         
         # Generate content
         response = model.generate_content(
@@ -257,7 +257,7 @@ async def validate_api_key(api_key: str) -> bool:
     """
     # Configure and attempt a minimal generation
     configure_gemini(api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
 
     try:
         response = model.generate_content(

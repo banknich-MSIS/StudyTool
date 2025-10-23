@@ -150,7 +150,7 @@ async def generate_exam_from_files(
             created_at=datetime.now(),
             metadata=json.dumps({
                 "source": "ai_generated",
-                "gemini_model": "gemini-1.5-flash-latest",
+                "gemini_model": "models/gemini-1.5-flash-latest",
                 "generation_timestamp": datetime.now().isoformat(),
                 "original_files": file_names,
                 "themes": generated_exam.metadata.themes,
