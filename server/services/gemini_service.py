@@ -208,47 +208,56 @@ async def resolve_model_for_key(api_key: str) -> str:
     """Resolve the best available Gemini model for the provided API key.
 
     Preference order:
-    - gemini-1.5-pro (highest quality)
-    - gemini-1.5-flash
-    - gemini-1.5-flash-8b (cheapest)
+    - gemini-2.5-pro (highest quality)
+    - gemini-2.5-flash
+    - gemini-2.0-flash (cheapest)
 
-    Falls back to 'gemini-1.5-flash' if discovery fails.
+    Returns the full model name (e.g., 'models/gemini-2.5-flash') that works with the API.
+    Falls back to 'models/gemini-2.5-flash' if discovery fails.
     """
     # Ensure SDK is configured with the key
     configure_gemini(api_key)
 
     preferred_order = [
-        'gemini-1.5-pro',
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-8b',
+        'gemini-2.5-pro',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
     ]
 
     try:
-        # Some SDKs return names like 'models/gemini-1.5-flash' and include supported methods
+        # Some SDKs return names like 'models/gemini-2.5-flash' and include supported methods
         models = list(genai.list_models())
-        supported_plain_names = set()
+        # Map plain name -> full name (e.g., 'gemini-2.5-flash' -> 'models/gemini-2.5-flash')
+        supported_models = {}
         for m in models:
             try:
                 methods = getattr(m, 'supported_generation_methods', []) or []
                 if 'generateContent' not in methods:
                     continue
-                # Normalize to plain model id without 'models/' prefix or '-latest' suffix
+                # Get the full model name and normalize to plain model id
                 name_raw = getattr(m, 'name', '') or ''
                 plain = name_raw.split('/')[-1]
                 if plain.endswith('-latest'):
                     plain = plain[:-7]
-                supported_plain_names.add(plain)
+                # Store the mapping: plain name -> full name
+                supported_models[plain] = name_raw
             except Exception:
                 continue
 
+        # Return full name for first matching preferred model
         for candidate in preferred_order:
-            if candidate in supported_plain_names:
-                return candidate
+            if candidate in supported_models:
+                return supported_models[candidate]  # Return full name that works with the API
+        
+        # If no preferred model found, return any available model's full name
+        if supported_models:
+            return next(iter(supported_models.values()))
     except Exception:
         # If listing models fails (network, permission), fall back to a sensible default
         pass
 
-    return 'gemini-1.5-flash'
+    # Fallback: return a full model name format
+    return 'models/gemini-2.5-flash'
 
 
 async def generate_exam_from_content(
@@ -300,12 +309,12 @@ async def generate_exam_from_content(
     except google_exceptions.NotFound as e:
         raise ValueError(
             "Requested model is not found or unsupported by your key. "
-            "The app automatically tries free models like 'gemini-1.5-flash'."
+            "The app automatically tries free models like 'gemini-2.5-flash'."
         )
     except google_exceptions.PermissionDenied as e:
         raise ValueError(
             "Your API key lacks access to the selected model. "
-            "Please check AI Studio quotas or try a free model like 'gemini-1.5-flash'."
+            "Please check AI Studio quotas or try a free model like 'gemini-2.5-flash'."
         )
     except Exception as e:
         raise ValueError(f"Failed to generate exam with Gemini: {str(e)}")
@@ -313,45 +322,104 @@ async def generate_exam_from_content(
 
 async def validate_api_key(api_key: str) -> bool:
     """
-    Validate that the provided Gemini API key works.
+    Validate that the provided Gemini API key works by discovering available models dynamically.
     Returns True if key is valid; raises with a descriptive error otherwise.
+    
+    This function uses the same approach as resolve_model_for_key() to discover
+    what models are actually available rather than trying hardcoded names.
     """
-    # Configure and attempt a minimal generation on a resolved, supported model
+    # Configure Gemini SDK with the provided API key
     configure_gemini(api_key)
-    model_name = await resolve_model_for_key(api_key)
-    model = genai.GenerativeModel(model_name)
-
+    
     try:
-        response = model.generate_content(
-            "Say 'OK' if you can read this.",
-            generation_config=genai.GenerationConfig(
-                max_output_tokens=10,
+        # Discover available models (same approach as resolve_model_for_key)
+        models = list(genai.list_models())
+        supported_models = []
+        
+        # Find models that support generateContent
+        for m in models:
+            try:
+                methods = getattr(m, 'supported_generation_methods', []) or []
+                if 'generateContent' in methods:
+                    name_raw = getattr(m, 'name', '') or ''
+                    # Normalize to plain model id without 'models/' prefix or '-latest' suffix
+                    plain = name_raw.split('/')[-1]
+                    if plain.endswith('-latest'):
+                        plain = plain[:-7]
+                    supported_models.append((plain, name_raw))
+            except Exception:
+                continue
+        
+        if not supported_models:
+            raise ValueError(
+                "No models with generateContent support found. "
+                "Please check your API key has proper permissions at: "
+                "https://aistudio.google.com/app/apikey"
             )
+        
+        # Try the first available model
+        last_error = None
+        for plain_name, full_name in supported_models:
+            try:
+                model = genai.GenerativeModel(full_name)
+                response = model.generate_content(
+                    "Say 'OK' if you can read this.",
+                    generation_config=genai.GenerationConfig(
+                        max_output_tokens=10,
+                    )
+                )
+                
+                # Extract response text
+                text = getattr(response, 'text', None)
+                if not text:
+                    try:
+                        candidates = getattr(response, 'candidates', []) or []
+                        if candidates and candidates[0].content and candidates[0].content.parts:
+                            part0 = candidates[0].content.parts[0]
+                            text = getattr(part0, 'text', None)
+                    except Exception:
+                        pass
+                
+                if not text:
+                    last_error = f"Empty response from model '{full_name}'"
+                    continue
+                
+                # Success! This model works
+                return True
+                
+            except google_exceptions.NotFound:
+                last_error = f"Model '{full_name}' not found"
+                continue
+            except google_exceptions.PermissionDenied:
+                last_error = f"Permission denied for model '{full_name}'"
+                continue
+            except google_exceptions.GoogleAPIError as e:
+                last_error = f"Google API error with '{full_name}': {str(e)}"
+                continue
+            except Exception as e:
+                last_error = f"Error with '{full_name}': {str(e)}"
+                continue
+        
+        # All discovered models failed
+        error_msg = (
+            f"Unable to access any Gemini models. "
+            f"Tried {len(supported_models)} available models.\n"
+            f"Last error: {last_error}\n\n"
+            f"Please verify your API key is valid and active at: "
+            f"https://aistudio.google.com/app/apikey"
         )
-    except google_exceptions.NotFound as e:
-        raise ValueError("Model not found or unsupported by your key. Try 'gemini-1.5-flash' or check AI Studio quotas.")
-    except google_exceptions.PermissionDenied as e:
-        raise ValueError("Your key lacks access to this model. Falling back to a free model may help.")
-    except google_exceptions.GoogleAPIError as e:
-        # Surface specific Google API errors to the caller
-        raise ValueError(f"Gemini API error ({e.__class__.__name__}): {str(e)}")
+        raise ValueError(error_msg)
+        
     except Exception as e:
-        raise ValueError(f"Gemini call failed: {str(e)}")
-
-    # Some SDK versions don't populate response.text reliably
-    text = getattr(response, 'text', None)
-    if not text:
-        try:
-            # Attempt to pull from candidates
-            candidates = getattr(response, 'candidates', []) or []
-            if candidates and candidates[0].content and candidates[0].content.parts:
-                part0 = candidates[0].content.parts[0]
-                text = getattr(part0, 'text', None)
-        except Exception:
-            pass
-
-    if not text:
-        raise ValueError("Empty response from model while validating API key")
-
-    return True
+        # If listing models fails, provide helpful error
+        error_msg = (
+            f"Failed to validate API key: {str(e)}\n\n"
+            f"Please ensure:\n"
+            f"  1. Your API key is valid and active\n"
+            f"  2. You have internet connectivity\n"
+            f"  3. Your firewall is not blocking Google APIs\n"
+            f"\n"
+            f"Get or verify your API key at: https://aistudio.google.com/app/apikey"
+        )
+        raise ValueError(error_msg)
 

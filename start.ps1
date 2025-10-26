@@ -239,8 +239,28 @@ if (Wait-ForHttp -Url 'http://127.0.0.1:5173' -TimeoutSec 300) {
 
 Write-Host "Both servers are running in this PowerShell session as background jobs."
 Write-Host "To stop: press Ctrl+C or run: Get-Job | Stop-Job"
+Write-Host ""
+
+# Cleanup function to stop all jobs
+function Stop-AllJobs {
+    Write-Host "`nCleaning up background jobs..." -ForegroundColor Yellow
+    Get-Job | ForEach-Object {
+        Write-Host "Stopping job: $($_.Name)" -ForegroundColor Gray
+        Stop-Job $_
+        Remove-Job $_
+    }
+    Write-Host "Cleanup complete." -ForegroundColor Green
+}
+
+# Register cleanup on Ctrl+C
+[Console]::TreatControlCAsInput = $false
+$null = Register-EngineEvent PowerShell.Exiting -Action { Stop-AllJobs }
 
 # Keep the window attached to the frontend job (until you stop it)
-Wait-Job -Name frontend
+try {
+    Wait-Job -Name frontend
+} finally {
+    Stop-AllJobs
+}
 
 

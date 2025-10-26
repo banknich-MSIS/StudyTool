@@ -61,11 +61,22 @@ function Stop-ProcessByPort {
         
         # Handle multiple connections (shouldn't happen but be safe)
         $stoppedCount = 0
+        $orphanedDetected = $false
         foreach ($conn in $connections) {
             $processId = $conn.OwningProcess
             
+            # Check for orphaned socket (null or 0 process ID but not system process 4)
+            if ($null -eq $processId -or $processId -eq 0) {
+                if ($processId -ne 4) {
+                    $orphanedDetected = $true
+                    Write-Host "[WARNING] Detected orphaned socket on port $Port (no associated process)" -ForegroundColor Yellow
+                    Write-Host "  This typically happens when a process crashes and leaves the port in a zombie state." -ForegroundColor Gray
+                    continue
+                }
+            }
+            
             # Skip system processes
-            if ($processId -eq 0 -or $processId -eq 4) {
+            if ($processId -eq 4) {
                 Write-Host "[WARNING] Port $Port owned by system process (PID: $processId), skipping" -ForegroundColor Yellow
                 continue
             }
@@ -73,7 +84,8 @@ function Stop-ProcessByPort {
             # Get process info
             $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
             if (-not $process) {
-                Write-Host "[WARNING] Process PID $processId not found, may be terminating" -ForegroundColor Yellow
+                $orphanedDetected = $true
+                Write-Host "[WARNING] Process PID $processId not found - orphaned socket detected" -ForegroundColor Yellow
                 continue
             }
             
@@ -100,6 +112,17 @@ function Stop-ProcessByPort {
                     Write-Host "  [ERROR] Could not stop process: $_" -ForegroundColor Red
                 }
             }
+        }
+        
+        # If orphaned sockets detected, recommend remediation
+        if ($orphanedDetected) {
+            Write-Host "" -ForegroundColor Yellow
+            Write-Host "[WARNING] Orphaned sockets detected on port $Port!" -ForegroundColor Red
+            Write-Host "  If port $Port remains unavailable after this script, try the following:" -ForegroundColor Yellow
+            Write-Host "  1. Restart your computer" -ForegroundColor Gray
+            Write-Host "  2. Or run as Administrator: netsh winsock reset && netsh int ip reset" -ForegroundColor Gray
+            Write-Host "  3. Then reboot your computer" -ForegroundColor Gray
+            Write-Host "" -ForegroundColor Yellow
         }
         
         return $stoppedCount -gt 0

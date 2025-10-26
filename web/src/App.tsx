@@ -114,6 +114,7 @@ export default function App() {
     { path: "/library", label: "Library" },
     { path: "/classes", label: "Classes" },
     { path: "/history", label: "History" },
+    { path: "/api-keys", label: "API Keys" },
   ];
 
   return (

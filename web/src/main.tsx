@@ -15,6 +15,7 @@ import HistoryPage from "./pages/HistoryPage";
 import ClassesPage from "./pages/ClassesPage";
 import SupportPage from "./pages/SupportPage";
 import UtilitiesPage from "./pages/UtilitiesPage";
+import ApiKeyManagementPage from "./pages/ApiKeyManagementPage";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +35,7 @@ const router = createBrowserRouter([
       { path: "history/:attemptId", element: <AttemptReviewPage /> },
       { path: "support", element: <SupportPage /> },
       { path: "utilities", element: <UtilitiesPage /> },
+      { path: "api-keys", element: <ApiKeyManagementPage /> },
     ],
   },
 ]);

@@ -263,11 +263,13 @@ export default function AttemptReviewPage() {
               boxShadow: "0 2px 8px rgba(196, 30, 58, 0.25)",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(196, 30, 58, 0.35)";
+              e.currentTarget.style.boxShadow =
+                "0 4px 12px rgba(196, 30, 58, 0.35)";
               e.currentTarget.style.transform = "translateY(-1px)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "0 2px 8px rgba(196, 30, 58, 0.25)";
+              e.currentTarget.style.boxShadow =
+                "0 2px 8px rgba(196, 30, 58, 0.25)";
               e.currentTarget.style.transform = "translateY(0)";
             }}
           >
@@ -289,11 +291,13 @@ export default function AttemptReviewPage() {
               boxShadow: "0 2px 8px rgba(212, 166, 80, 0.25)",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(212, 166, 80, 0.35)";
+              e.currentTarget.style.boxShadow =
+                "0 4px 12px rgba(212, 166, 80, 0.35)";
               e.currentTarget.style.transform = "translateY(-1px)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "0 2px 8px rgba(212, 166, 80, 0.25)";
+              e.currentTarget.style.boxShadow =
+                "0 2px 8px rgba(212, 166, 80, 0.25)";
               e.currentTarget.style.transform = "translateY(0)";
             }}
           >

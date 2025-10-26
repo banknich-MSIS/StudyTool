@@ -89,6 +89,86 @@ async def list_available_models(x_gemini_api_key: str = Header(..., alias="X-Gem
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to list models: {str(e)}")
 
+@router.post("/ai/test-key")
+async def test_api_key_detailed(request: ValidateKeyRequest):
+    """
+    Detailed diagnostics for API key - shows available models and tests them.
+    Returns comprehensive information about what models are accessible and working.
+    """
+    import google.generativeai as genai
+    from google.api_core import exceptions as google_exceptions
+    
+    results = {
+        "api_key_provided": bool(request.api_key),
+        "configured": False,
+        "models_listed": [],
+        "models_tested": {},
+        "working_model": None,
+        "errors": []
+    }
+    
+    try:
+        # Configure the API
+        genai.configure(api_key=request.api_key)
+        results["configured"] = True
+        
+        # List all models
+        try:
+            models = list(genai.list_models())
+            results["models_listed"] = [str(model.name) for model in models]
+        except Exception as e:
+            results["errors"].append(f"Failed to list models: {str(e)}")
+            models = []
+        
+        # Test content generation with different model name formats
+        model_formats_to_test = [
+            'models/gemini-2.5-flash',
+            'gemini-2.5-flash',
+            'models/gemini-2.5-pro',
+            'gemini-2.5-pro',
+            'models/gemini-2.0-flash',
+            'gemini-2.0-flash',
+        ]
+        
+        for model_name in model_formats_to_test:
+            try:
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(
+                    "Say 'OK'",
+                    generation_config=genai.GenerationConfig(
+                        max_output_tokens=10,
+                    )
+                )
+                results["models_tested"][model_name] = {
+                    "status": "success",
+                    "response": getattr(response, 'text', None) or "No text in response"
+                }
+                if results["working_model"] is None:
+                    results["working_model"] = model_name
+                    break  # Found a working model, stop testing
+            except google_exceptions.NotFound as e:
+                results["models_tested"][model_name] = {
+                    "status": "not_found",
+                    "error": str(e)
+                }
+            except google_exceptions.PermissionDenied as e:
+                results["models_tested"][model_name] = {
+                    "status": "permission_denied",
+                    "error": str(e)
+                }
+            except Exception as e:
+                results["models_tested"][model_name] = {
+                    "status": "error",
+                    "error": str(e)
+                }
+        
+        return results
+        
+    except Exception as e:
+        results["errors"].append(f"Configuration failed: {str(e)}")
+        return results
+
+
 @router.post("/ai/validate-key", response_model=ValidateKeyResponse)
 async def validate_gemini_key(request: ValidateKeyRequest):
     """
@@ -170,7 +250,7 @@ async def generate_exam_from_files(
         file_names = [f.filename for f in files]
         
         # Determine model used (service attaches _model_name on the returned object)
-        used_model = getattr(generated_exam, '_model_name', 'gemini-1.5-flash')
+        used_model = getattr(generated_exam, '_model_name', 'gemini-2.5-flash')
 
         upload = Upload(
             filename=f"AI_Generated_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
