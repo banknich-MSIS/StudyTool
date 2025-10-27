@@ -12,7 +12,7 @@ import pkg_resources
 import socket
 import ssl
 from ..db import SessionLocal
-from ..models import Upload, Question, Concept
+from ..models import Upload, Question, Concept, Exam
 from datetime import datetime
 import json
 
@@ -202,6 +202,9 @@ async def generate_exam_from_files(
     difficulty: str = Form("medium"),
     question_types: str = Form("mcq,short"),  # Comma-separated
     focus_concepts: Optional[str] = Form(None),  # Comma-separated
+    exam_name: Optional[str] = Form(None),  # Optional exam name
+    exam_mode: Optional[str] = Form("exam"),  # exam or practice
+    class_id: Optional[int] = Form(None),  # Optional class assignment
     x_gemini_api_key: str = Header(..., alias="X-Gemini-API-Key")
 ):
     """
@@ -252,72 +255,123 @@ async def generate_exam_from_files(
         # Determine model used (service attaches _model_name on the returned object)
         used_model = getattr(generated_exam, '_model_name', 'gemini-2.5-flash')
 
+        # Count existing AI-generated uploads and increment
+        ai_upload_count = db.query(Upload).filter(Upload.file_type == "ai_generated").count()
+        filename = f"AI Generated Quiz {ai_upload_count + 1}"
+
         upload = Upload(
-            filename=f"AI_Generated_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            created_at=datetime.now(),
-            metadata=json.dumps({
-                "source": "ai_generated",
-                "gemini_model": used_model,
-                "generation_timestamp": datetime.now().isoformat(),
-                "original_files": file_names,
-                "themes": generated_exam.metadata.themes,
-                "difficulty": generated_exam.metadata.difficulty,
-                "suggested_types": question_types_list,
-                "recommended_count": question_count,
-                "topic": generated_exam.metadata.topic
-            })
+            filename=filename,
+            file_type="ai_generated",
+            created_at=datetime.now()
         )
         
         db.add(upload)
         db.flush()  # Get upload ID
         
-        # Step 5: Create questions in database
-        created_questions = []
+        # Step 5: Create concept records first and build mapping
         concept_names = set()
+        for q_data in generated_exam.questions:
+            if q_data.concepts:
+                concept_names.update(q_data.concepts)
+        
+        # Create concept records and build name-to-ID mapping
+        concept_map = {}  # name -> Concept object
+        for concept_name in concept_names:
+            concept = Concept(
+                upload_id=upload.id,
+                name=concept_name,
+                score=1.0  # Default score
+            )
+            db.add(concept)
+            concept_map[concept_name] = concept
+        
+        db.flush()  # Get concept IDs
+        
+        # Step 6: Create questions in database
+        created_questions = []
         
         for q_data in generated_exam.questions:
-            # Prepare options
-            options_str = None
+            # Prepare options as JSON dict
+            options_dict = None
             if q_data.options and len(q_data.options) > 0:
-                options_str = "|".join(q_data.options)
+                options_dict = {"list": q_data.options}
             
-            # Prepare concepts
-            concepts_str = ",".join(q_data.concepts) if q_data.concepts else ""
-            concept_names.update(q_data.concepts)
+            # Prepare answer as JSON dict
+            answer_dict = None
+            if q_data.answer:
+                # Convert answer to appropriate format based on question type
+                # For multi-select, parse comma-separated answers into list
+                if q_data.type == 'multi':
+                    # Check if already a list (from JSON parsing) or string to split
+                    if isinstance(q_data.answer, str):
+                        answer_list = [a.strip() for a in q_data.answer.split(",") if a.strip()]
+                        answer_dict = {"value": answer_list}
+                    elif isinstance(q_data.answer, list):
+                        answer_dict = {"value": q_data.answer}
+                    else:
+                        answer_dict = {"value": str(q_data.answer)}
+                elif q_data.type == 'cloze':
+                    # For cloze questions, parse multiple answers
+                    if isinstance(q_data.answer, str):
+                        answer_list = [a.strip() for a in q_data.answer.split(",") if a.strip()]
+                        answer_dict = {"value": answer_list}
+                    elif isinstance(q_data.answer, list):
+                        answer_dict = {"value": q_data.answer}
+                    else:
+                        answer_dict = {"value": [str(q_data.answer)]}
+                else:
+                    # For MCQ, short answer, true/false: single answer as string
+                    answer_dict = {"value": str(q_data.answer)}
+            
+            # Prepare concept IDs
+            concept_ids = [concept_map[name].id for name in (q_data.concepts or []) if name in concept_map]
             
             question = Question(
                 upload_id=upload.id,
-                question=q_data.question,
-                answer=q_data.answer,
-                type=q_data.type,
-                options=options_str,
-                concepts=concepts_str
+                stem=q_data.question,
+                qtype=q_data.type,
+                options=options_dict,
+                answer=answer_dict,
+                concept_ids=concept_ids if concept_ids else None
             )
             
             db.add(question)
             created_questions.append(question)
         
-        # Step 6: Create concept records
-        for concept_name in concept_names:
-            # Check if concept already exists for this upload
-            existing = db.query(Concept).filter(
-                Concept.upload_id == upload.id,
-                Concept.name == concept_name
-            ).first()
-            
-            if not existing:
-                concept = Concept(
-                    upload_id=upload.id,
-                    name=concept_name,
-                    score=0.5  # Default score
-                )
-                db.add(concept)
+        # Step 7: Create exam record
+        question_ids = [q.id for q in created_questions]
+        exam_settings = {
+            "question_count": question_count,
+            "difficulty": difficulty,
+            "question_types": question_types_list,
+            "exam_name": exam_name,
+            "exam_mode": exam_mode,
+        }
         
+        exam = Exam(
+            upload_id=upload.id,
+            settings=exam_settings,
+            question_ids=question_ids
+        )
+        db.add(exam)
         db.commit()
+        db.refresh(exam)
         
-        # Step 7: Prepare response
+        # Assign to class if specified
+        if class_id:
+            from ..models import upload_classes
+            try:
+                db.execute(
+                    upload_classes.insert().values(upload_id=upload.id, class_id=class_id)
+                )
+                db.commit()
+            except Exception as e:
+                # Class assignment failed, but don't fail the whole request
+                print(f"Warning: Could not assign to class: {e}")
+        
+        # Step 8: Prepare response
         return GenerateExamResponse(
-            exam_id=upload.id,
+            exam_id=exam.id,
             upload_id=upload.id,
             question_count=len(created_questions),
             stats={
@@ -329,7 +383,7 @@ async def generate_exam_from_files(
                 },
                 "questions_generated": len(created_questions),
                 "question_types": {
-                    qt: sum(1 for q in created_questions if q.type == qt)
+                    qt: sum(1 for q in created_questions if q.qtype == qt)
                     for qt in question_types_list
                 },
                 "concepts_extracted": list(concept_names),

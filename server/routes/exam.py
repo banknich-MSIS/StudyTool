@@ -15,12 +15,18 @@ router = APIRouter(tags=["exam"])
 
 @router.post("/exams", response_model=ExamOut)
 def create_exam(payload: ExamCreate, db: Session = Depends(get_db)) -> ExamOut:
-    upload = db.get(Upload, payload.uploadId)
-    if upload is None:
-        raise HTTPException(status_code=404, detail="Upload not found")
-
-    # Very simple selection for now: filter by types and limit count
-    query = db.query(QuestionModel).filter(QuestionModel.upload_id == upload.id)
+    # If multiple upload IDs provided, query from all of them
+    if payload.uploadIds and len(payload.uploadIds) > 1:
+        # Query questions from multiple uploads
+        query = db.query(QuestionModel).filter(QuestionModel.upload_id.in_(payload.uploadIds))
+    else:
+        # Single upload (either from uploadId or first of uploadIds)
+        upload_id = payload.uploadId
+        upload = db.get(Upload, upload_id)
+        if upload is None:
+            raise HTTPException(status_code=404, detail="Upload not found")
+        query = db.query(QuestionModel).filter(QuestionModel.upload_id == upload_id)
+    
     if payload.questionTypes:
         query = query.filter(QuestionModel.qtype.in_(payload.questionTypes))
     
@@ -35,7 +41,9 @@ def create_exam(payload: ExamCreate, db: Session = Depends(get_db)) -> ExamOut:
     questions = query.limit(payload.count).all()
 
     question_ids = [q.id for q in questions]
-    exam = ExamModel(upload_id=upload.id, settings=payload.model_dump(), question_ids=question_ids)
+    # Use the primary upload ID (or first one if multiple)
+    primary_upload_id = payload.uploadId if not payload.uploadIds else payload.uploadIds[0]
+    exam = ExamModel(upload_id=primary_upload_id, settings=payload.model_dump(), question_ids=question_ids)
     db.add(exam)
     db.commit()
     db.refresh(exam)

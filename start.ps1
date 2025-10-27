@@ -37,57 +37,127 @@ function Wait-ForHttp { param([string]$Url, [int]$TimeoutSec = 300)
   return $false
 }
 
+function Force-FreePort {
+    param([int]$Port)
+    Write-Host "Attempting to free port $Port..." -ForegroundColor Yellow
+    
+    try {
+        # Try Get-NetTCPConnection first (modern approach)
+        $connections = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+        
+        if (-not $connections) {
+            Write-Host "[OK] Port $Port is already free" -ForegroundColor Green
+            return $true
+        }
+        
+        foreach ($conn in $connections) {
+            $processId = $conn.OwningProcess
+            
+            # Skip system processes
+            if ($processId -eq 4) {
+                Write-Host "[WARNING] Port $Port owned by system process - skipping" -ForegroundColor Yellow
+                continue
+            }
+            
+            # Try to get process info
+            $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
+            if (-not $process) {
+                Write-Host "[WARNING] Process PID $processId not found - may be orphaned" -ForegroundColor Yellow
+                continue
+            }
+            
+            Write-Host "Stopping process: $($process.Name) (PID: $processId)" -ForegroundColor Gray
+            try {
+                Stop-Process -Id $processId -Force -ErrorAction Stop
+                Write-Host "[OK] Stopped process on port $Port" -ForegroundColor Green
+            } catch {
+                Write-Host "[WARNING] Could not stop process PID $processId: $_" -ForegroundColor Yellow
+            }
+        }
+    } catch {
+        Write-Host "[WARNING] Error checking port $Port: $_" -ForegroundColor Yellow
+    }
+    
+    return Wait-PortFree -Port $Port -TimeoutSec 5
+}
+
+function Wait-PortFree {
+    param([int]$Port, [int]$TimeoutSec = 10)
+    
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    $attempt = 0
+    
+    while ($sw.Elapsed.TotalSeconds -lt $TimeoutSec) {
+        $attempt++
+        try {
+            $connections = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+            if (-not $connections) {
+                Write-Host "[OK] Port $Port is now free" -ForegroundColor Green
+                return $true
+            }
+        } catch {
+            # If we can't check, assume it's free
+            Write-Host "[INFO] Cannot verify port status, assuming free" -ForegroundColor Gray
+            return $true
+        }
+        
+        if ($attempt % 5 -eq 0) {
+            Write-Host "Waiting for port $Port to be released... ($($sw.Elapsed.TotalSeconds.ToString('F1'))s elapsed)" -ForegroundColor Gray
+        }
+        Start-Sleep -Milliseconds 500
+    }
+    
+    Write-Host "[ERROR] Port $Port did not become free within $TimeoutSec seconds" -ForegroundColor Red
+    return $false
+}
+
+function Write-PidFile {
+    param([string]$Path, [int]$ProcessId)
+    
+    try {
+        $ProcessId | Out-File -FilePath $Path -Encoding ASCII -NoNewline
+        Write-Host "Wrote PID file: $Path (PID: $ProcessId)" -ForegroundColor Gray
+    } catch {
+        Write-Host "[WARNING] Could not write PID file: $_" -ForegroundColor Yellow
+    }
+}
+
 $root = $PSScriptRoot
 $serverDir = Join-Path $root 'server'
 $webDir = Join-Path $root 'web'
 $venvDir = Join-Path $serverDir '.venv'
 $pythonExe = Join-Path $venvDir 'Scripts\python.exe'
 
-# Clean up any existing servers first using stop.ps1
-Write-Host "Cleaning up any existing servers..." -ForegroundColor Yellow
-$stopScript = Join-Path $root "stop.ps1"
+# Clean up any existing servers
+Write-Host "Checking and cleaning up ports..." -ForegroundColor Yellow
 
-# Check if we're running as admin
-$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-
-if (Test-Path $stopScript) {
-  if ($isAdmin) {
-    Write-Host "Running stop script to clean up ports..." -ForegroundColor Gray
-    & $stopScript
-    Start-Sleep -Seconds 2
-  } else {
-    # Not admin - just clean up background jobs
-    Write-Host "[INFO] Not running as admin - cleaning up background jobs only" -ForegroundColor Gray
-    $existingJobs = Get-Job
-    if ($existingJobs) {
-      Write-Host "Stopping existing PowerShell background jobs..." -ForegroundColor Yellow
-      $existingJobs | Stop-Job
-      $existingJobs | Remove-Job
-    }
-  }
+# Stop background jobs first
+$existingJobs = Get-Job
+if ($existingJobs) {
+  Write-Host "Stopping existing PowerShell background jobs..." -ForegroundColor Gray
+  $existingJobs | Stop-Job -ErrorAction SilentlyContinue
+  $existingJobs | Remove-Job -ErrorAction SilentlyContinue
+  Start-Sleep -Seconds 1
 }
 
-# Final port check
-Write-Host "Checking for port conflicts..." -ForegroundColor Yellow
-$backendPort = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue
-$frontendPort = Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue
+# Aggressively free ports
+Write-Host "Ensuring ports 8000 and 5173 are free..." -ForegroundColor Yellow
+$backendFree = Force-FreePort -Port 8000
+$frontendFree = Force-FreePort -Port 5173
 
-if ($backendPort -or $frontendPort) {
-  Write-Host ""
-  Write-Host "[WARNING] Ports still in use!" -ForegroundColor Yellow
-  if ($backendPort) {
-    $proc = Get-Process -Id $backendPort.OwningProcess -ErrorAction SilentlyContinue
-    Write-Host "  Port 8000: $($proc.Name) (PID: $($proc.Id))" -ForegroundColor Yellow
-  }
-  if ($frontendPort) {
-    $proc = Get-Process -Id $frontendPort.OwningProcess -ErrorAction SilentlyContinue
-    Write-Host "  Port 5173: $($proc.Name) (PID: $($proc.Id))" -ForegroundColor Yellow
-  }
-  Write-Host ""
-  Write-Host "To fix: Run '.\stop.ps1' as Administrator" -ForegroundColor Cyan
-  Write-Host "Press Enter to continue anyway, or Ctrl+C to cancel" -ForegroundColor Yellow
-  Read-Host
+if (-not $backendFree) {
+  Write-Host "[ERROR] Could not free port 8000" -ForegroundColor Red
+  Write-Host "Run '.\stop.ps1' as Administrator, or manually kill the process" -ForegroundColor Yellow
+  Read-Host "Press Enter to continue anyway (may cause conflicts)"
 }
+
+if (-not $frontendFree) {
+  Write-Host "[ERROR] Could not free port 5173" -ForegroundColor Red
+  Write-Host "Run '.\stop.ps1' as Administrator, or manually kill the process" -ForegroundColor Yellow
+  Read-Host "Press Enter to continue anyway (may cause conflicts)"
+}
+
+Write-Host ""
 
 # Ensure Python available to create venv
 if (-not (Test-Command 'python')) {
@@ -122,13 +192,23 @@ if ($LASTEXITCODE -ne 0) {
 # Optional: spaCy model
 # & $pythonExe -m spacy download en_core_web_sm
 
+# Create PID files directory
+$pidFileDir = $serverDir
+$backendPidFile = Join-Path $pidFileDir '.backend.pid'
+$frontendPidFile = Join-Path $webDir '.frontend.pid'
+
 # Start backend (FastAPI) in background job
 Write-Host "Starting backend on http://127.0.0.1:8000 ..."
-Start-Job -Name backend -ScriptBlock {
+$backendJob = Start-Job -Name backend -ScriptBlock {
   Set-Location $using:root
   Write-Host "Backend job started, running from: $using:root"
   & $using:pythonExe -m uvicorn server.main:app --host 127.0.0.1 --port 8000 --reload
-} | Out-Null
+}
+
+# Record backend job PID
+if ($backendJob.Id) {
+  Write-PidFile -Path $backendPidFile -ProcessId $backendJob.Id
+}
 
 # Give the backend a moment to start
 Start-Sleep -Seconds 5
@@ -198,6 +278,11 @@ $frontendJob = Start-Job -Name frontend -ScriptBlock {
   npm run dev
 } -ArgumentList $webDir
 
+# Record frontend job PID
+if ($frontendJob.Id) {
+  Write-PidFile -Path $frontendPidFile -ProcessId $frontendJob.Id
+}
+
 # Give the frontend job a moment to start
 Start-Sleep -Seconds 5
 
@@ -249,6 +334,15 @@ function Stop-AllJobs {
         Stop-Job $_
         Remove-Job $_
     }
+    
+    # Clean up PID files
+    if (Test-Path $backendPidFile) {
+        Remove-Item $backendPidFile -ErrorAction SilentlyContinue
+    }
+    if (Test-Path $frontendPidFile) {
+        Remove-Item $frontendPidFile -ErrorAction SilentlyContinue
+    }
+    
     Write-Host "Cleanup complete." -ForegroundColor Green
 }
 

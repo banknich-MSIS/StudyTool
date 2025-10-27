@@ -21,4 +21,8 @@ server/__pycache__/
 exam.db
 *.log
 
+# PID files for process tracking
+server/.backend.pid
+web/.frontend.pid
+
 

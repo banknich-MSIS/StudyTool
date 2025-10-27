@@ -39,6 +39,11 @@ export default function App() {
     document.body.className = darkMode ? "dark-mode" : "light-mode";
   }, [darkMode]);
 
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   const toggleDarkMode = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
@@ -524,5 +529,14 @@ export default function App() {
         )}
       </div>
     </div>
+    <style>{`
+      select option {
+        background-color: ${darkMode ? '#3D2325' : '#F5F3ED'};
+        color: ${darkMode ? '#F5F3ED' : '#3D2325'};
+      }
+      select option:hover {
+        background-color: ${theme.navHover || 'rgba(196, 30, 58, 0.1)'};
+      }
+    `}</style>
   );
 }

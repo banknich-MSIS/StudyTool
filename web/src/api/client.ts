@@ -99,6 +99,15 @@ export async function deleteAttempt(attemptId: number): Promise<void> {
   await api.delete(`/attempts/delete/${attemptId}`);
 }
 
+export async function updateUploadName(
+  uploadId: number,
+  newName: string
+): Promise<void> {
+  await api.patch(`/uploads/${uploadId}`, null, {
+    params: { new_name: newName },
+  });
+}
+
 export async function previewExamAnswers(
   examId: number
 ): Promise<{ answers: Array<{ questionId: number; correctAnswer: any }> }> {
@@ -187,6 +196,9 @@ export async function generateExamFromFiles(params: {
   difficulty: string;
   questionTypes: string[];
   focusConcepts: string[];
+  examName?: string;
+  examMode?: string;
+  selectedClassId?: number;
   apiKey: string;
 }): Promise<{ exam_id: number; upload_id: number; stats: any }> {
   const formData = params.files;
@@ -195,6 +207,15 @@ export async function generateExamFromFiles(params: {
   formData.append("question_types", params.questionTypes.join(","));
   if (params.focusConcepts.length > 0) {
     formData.append("focus_concepts", params.focusConcepts.join(","));
+  }
+  if (params.examName) {
+    formData.append("exam_name", params.examName);
+  }
+  if (params.examMode) {
+    formData.append("exam_mode", params.examMode);
+  }
+  if (params.selectedClassId) {
+    formData.append("class_id", params.selectedClassId.toString());
   }
 
   const { data } = await api.post("/ai/generate-exam", formData, {

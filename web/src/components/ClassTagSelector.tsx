@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   fetchClasses,
   assignUploadToClass,
@@ -22,13 +23,10 @@ export default function ClassTagSelector({
   darkMode,
   theme,
 }: ClassTagSelectorProps) {
+  const navigate = useNavigate();
   const [allClasses, setAllClasses] = useState<ClassSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newDesc, setNewDesc] = useState("");
-  const [newColor, setNewColor] = useState("#007bff");
 
   const CLASS_COLORS = [
     { name: "Blue", value: "#007bff", darkBg: "#1a3a52", darkText: "#64b5f6" },
@@ -141,8 +139,8 @@ export default function ClassTagSelector({
           Classes
         </span>
         <button
-          onClick={() => setShowCreate(true)}
-          title="Create class"
+          onClick={() => navigate("/classes")}
+          title="Go to classes page"
           disabled={loading}
           onMouseEnter={() => !loading && setHoveredButton("createClass")}
           onMouseLeave={() => setHoveredButton(null)}
@@ -228,150 +226,6 @@ export default function ClassTagSelector({
           })
         )}
       </div>
-
-      {showCreate && (
-        <div
-          style={{
-            marginTop: 8,
-            padding: 10,
-            background: theme.cardBg,
-            border: `1px solid ${theme.border}`,
-            borderRadius: 6,
-          }}
-        >
-          <div style={{ display: "grid", gap: 8 }}>
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value.slice(0, 12))}
-              placeholder="Name (max 12 chars)"
-              style={{
-                width: "100%",
-                padding: "6px 10px",
-                border: `1px solid ${theme.border}`,
-                borderRadius: 4,
-                fontSize: 13,
-                backgroundColor: theme.cardBg,
-                color: theme.text,
-              }}
-            />
-            <div
-              style={{
-                fontSize: 11,
-                color: theme.textSecondary,
-                textAlign: "right",
-              }}
-            >
-              {newName.length}/12
-            </div>
-            <input
-              type="text"
-              value={newDesc}
-              onChange={(e) => setNewDesc(e.target.value)}
-              placeholder="Optional: short description"
-              style={{
-                width: "100%",
-                padding: "6px 10px",
-                border: `1px solid ${theme.border}`,
-                borderRadius: 4,
-                fontSize: 13,
-                backgroundColor: theme.cardBg,
-                color: theme.text,
-              }}
-            />
-            <label
-              style={{
-                display: "block",
-                marginBottom: 8,
-                fontWeight: "bold",
-                fontSize: 12,
-                color: theme.text,
-              }}
-            >
-              Color
-            </label>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(6, 1fr)",
-                gap: 8,
-              }}
-            >
-              {CLASS_COLORS.map((colorOption) => (
-                <button
-                  key={colorOption.value}
-                  onClick={() => setNewColor(colorOption.value)}
-                  style={{
-                    width: "100%",
-                    aspectRatio: "1",
-                    borderRadius: 8,
-                    backgroundColor: colorOption.value,
-                    border:
-                      newColor === colorOption.value
-                        ? "3px solid white"
-                        : "1px solid #ccc",
-                    cursor: "pointer",
-                    boxShadow:
-                      newColor === colorOption.value
-                        ? "0 0 8px rgba(0,0,0,0.3)"
-                        : "none",
-                  }}
-                  title={colorOption.name}
-                />
-              ))}
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 12,
-                color: theme.textSecondary,
-              }}
-            >
-              Selected: {CLASS_COLORS.find((c) => c.value === newColor)?.name}
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={handleCreate}
-                disabled={!newName.trim() || loading}
-                style={{
-                  flex: 1,
-                  padding: "8px 12px",
-                  background: theme.crimson,
-                  color: "white",
-                  border: "none",
-                  borderRadius: 6,
-                  cursor:
-                    !newName.trim() || loading ? "not-allowed" : "pointer",
-                  fontSize: 13,
-                  fontWeight: 600,
-                }}
-              >
-                Create
-              </button>
-              <button
-                onClick={() => {
-                  setShowCreate(false);
-                  setNewName("");
-                  setNewDesc("");
-                }}
-                style={{
-                  flex: 1,
-                  padding: "8px 12px",
-                  background: theme.textSecondary,
-                  color: "white",
-                  border: "none",
-                  borderRadius: 6,
-                  cursor: "pointer",
-                  fontSize: 13,
-                  fontWeight: 600,
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

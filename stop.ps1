@@ -1,6 +1,40 @@
 # stop.ps1 - Stop all Study Tool servers
 # This script REQUIRES Administrator privileges to reliably stop processes by port
 
+function Stop-ByPidFile {
+    param([string]$PidFile, [string]$ServerName)
+    
+    if (-not (Test-Path $PidFile)) {
+        Write-Host "[INFO] No PID file found for $ServerName" -ForegroundColor Gray
+        return $false
+    }
+    
+    try {
+        $processId = Get-Content $PidFile -Raw
+        $processId = $processId.Trim()
+        
+        # Try to get the job by ID
+        $job = Get-Job -Id $processId -ErrorAction SilentlyContinue
+        
+        if ($job) {
+            Write-Host "Stopping $ServerName job (ID: $processId)..." -ForegroundColor Yellow
+            Stop-Job $job -ErrorAction SilentlyContinue
+            Remove-Job $job -ErrorAction SilentlyContinue
+            Remove-Item $PidFile -ErrorAction SilentlyContinue
+            Write-Host "[OK] Stopped $ServerName via job ID" -ForegroundColor Green
+            return $true
+        } else {
+            Write-Host "[INFO] Job ID $processId not found in current session" -ForegroundColor Gray
+            Remove-Item $PidFile -ErrorAction SilentlyContinue
+            return $false
+        }
+    } catch {
+        Write-Host "[WARNING] Error reading PID file: $_" -ForegroundColor Yellow
+        Remove-Item $PidFile -ErrorAction SilentlyContinue
+        return $false
+    }
+}
+
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Study Tool - Server Shutdown" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
@@ -25,7 +59,19 @@ if (-not $isAdmin) {
     exit 1
 }
 
-# Stop PowerShell background jobs first
+# Stop by PID files first (most reliable)
+Write-Host "Checking PID files..." -ForegroundColor Yellow
+$root = $PSScriptRoot
+$serverDir = Join-Path $root 'server'
+$webDir = Join-Path $root 'web'
+$backendPidFile = Join-Path $serverDir '.backend.pid'
+$frontendPidFile = Join-Path $webDir '.frontend.pid'
+
+Stop-ByPidFile -PidFile $backendPidFile -ServerName "Backend" | Out-Null
+Stop-ByPidFile -PidFile $frontendPidFile -ServerName "Frontend" | Out-Null
+Write-Host ""
+
+# Stop PowerShell background jobs
 Write-Host "Stopping PowerShell background jobs..." -ForegroundColor Yellow
 $jobs = Get-Job
 if ($jobs) {
@@ -133,11 +179,11 @@ function Stop-ProcessByPort {
 }
 
 # Stop backend server (port 8000)
-$backendStopped = Stop-ProcessByPort -Port 8000 -ServerName "Backend"
+Stop-ProcessByPort -Port 8000 -ServerName "Backend" | Out-Null
 Write-Host ""
 
 # Stop frontend server (port 5173)
-$frontendStopped = Stop-ProcessByPort -Port 5173 -ServerName "Frontend"
+Stop-ProcessByPort -Port 5173 -ServerName "Frontend" | Out-Null
 Write-Host ""
 
 # Give processes time to fully terminate

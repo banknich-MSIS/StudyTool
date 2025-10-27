@@ -1,9 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { generateExamFromFiles } from "../api/client";
+import {
+  generateExamFromFiles,
+  fetchClasses,
+  getExam,
+  createClass,
+} from "../api/client";
+import { useExamStore } from "../store/examStore";
+import type { ClassSummary } from "../types";
+
+const CLASS_COLORS = [
+  { name: "Blue", value: "#007bff" },
+  { name: "Green", value: "#28a745" },
+  { name: "Red", value: "#dc3545" },
+  { name: "Yellow", value: "#ffc107" },
+  { name: "Purple", value: "#6f42c1" },
+  { name: "Orange", value: "#fd7e14" },
+  { name: "Teal", value: "#20c997" },
+  { name: "Pink", value: "#e83e8c" },
+  { name: "Indigo", value: "#6610f2" },
+  { name: "Cyan", value: "#17a2b8" },
+  { name: "Brown", value: "#795548" },
+  { name: "Gray", value: "#6c757d" },
+];
 
 export default function SmartExamCreator() {
   const navigate = useNavigate();
+  const setExam = useExamStore((s) => s.setExam);
   const { darkMode, theme } = useOutletContext<{
     darkMode: boolean;
     theme: any;
@@ -19,6 +42,14 @@ export default function SmartExamCreator() {
     "short",
   ]);
   const [focusConcepts, setFocusConcepts] = useState("");
+  const [examName, setExamName] = useState("");
+  const [examMode, setExamMode] = useState<"exam" | "practice">("exam");
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const [classes, setClasses] = useState<ClassSummary[]>([]);
+  const [showCreateClassModal, setShowCreateClassModal] = useState(false);
+  const [newClassName, setNewClassName] = useState("");
+  const [newClassDescription, setNewClassDescription] = useState("");
+  const [newClassColor, setNewClassColor] = useState("#007bff");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
@@ -32,6 +63,19 @@ export default function SmartExamCreator() {
   };
 
   const hasApiKey = !!getStoredApiKey();
+
+  // Load classes on mount
+  useEffect(() => {
+    const loadClasses = async () => {
+      try {
+        const data = await fetchClasses();
+        setClasses(data);
+      } catch (e) {
+        console.error("Failed to load classes:", e);
+      }
+    };
+    loadClasses();
+  }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -98,6 +142,9 @@ export default function SmartExamCreator() {
           .split(",")
           .map((c) => c.trim())
           .filter((c) => c.length > 0),
+        examName: examName || undefined,
+        examMode,
+        selectedClassId: selectedClassId || undefined,
         apiKey,
       });
 
@@ -106,13 +153,21 @@ export default function SmartExamCreator() {
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       setProgress(100);
-      setProgressMessage("Done! Redirecting to exam...");
+      setProgressMessage("Loading exam data...");
 
-      // Navigate to settings page to create exam from upload
+      // Fetch exam data and load into store
+      const examData = await getExam(response.exam_id);
+      setExam(response.exam_id, examData.questions);
+
+      setProgressMessage("Done! Starting exam...");
+
+      // Navigate directly to exam or practice mode
       setTimeout(() => {
-        navigate("/settings", {
-          state: { uploadId: response.upload_id, autoStart: true },
-        });
+        if (examMode === "practice") {
+          navigate(`/practice/${response.exam_id}`);
+        } else {
+          navigate(`/exam/${response.exam_id}`);
+        }
       }, 500);
     } catch (e: any) {
       setError(
@@ -257,13 +312,13 @@ export default function SmartExamCreator() {
             fontSize: 14,
           }}
         >
-          Supported: PDF, PowerPoint, Word, Images
+          Supported: PDF, PowerPoint, Word, Images, Video, Excel, Text
         </p>
 
         <input
           type="file"
           multiple
-          accept=".pdf,.pptx,.ppt,.docx,.doc,.png,.jpg,.jpeg,.txt"
+          accept=".pdf,.pptx,.ppt,.docx,.doc,.png,.jpg,.jpeg,.txt,.md,.mp4,.mov,.avi,.xlsx,.xls,.csv"
           onChange={handleFileSelect}
           style={{
             marginBottom: 16,
@@ -301,6 +356,12 @@ export default function SmartExamCreator() {
                 </div>
                 <button
                   onClick={() => removeFile(index)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = "0.7";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = "1";
+                  }}
                   style={{
                     padding: "4px 12px",
                     background: "transparent",
@@ -475,7 +536,7 @@ export default function SmartExamCreator() {
               type="text"
               value={focusConcepts}
               onChange={(e) => setFocusConcepts(e.target.value)}
-              placeholder="e.g., photosynthesis, cell division, mitosis"
+              placeholder="e.g., enterprise architecture, statistics, business systems"
               style={{
                 width: "100%",
                 padding: 12,
@@ -496,6 +557,369 @@ export default function SmartExamCreator() {
               Comma-separated list of topics to emphasize
             </p>
           </div>
+
+          {/* Exam Name */}
+          <div>
+            <label
+              style={{
+                display: "block",
+                marginBottom: 8,
+                color: theme.text,
+                fontWeight: 500,
+              }}
+            >
+              Exam Name (optional)
+            </label>
+            <input
+              type="text"
+              value={examName}
+              onChange={(e) => setExamName(e.target.value)}
+              placeholder="e.g., ITS Final Study Set"
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 8,
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.cardBgSolid,
+                color: theme.text,
+                fontSize: 14,
+              }}
+            />
+          </div>
+
+          {/* Row: Exam Mode + Class Assignment */}
+          <div
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}
+          >
+            {/* Exam Mode */}
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: 8,
+                  color: theme.text,
+                  fontWeight: 500,
+                }}
+              >
+                Mode
+              </label>
+              <select
+                value={examMode}
+                onChange={(e) =>
+                  setExamMode(e.target.value as "exam" | "practice")
+                }
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`,
+                  backgroundColor: theme.cardBgSolid,
+                  color: theme.text,
+                  fontSize: 14,
+                }}
+              >
+                <option value="exam">
+                  Exam Mode (timed, submit for grading)
+                </option>
+                <option value="practice">
+                  Practice Mode (untimed, see answers)
+                </option>
+              </select>
+            </div>
+
+            {/* Class Assignment */}
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 8,
+                }}
+              >
+                <label
+                  style={{
+                    color: theme.text,
+                    fontWeight: 500,
+                  }}
+                >
+                  Assign to Class (optional)
+                </label>
+                <button
+                  onClick={() => setShowCreateClassModal(true)}
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: 6,
+                    border: `1px solid ${theme.border}`,
+                    background: darkMode
+                      ? "rgba(194, 155, 74, 0.1)"
+                      : "rgba(212, 166, 80, 0.15)",
+                    cursor: "pointer",
+                    color: theme.text,
+                    fontSize: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    lineHeight: 1,
+                  }}
+                  title="Create new class"
+                >
+                  +
+                </button>
+              </div>
+              <select
+                value={selectedClassId || ""}
+                onChange={(e) =>
+                  setSelectedClassId(
+                    e.target.value ? parseInt(e.target.value) : null
+                  )
+                }
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`,
+                  backgroundColor: theme.cardBgSolid,
+                  color: theme.text,
+                  fontSize: 14,
+                  appearance: "none",
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='${encodeURIComponent(
+                    theme.textSecondary
+                  )}' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 10px center",
+                  paddingRight: "35px",
+                }}
+              >
+                <option value="">None</option>
+                {classes.map((cls) => (
+                  <option key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Class Creation Modal */}
+          {showCreateClassModal && (
+            <div
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(0, 0, 0, 0.3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 2000,
+                backdropFilter: "blur(12px)",
+              }}
+              onClick={() => setShowCreateClassModal(false)}
+            >
+              <div
+                style={{
+                  backgroundColor: theme.modalBg,
+                  backdropFilter: theme.glassBlur,
+                  WebkitBackdropFilter: theme.glassBlur,
+                  borderRadius: 12,
+                  padding: 24,
+                  maxWidth: 500,
+                  width: "90%",
+                  maxHeight: "80vh",
+                  overflow: "auto",
+                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)",
+                  border: `1px solid ${theme.glassBorder}`,
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 style={{ margin: "0 0 20px 0", color: theme.text }}>
+                  Create New Class
+                </h3>
+                <div style={{ marginBottom: 16 }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: 4,
+                      fontWeight: "bold",
+                      fontSize: 14,
+                      color: theme.text,
+                    }}
+                  >
+                    Class Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newClassName}
+                    onChange={(e) => setNewClassName(e.target.value)}
+                    placeholder="e.g., ITS, CPA, AiDD"
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: 4,
+                      fontSize: 14,
+                      boxSizing: "border-box",
+                      backgroundColor: theme.cardBg,
+                      color: theme.text,
+                    }}
+                  />
+                </div>
+                <div style={{ marginBottom: 16 }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: 4,
+                      fontWeight: "bold",
+                      fontSize: 14,
+                      color: theme.text,
+                    }}
+                  >
+                    Description (optional)
+                  </label>
+                  <textarea
+                    value={newClassDescription}
+                    onChange={(e) => setNewClassDescription(e.target.value)}
+                    placeholder="Brief description"
+                    rows={3}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: 4,
+                      fontSize: 14,
+                      resize: "vertical",
+                      boxSizing: "border-box",
+                      backgroundColor: theme.cardBg,
+                      color: theme.text,
+                    }}
+                  />
+                </div>
+                <div style={{ marginBottom: 24 }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: 8,
+                      fontWeight: "bold",
+                      fontSize: 14,
+                      color: theme.text,
+                    }}
+                  >
+                    Color
+                  </label>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(6, 1fr)",
+                      gap: 8,
+                    }}
+                  >
+                    {CLASS_COLORS.map((colorOption) => (
+                      <button
+                        key={colorOption.value}
+                        onClick={() => setNewClassColor(colorOption.value)}
+                        style={{
+                          width: "100%",
+                          aspectRatio: "1",
+                          borderRadius: 8,
+                          backgroundColor: colorOption.value,
+                          border:
+                            newClassColor === colorOption.value
+                              ? "3px solid white"
+                              : "1px solid #ccc",
+                          cursor: "pointer",
+                          boxShadow:
+                            newClassColor === colorOption.value
+                              ? "0 0 8px rgba(0,0,0,0.3)"
+                              : "none",
+                        }}
+                        title={colorOption.name}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      setShowCreateClassModal(false);
+                      setNewClassName("");
+                      setNewClassDescription("");
+                      setNewClassColor("#007bff");
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = "0.7";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = "1";
+                    }}
+                    style={{
+                      padding: "8px 16px",
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: 6,
+                      background: "transparent",
+                      color: theme.text,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!newClassName.trim()) {
+                        alert("Please enter a class name");
+                        return;
+                      }
+                      try {
+                        const newClass = await createClass(
+                          newClassName,
+                          newClassDescription || undefined,
+                          newClassColor
+                        );
+                        setShowCreateClassModal(false);
+                        setNewClassName("");
+                        setNewClassDescription("");
+                        setNewClassColor("#007bff");
+                        // Add the new class to the list
+                        setClasses([...classes, newClass]);
+                        // Auto-select the new class
+                        setSelectedClassId(newClass.id);
+                      } catch (e: any) {
+                        alert(
+                          `Failed to create class: ${
+                            e?.message || "Unknown error"
+                          }`
+                        );
+                      }
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.filter = "brightness(1.1)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.filter = "brightness(1)";
+                    }}
+                    style={{
+                      padding: "8px 16px",
+                      background: theme.crimson,
+                      color: "white",
+                      border: "none",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -563,12 +987,14 @@ export default function SmartExamCreator() {
             if (hasApiKey && files.length > 0 && !loading) {
               e.currentTarget.style.boxShadow =
                 "0 4px 12px rgba(196, 30, 58, 0.35)";
+              e.currentTarget.style.filter = "brightness(1.1)";
             }
           }}
           onMouseLeave={(e) => {
             if (hasApiKey && files.length > 0 && !loading) {
               e.currentTarget.style.boxShadow =
                 "0 2px 8px rgba(196, 30, 58, 0.25)";
+              e.currentTarget.style.filter = "brightness(1)";
             }
           }}
         >

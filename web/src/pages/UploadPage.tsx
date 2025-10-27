@@ -67,12 +67,60 @@ export default function UploadPage() {
   };
 
   const downloadTemplate = () => {
-    const csvContent = `#themes: Your Study Topic, Subtopic
-#suggested_types: mcq, short
+    const csvContent = `# Hoosier Prep CSV Template with Detailed Formatting Rules
+# 
+# CRITICAL FORMATTING RULES FOR LLMs TO FOLLOW:
+#
+# 1. FIELD QUOTING:
+#    - question: ALWAYS quoted (contains text)
+#    - options: ALWAYS quoted if populated (contains pipes)
+#    - answer: Quote ONLY if contains commas or pipes
+#    - concepts: ALWAYS quoted (comma-separated)
+#
+# 2. OPTIONS (mcq/multi only):
+#    - Use pipes (|) to separate options
+#    - NO spaces around pipes
+#    - NO commas within options
+#    - Example: "Option A|Option B|Option C"
+#
+# 3. ANSWERS:
+#    - mcq: Single value matching ONE option exactly (case-sensitive)
+#    - multi: Pipe-separated, MUST be quoted (e.g., "A|B|C")
+#    - short: Simple text, quote if contains commas/pipes
+#    - truefalse: "True" or "False"
+#    - cloze: Pipe-separated for each blank, MUST be quoted
+#
+# 4. CONCEPTS:
+#    - Comma-separated tags
+#    - ALWAYS quoted
+#    - Example: "Networking,Router,OSI Model"
+#
+# 5. FORBIDDEN:
+#    - NO pipes in question stems (use other punctuation or rephrase)
+#    - NO commas in options or multi-answers (use pipes)
+#    - NO citation markers ([cite: XX])
+#    - NO special annotations or metadata
+#
+# 6. QUESTION TYPES:
+#    mcq = Single correct multiple choice
+#    multi = Multiple correct selections
+#    short = Text answer
+#    truefalse = True/False
+#    cloze = Fill-in-the-blank (use underscores in question)
+#
+# Example: "The _____ protocol operates at Layer 4" with answer "TCP"
+#
+
+#themes: Your Study Topic, Subtopic
+#suggested_types: mcq,short,multi
 #recommended_count: 10
-question,answer,type,options,concepts
-What is 2+2?,4,short,,Basic Math
-What is the capital of France?,Paris,mcq,Paris|London|Berlin|Madrid,Geography`;
+
+question,type,options,answer,concepts
+"What is 2+2?",short,,4,"Basic Math"
+"What is the capital of France?",mcq,"Paris|London|Berlin|Madrid",Paris,"Geography"
+"Which are programming languages?",multi,"Python|English|Java|C++","Python|Java|C++","Programming,Languages"
+"HTML is a programming language",truefalse,,False,"HTML,Web"
+"The _____ is the heart of a computer",cloze,,CPU,"Hardware,Components"`;
 
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);

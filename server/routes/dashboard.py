@@ -222,6 +222,19 @@ def delete_upload(upload_id: int, db: Session = Depends(get_db)) -> Dict[str, An
     return {"success": True}
 
 
+@router.patch("/uploads/{upload_id}")
+def update_upload_name(upload_id: int, new_name: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Update the filename of an upload"""
+    upload = db.get(Upload, upload_id)
+    if not upload:
+        raise HTTPException(status_code=404, detail="Upload not found")
+    
+    upload.filename = new_name
+    db.commit()
+    
+    return {"success": True, "filename": new_name}
+
+
 @router.get("/uploads/{upload_id}/download")
 def download_csv(upload_id: int, db: Session = Depends(get_db)):
     """Download the original CSV file"""

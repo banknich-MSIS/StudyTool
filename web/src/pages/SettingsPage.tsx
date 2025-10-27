@@ -32,6 +32,8 @@ export default function SettingsPage() {
   }>();
   const uploadId: number | undefined =
     loc?.state?.uploadId || loc?.state?.uploadIds?.[0];
+  const uploadIds: number[] =
+    loc?.state?.uploadIds || (uploadId ? [uploadId] : []);
   const metadata: UploadMetadata | undefined = loc?.state?.metadata;
   const uploadDataFromState = loc?.state?.uploadData as
     | UploadSummary
@@ -195,12 +197,13 @@ export default function SettingsPage() {
   const isCountValid = count > 0 && count <= availableQuestions;
 
   const onStart = async () => {
-    if (!uploadId) return;
+    if (!uploadIds || uploadIds.length === 0) return;
     setLoading(true);
     setError(null);
     try {
       const exam = await createExam({
-        uploadId,
+        uploadId: uploadIds[0], // Backend expects single uploadId for now
+        uploadIds: uploadIds.length > 1 ? uploadIds : undefined, // Pass array if multiple
         includeConceptIds: [],
         questionTypes: [], // Empty array means all types
         count,
@@ -222,168 +225,172 @@ export default function SettingsPage() {
 
   return (
     <div style={{ display: "grid", gap: 24, color: theme.text }}>
-      {/* API Key Management Section */}
-      <section
-        style={{
-          background: theme.cardBg,
-          backdropFilter: theme.glassBlur,
-          WebkitBackdropFilter: theme.glassBlur,
-          borderRadius: 12,
-          padding: 24,
-          border: `1px solid ${theme.glassBorder}`,
-          boxShadow: theme.glassShadow,
-        }}
-      >
-        <h2
+      {/* API Key Management Section - Only show if no valid key */}
+      {!apiKeyValid && (
+        <section
           style={{
-            margin: "0 0 12px 0",
-            fontSize: 24,
-            fontWeight: 700,
-            color: theme.crimson,
+            background: theme.cardBg,
+            backdropFilter: theme.glassBlur,
+            WebkitBackdropFilter: theme.glassBlur,
+            borderRadius: 12,
+            padding: 24,
+            border: `1px solid ${theme.glassBorder}`,
+            boxShadow: theme.glassShadow,
           }}
         >
-          Gemini API Configuration
-        </h2>
-        <p style={{ margin: "0 0 16px 0", color: theme.textSecondary }}>
-          Enable AI-powered exam generation by setting up your free Gemini API
-          key.{" "}
-          <a
-            href="https://makersuite.google.com/app/apikey"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: theme.crimson, textDecoration: "underline" }}
-          >
-            Get your free key here
-          </a>
-        </p>
-        <div
-          style={{
-            marginTop: 8,
-            color: theme.textSecondary,
-            fontSize: 13,
-          }}
-        >
-          Note: If you’re signed into an IU email account in this browser, you
-          may encounter an error due to administrator restrictions.
-        </div>
-        <div
-          style={{
-            marginTop: 8,
-            color: theme.textSecondary,
-            fontSize: 13,
-          }}
-        >
-          Disclosure: The linked Gemini Gem may require a paid-enabled personal
-          Google account. Visiting with a school-managed account can cause
-          permission errors. Use a non-school personal account.
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label
+          <h2
             style={{
-              display: "block",
-              marginBottom: 8,
-              color: theme.text,
-              fontWeight: 500,
+              margin: "0 0 12px 0",
+              fontSize: 24,
+              fontWeight: 700,
+              color: theme.crimson,
             }}
           >
-            Gemini API Key
-          </label>
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="AIza..."
+            Gemini API Configuration
+          </h2>
+          <p style={{ margin: "0 0 16px 0", color: theme.textSecondary }}>
+            Enable AI-powered exam generation by setting up your free Gemini API
+            key.{" "}
+            <a
+              href="https://makersuite.google.com/app/apikey"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: theme.crimson, textDecoration: "underline" }}
+            >
+              Get your free key here
+            </a>
+          </p>
+          <div
             style={{
-              width: "100%",
-              padding: 12,
-              borderRadius: 8,
-              border: `1px solid ${theme.border}`,
-              backgroundColor: theme.cardBgSolid,
-              color: theme.text,
-              fontSize: 14,
-              fontFamily: "monospace",
-            }}
-          />
-        </div>
-
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <button
-            onClick={handleValidateAndSaveKey}
-            disabled={!apiKey.trim() || validatingKey}
-            style={{
-              padding: "10px 24px",
-              background:
-                apiKey.trim() && !validatingKey ? theme.crimson : theme.border,
-              color: "white",
-              border: "none",
-              borderRadius: 8,
-              cursor:
-                apiKey.trim() && !validatingKey ? "pointer" : "not-allowed",
-              fontWeight: 600,
-              boxShadow:
-                apiKey.trim() && !validatingKey
-                  ? "0 3px 12px rgba(196, 30, 58, 0.3)"
-                  : "none",
+              marginTop: 8,
+              color: theme.textSecondary,
+              fontSize: 13,
             }}
           >
-            {validatingKey ? "Validating..." : "Save & Validate"}
-          </button>
+            Note: If you’re signed into an IU email account in this browser, you
+            may encounter an error due to administrator restrictions.
+          </div>
+          <div
+            style={{
+              marginTop: 8,
+              color: theme.textSecondary,
+              fontSize: 13,
+            }}
+          >
+            Disclosure: The Gemini Gem requires a Gemini Pro account (IU
+            accounts have this). API Keys: School accounts may block access -
+            use a personal account for free API keys.
+          </div>
 
-          {apiKeyValid !== null && (
-            <div
+          <div style={{ marginBottom: 16 }}>
+            <label
               style={{
-                padding: "8px 16px",
-                background: apiKeyValid
-                  ? "rgba(40, 167, 69, 0.1)"
-                  : "rgba(220, 53, 69, 0.1)",
-                color: apiKeyValid ? theme.btnSuccess : theme.btnDanger,
-                borderRadius: 8,
-                border: `1px solid ${
-                  apiKeyValid ? theme.btnSuccess : theme.btnDanger
-                }`,
-                fontSize: 14,
+                display: "block",
+                marginBottom: 8,
+                color: theme.text,
                 fontWeight: 500,
               }}
             >
-              {apiKeyValid ? "Key is valid" : "Invalid key"}
-            </div>
-          )}
-
-          {apiKey && (
-            <button
-              onClick={handleClearApiKey}
+              Gemini API Key
+            </label>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="AIza..."
               style={{
-                padding: "8px 16px",
-                background: "transparent",
-                color: theme.textSecondary,
-                border: `1px solid ${theme.border}`,
+                width: "100%",
+                padding: 12,
                 borderRadius: 8,
-                cursor: "pointer",
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.cardBgSolid,
+                color: theme.text,
                 fontSize: 14,
+                fontFamily: "monospace",
+              }}
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <button
+              onClick={handleValidateAndSaveKey}
+              disabled={!apiKey.trim() || validatingKey}
+              style={{
+                padding: "10px 24px",
+                background:
+                  apiKey.trim() && !validatingKey
+                    ? theme.crimson
+                    : theme.border,
+                color: "white",
+                border: "none",
+                borderRadius: 8,
+                cursor:
+                  apiKey.trim() && !validatingKey ? "pointer" : "not-allowed",
+                fontWeight: 600,
+                boxShadow:
+                  apiKey.trim() && !validatingKey
+                    ? "0 3px 12px rgba(196, 30, 58, 0.3)"
+                    : "none",
               }}
             >
-              Clear Key
+              {validatingKey ? "Validating..." : "Save & Validate"}
             </button>
-          )}
-        </div>
 
-        <div
-          style={{
-            marginTop: 16,
-            padding: 12,
-            background: darkMode
-              ? "rgba(212, 166, 80, 0.08)"
-              : "rgba(212, 166, 80, 0.1)",
-            borderRadius: 8,
-            fontSize: 13,
-            color: theme.textSecondary,
-          }}
-        >
-          <strong style={{ color: theme.amber }}>Free Tier Limits:</strong> 1M
-          tokens/day (~100 exams), 60 requests/hour • No credit card required
-        </div>
-      </section>
+            {apiKeyValid !== null && (
+              <div
+                style={{
+                  padding: "8px 16px",
+                  background: apiKeyValid
+                    ? "rgba(40, 167, 69, 0.1)"
+                    : "rgba(220, 53, 69, 0.1)",
+                  color: apiKeyValid ? theme.btnSuccess : theme.btnDanger,
+                  borderRadius: 8,
+                  border: `1px solid ${
+                    apiKeyValid ? theme.btnSuccess : theme.btnDanger
+                  }`,
+                  fontSize: 14,
+                  fontWeight: 500,
+                }}
+              >
+                {apiKeyValid ? "Key is valid" : "Invalid key"}
+              </div>
+            )}
+
+            {apiKey && (
+              <button
+                onClick={handleClearApiKey}
+                style={{
+                  padding: "8px 16px",
+                  background: "transparent",
+                  color: theme.textSecondary,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  fontSize: 14,
+                }}
+              >
+                Clear Key
+              </button>
+            )}
+          </div>
+
+          <div
+            style={{
+              marginTop: 16,
+              padding: 12,
+              background: darkMode
+                ? "rgba(212, 166, 80, 0.08)"
+                : "rgba(212, 166, 80, 0.1)",
+              borderRadius: 8,
+              fontSize: 13,
+              color: theme.textSecondary,
+            }}
+          >
+            <strong style={{ color: theme.amber }}>Free Tier Limits:</strong> 1M
+            tokens/day (~100 exams), 60 requests/hour • No credit card required
+          </div>
+        </section>
+      )}
 
       {!uploadId && (
         <div style={{ color: "crimson" }}>

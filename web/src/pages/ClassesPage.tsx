@@ -439,7 +439,7 @@ export default function ClassesPage() {
                 type="text"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                placeholder="e.g., CPA Review, Math 101"
+                placeholder="e.g., CPA, ITS, APA, BUSA"
                 style={{
                   width: "100%",
                   padding: "8px 12px",
@@ -636,7 +636,7 @@ export default function ClassesPage() {
                 type="text"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                placeholder="e.g., CPA Review, Math 101"
+                placeholder="e.g., CPA, ITS, APA, BUSA"
                 style={{
                   width: "100%",
                   padding: "8px 12px",

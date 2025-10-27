@@ -68,6 +68,7 @@ class QuestionReview(BaseModel):
 
 class ExamCreate(BaseModel):
     uploadId: int
+    uploadIds: Optional[List[int]] = None  # For combined exams
     includeConceptIds: List[int] = []
     questionTypes: List[QuestionType] = ["mcq", "short"]
     count: int = 10

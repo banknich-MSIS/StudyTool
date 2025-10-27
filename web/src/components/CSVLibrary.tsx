@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { UploadSummary, ClassSummary, QuestionType } from "../types";
 import ClassTagSelector from "./ClassTagSelector";
-import { fetchClasses } from "../api/client";
+import { fetchClasses, updateUploadName } from "../api/client";
 
 const QUESTION_TYPE_LABELS: Record<string, string> = {
   mcq: "Multiple Choice",
@@ -43,6 +43,8 @@ export default function CSVLibrary({
   const [openClassDropdown, setOpenClassDropdown] = useState<number | null>(
     null
   );
+  const [editingUploadId, setEditingUploadId] = useState<number | null>(null);
+  const [editName, setEditName] = useState<string>("");
 
   // Load classes to get actual colors
   useEffect(() => {
@@ -56,6 +58,26 @@ export default function CSVLibrary({
     };
     loadClasses();
   }, []);
+
+  // Close class dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Check if click is outside the dropdown
+      if (
+        openClassDropdown !== null &&
+        !target.closest(`[data-dropdown="${openClassDropdown}"]`)
+      ) {
+        setOpenClassDropdown(null);
+      }
+    };
+
+    if (openClassDropdown !== null) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [openClassDropdown]);
 
   // Helper function to calculate contrast text color
   const getContrastTextColor = (hexColor: string): string => {
@@ -97,6 +119,31 @@ export default function CSVLibrary({
       onCreateExam(uploadIds, firstUpload);
       setSelectedUploads(new Set());
     }
+  };
+
+  const handleStartRename = (uploadId: number) => {
+    const upload = uploads.find((u) => u.id === uploadId);
+    if (upload) {
+      setEditingUploadId(uploadId);
+      setEditName(upload.filename);
+    }
+  };
+
+  const handleSaveRename = async (uploadId: number) => {
+    try {
+      await updateUploadName(uploadId, editName);
+      setEditingUploadId(null);
+      setEditName("");
+      onUpdate();
+    } catch (error) {
+      console.error("Failed to rename upload:", error);
+      alert("Failed to rename upload");
+    }
+  };
+
+  const handleCancelRename = () => {
+    setEditingUploadId(null);
+    setEditName("");
   };
 
   const formatDate = (date: string) => {
@@ -315,7 +362,7 @@ export default function CSVLibrary({
               onClick={handleCreateExamFromSelected}
               style={{
                 padding: "10px 24px",
-                background: theme.btnSuccess,
+                background: theme.crimson,
                 color: "white",
                 border: "none",
                 borderRadius: 6,
@@ -324,7 +371,7 @@ export default function CSVLibrary({
                 fontSize: 14,
                 letterSpacing: "-0.2px",
                 transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                boxShadow: "0 2px 8px rgba(40, 167, 69, 0.25)",
+                boxShadow: "0 2px 8px rgba(196, 30, 58, 0.25)",
                 transform:
                   hoveredButton === "createFromSelected"
                     ? "translateY(-1px)"
@@ -333,12 +380,12 @@ export default function CSVLibrary({
               onMouseEnter={(e) => {
                 setHoveredButton("createFromSelected");
                 e.currentTarget.style.boxShadow =
-                  "0 4px 12px rgba(40, 167, 69, 0.35)";
+                  "0 4px 12px rgba(196, 30, 58, 0.35)";
               }}
               onMouseLeave={(e) => {
                 setHoveredButton(null);
                 e.currentTarget.style.boxShadow =
-                  "0 2px 8px rgba(40, 167, 69, 0.25)";
+                  "0 2px 8px rgba(196, 30, 58, 0.25)";
               }}
             >
               Create Exam from Selected
@@ -392,15 +439,56 @@ export default function CSVLibrary({
               }
             }}
           >
-            {/* Assignment button (cap) in Top Right */}
+            {/* Action buttons (Assign to class & Rename) in Top Right */}
             <div
               style={{
                 position: "absolute",
                 top: 8,
                 right: 8,
+                display: "flex",
+                gap: 8,
               }}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Rename button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStartRename(upload.id);
+                }}
+                title="Rename"
+                style={{
+                  padding: "6px",
+                  background: "rgba(196, 30, 58, 0.08)",
+                  border: `1px solid ${theme.glassBorder}`,
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(196, 30, 58, 0.15)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(196, 30, 58, 0.08)";
+                }}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={theme.crimson}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </button>
+
               <div style={{ position: "relative" }}>
                 <button
                   onClick={(e) => {
@@ -454,6 +542,7 @@ export default function CSVLibrary({
                 {/* Dropdown for class assignment */}
                 {openClassDropdown === upload.id && (
                   <div
+                    data-dropdown={upload.id}
                     style={{
                       position: "absolute",
                       top: "calc(100% + 4px)",
@@ -484,7 +573,7 @@ export default function CSVLibrary({
               </div>
             </div>
 
-            {/* Selection Checkbox */}
+            {/* Selection Checkbox and Filename */}
             <div style={{ marginBottom: 12 }}>
               <input
                 type="checkbox"
@@ -492,22 +581,54 @@ export default function CSVLibrary({
                 onChange={() => toggleSelection(upload.id)}
                 style={{ marginRight: 8 }}
               />
-              <span
-                title={upload.filename}
-                style={{
-                  fontWeight: "bold",
-                  fontSize: 16,
-                  color: theme.text,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  display: "inline-block",
-                  maxWidth: "calc(100% - 100px)",
-                  verticalAlign: "middle",
-                }}
-              >
-                {upload.filename}
-              </span>
+              {editingUploadId === upload.id ? (
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveRename(upload.id);
+                    if (e.key === "Escape") handleCancelRename();
+                  }}
+                  onBlur={() => handleSaveRename(upload.id)}
+                  style={{
+                    width: "calc(100% - 50px)",
+                    padding: "4px 8px",
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: 4,
+                    backgroundColor: theme.cardBgSolid,
+                    color: theme.text,
+                    fontSize: 16,
+                    fontWeight: "bold",
+                  }}
+                  autoFocus
+                />
+              ) : (
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    width: "calc(100% - 50px)",
+                  }}
+                >
+                  <span
+                    title={upload.filename}
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: 16,
+                      color: theme.text,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      display: "inline-block",
+                      flex: 1,
+                    }}
+                  >
+                    {upload.filename}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Class Tags under header */}

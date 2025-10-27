@@ -163,9 +163,11 @@ export default function SupportPage() {
                 lineHeight: 1.6,
               }}
             >
-              Yes! Upload your study materials to Gemini AI and ask it to create
-              a study CSV in the required format. See GEMINI_PROMPT.md for the
-              prompt template.
+              This tool has built-in Gemini AI integration for quick exam
+              generation. Alternatively, use our Gemini Gem for a more
+              consultative approach that tailors exams with detailed
+              customization. The template can be used with other LLMs, though
+              subtle formatting differences may cause errors.
             </p>
           </div>
           <div>
@@ -185,10 +187,10 @@ export default function SupportPage() {
                 lineHeight: 1.6,
               }}
             >
-              Gemini Gems may require a paid-enabled personal Google account.
-              School-managed accounts often block access. Sign out of your
-              school account in the browser or open the link in a personal
-              account to avoid the error.
+              The Gemini Gem requires a Gemini Pro account, which IU school
+              accounts provide. However, for API keys used in this tool, school
+              accounts may block access - use a personal Google account to
+              obtain a free API key.
             </p>
           </div>
           <div>
@@ -223,10 +225,26 @@ export default function SupportPage() {
             >
               Common errors and fixes
             </h4>
-            <ul style={{ margin: 0, paddingLeft: 18, color: theme.textSecondary, lineHeight: 1.6 }}>
-              <li>"Invalid API key": trim whitespace; ensure API enabled; use personal account.</li>
-              <li>"Could not extract enough content": upload files with selectable text.</li>
-              <li>CSV parse errors: check headers; quote fields containing commas; use UTF-8.</li>
+            <ul
+              style={{
+                margin: 0,
+                paddingLeft: 18,
+                color: theme.textSecondary,
+                lineHeight: 1.6,
+              }}
+            >
+              <li>
+                "Invalid API key": trim whitespace; ensure API enabled; use
+                personal account.
+              </li>
+              <li>
+                "Could not extract enough content": upload files with selectable
+                text.
+              </li>
+              <li>
+                CSV parse errors: check headers; quote fields containing commas;
+                use UTF-8.
+              </li>
             </ul>
           </div>
         </div>
